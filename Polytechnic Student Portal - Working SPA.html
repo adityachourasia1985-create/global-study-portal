@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<!-- saved from url=(0031)http://localhost:3000/dashboard -->
+<html lang="en" data-theme="dark"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Polytechnic Student Portal - Working SPA</title>
+    
+    <link rel="stylesheet" href="./Polytechnic Student Portal - Working SPA_files/all.min.css">
+
+    <link rel="stylesheet" href="./Polytechnic Student Portal - Working SPA_files/style.css">
+    
+</head>
+<body>
+
+    <div class="container">
+        <nav class="sidebar">
+            <div class="logo">
+                <i class="fa-solid fa-graduation-cap"></i>
+                <h2>PolyPortal</h2>
+            </div>
+           <ul>
+    <li id="menu-dashboard"
+        class="active"
+        onclick="switchSection('dashboard-tab')">
+        <i class="fa-solid fa-gauge"></i>
+        Dashboard
+    </li>
+
+    <li id="menu-timetable"
+        onclick="switchSection('timetable-tab')">
+        <i class="fa-solid fa-calendar-days"></i>
+        Timetable
+    </li>
+
+    <li id="menu-attendance"
+        onclick="switchSection('attendance-tab')">
+        <i class="fa-solid fa-user-check"></i>
+        Attendance
+    </li>
+
+    <li id="menu-progress"
+        onclick="switchSection('progress-tab')">
+        <i class="fa-solid fa-chart-line"></i>
+        Progress Report
+    </li>
+
+    <li id="menu-analysis"
+        onclick="switchSection('analysis-tab')">
+        <i class="fa-solid fa-chart-simple"></i>
+        Study Analysis
+    </li>
+
+    <li id="menu-notices"
+        onclick="switchSection('notices-tab')">
+        <i class="fa-solid fa-bullhorn"></i>
+        Notice Board
+    </li>
+
+    <li id="menu-settings"
+        onclick="switchSection('settings-tab')">
+     <i class="fa-solid fa-gear"></i>
+        Settings
+    </li>
+</ul>
+
+           
+            
+            <div class="theme-toggle-container">
+                <span>Dark Mode</span>
+                <input type="checkbox" id="theme-toggle">
+            </div>
+        </nav>
+
+
+        <main class="main-content">
+            <header>
+                <div class="welcome-text">
+                  <h1>Welcome Back, <span id="welcomeName">ADITYA CHOURASIA</span></h1>
+                    <p>Government Polytechnic College</p>
+                </div>
+            </header>
+<div id="dashboard-tab" class="tab-content active-tab">
+
+    <section class="dashboard-grid">
+<div class="card profile-dashboard-card">
+
+    <div class="dashboard-profile">
+
+        <img id="dashboardProfileImage" src="http://localhost:3000/dashboard" alt="Profile">
+
+        <div class="profile-info">
+
+            <h2 id="dashboardName">
+                Aditya sir
+            </h2>
+
+            <p id="dashboardBranch">
+                Branch: Not Set
+            </p>
+
+            <p id="dashboardSemester">
+                Semester: Not Set
+            </p>
+
+            <p id="dashboardEnrollment">
+                Enrollment: Not Set
+            </p>
+
+            <p id="dashboardEmail">
+                Email: Not Set
+            </p>
+
+        </div>
+
+    </div>
+
+</div>
+
+        <div class="card">
+            <h3>📊 Overall Attendance</h3>
+            <h1 id="dashboard-attendance">0%</h1>
+            <p>Updated from Attendance</p>
+        </div>
+
+
+        <div class="card">
+            <h3>📚 Today's Study</h3>
+            <h1 id="dashboard-study">0h 0m</h1>
+            <p>From Pomodoro Tracker</p>
+        </div>
+
+
+        <div class="card">
+            <h3>🎯 Daily Goal</h3>
+            <h1 id="dashboard-goal">0%</h1>
+            <p id="dashboard-goal-text">0h / 0h</p>
+        </div>
+
+
+        <div class="card">
+            <h3>🔥 Study Streak</h3>
+            <h1 id="dashboard-streak">0 Days</h1>
+            <p>Keep learning!</p>
+        </div>
+
+
+        <div class="card">
+            <h3>📢 Latest Notice</h3>
+
+            <div class="notice-item">
+                Mid-Sem exams start next Monday.
+            </div>
+
+        </div>
+
+
+        <div class="card">
+            <h3>⚡ Recent Activity</h3>
+
+            <ul id="recentActivity">
+                <li>No activity yet</li>
+            </ul>
+
+        </div>
+        <div class="card task-card">
+
+    <h3>🎯 Today's Focus</h3>
+
+    <div class="task-input-box">
+
+        <input type="text" id="taskInput" placeholder="Add today&#39;s task">
+
+        <button onclick="addTask()">
+            Add
+        </button>
+
+    </div>
+
+
+    <ul id="taskList">
+
+        <li>
+            No tasks added yet
+        </li>
+
+    </ul>
+
+
+    <div class="task-progress">
+
+        <h4>
+            Progress:
+            <span id="taskProgress">0%</span>
+        </h4>
+
+        <div class="progress-container">
+
+            <div class="progress-bar" id="taskProgressBar">
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+    </section>
+
+</div>
+
+<div id="timetable-tab" class="tab-content">
+
+    <div class="card">
+
+        <h3>📅 Weekly Lecture Schedule</h3>
+
+        <table class="custom-table">
+
+            <thead>
+                <tr>
+                    <th>Time</th>
+                    <th>Monday</th>
+                    <th>Tuesday</th>
+                    <th>Wednesday</th>
+                    <th>Thursday</th>
+                    <th>Friday</th>
+                    <th>Saturday</th>
+                </tr>
+            </thead>
+
+            <tbody>
+  <!-- <h2>ADITYAJII</h2> -->
+                <tr>
+                    <td contenteditable="true">10:00 AM</td>
+                    <!-- <td>Java Programming</td> -->
+                     <td contenteditable="true">Java Programming</td>
+                    <td contenteditable="true">Web Designing</td>
+                    <td contenteditable="true">DSA</td>
+                    <td contenteditable="true">Computer Network</td>
+                    <td contenteditable="true">DBMS</td>
+                    <td contenteditable="true">Lab</td>
+                </tr>
+
+                <tr>
+                    <td contenteditable="true">11:30 AM</td>
+                    <td contenteditable="true">Computer Network</td>
+                    <td contenteditable="true">Data Structures</td>
+                    <td contenteditable="true">Java</td>
+                    <td contenteditable="true">DBMS</td>
+                    <td contenteditable="true">Web Designing</td>
+                    <td contenteditable="true">Project</td>
+                </tr>
+
+            </tbody>
+
+        </table>
+        <!-- <button onclick="saveTimetable()" class="primary-btn">
+    Save Timetable
+</button> -->
+<button onclick="saveTimetable()" class="primary-btn">
+    Save Timetable
+</button>
+
+
+    </div>
+
+</div>
+
+<div id="attendance-tab" class="tab-content">
+
+    <div class="card">
+        <h3>Attendance Management</h3>
+
+        <div class="attendance-form">
+
+            <input type="text" id="subjectName" placeholder="Enter Subject Name">
+
+            <input type="number" id="totalClasses" placeholder="Total Classes">
+
+            <input type="number" id="attendedClasses" placeholder="Attended Classes">
+
+            <button onclick="addAttendance()">
+                Add Subject
+            </button>
+
+        </div>
+
+
+        <table class="custom-table">
+
+            <thead>
+                <tr>
+                    <th>Subject</th>
+                    <th>Total Classes</th>
+                    <th>Present</th>
+                    <th>Attendance %</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+
+            <tbody id="attendanceTable">
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+<div id="progress-tab" class="tab-content">
+    <section class="dashboard-grid">
+
+        <div class="card">
+            <h3>🍅 Pomodoro Timer</h3>
+            <h1 id="timer">30:00</h1>
+            <label>Set Timer (Minutes)</label>
+<input type="number" id="timerInput" value="30" min="1">
+
+<button onclick="setTimer()">Set</button>
+            <button onclick="startTimer()">Start</button>
+            <button onclick="pauseTimer()">Pause</button>
+            <button onclick="resetTimer()">Reset</button>
+        </div>
+
+        <div class="card">
+            <h3>⏱ Stopwatch</h3>
+            <h1 id="stopwatch">00:00:00</h1>
+
+            <button onclick="startStopwatch()">Start</button>
+            <button onclick="stopStopwatch()">Stop</button>
+            <button onclick="resetStopwatch()">Reset</button>
+        </div>
+<div class="card">
+    <h3>🎯 Daily Goal Tracker</h3>
+
+    <label>Set Daily Goal (Hours)</label>
+<br><br>
+
+<input type="number" id="goalInput" value="6" min="1" max="24">
+
+<button onclick="saveGoal()">Save Goal</button>
+
+<h2 id="goal-hours">Completed : 0h 3.4200000000000004m / 6h</h2>
+
+    <div class="progress-container">
+        <div class="progress-bar" id="goal-progress" style="width: 0.95%;"></div>
+    </div>
+
+    <h3 id="goal-percent">1% Completed</h3>
+
+    
+</div>
+    </section>
+</div>
+<div id="analysis-tab" class="tab-content">
+
+    <section class="dashboard-grid">
+
+        <div class="card">
+            <h3>📚 Total Study Time</h3>
+            <h1 id="total-study">0h 3.4200000000000004m</h1>
+        </div>
+
+        <div class="card">
+            <h3>🔥 Study Streak</h3>
+            <h1 id="streak">1 Days</h1>
+        </div>
+
+        <div class="card">
+            <h3>🎯 Productivity Score</h3>
+            <h1 id="productivity">1%</h1>
+        </div>
+        <div class="card">
+
+    <h3>📊 Weekly Study Report</h3>
+
+    <div id="weeklyChart" class="weekly-chart">
+
+    </div>
+
+</div>
+
+    </section>
+
+</div>
+ <div id="notices-tab" class="tab-content">
+
+    <div class="card">
+
+        <h2>📢 Notice Board</h2>
+   
+
+<div class="notice-search">
+
+    <input type="text" id="noticeSearch" placeholder="Search notices..." onkeyup="searchNotice()">
+
+</div>
+        <div class="notice-item">
+            <h4>Mid Semester Examination</h4>
+            <p>Mid Semester exams will start from 25 July 2026.</p>
+            <small>Posted: Today</small>
+        </div>
+
+        <div class="notice-item">
+            <h4>Holiday Notice</h4>
+            <p>College will remain closed on Sunday.</p>
+            <small>Posted: Yesterday</small>
+        </div>
+
+        <div class="notice-item">
+            <h4>Library Notice</h4>
+            <p>Please return all library books before the due date.</p>
+            <small>Posted: 2 Days Ago</small>
+        </div>
+
+    </div>
+
+</div>
+
+<div id="settings-tab" class="tab-content">
+<div class="card settings-card">
+
+    <h3><i class="fa-solid fa-user"></i> Profile</h3>
+
+    <div class="profile-section">
+
+        <img id="profileImagePreview" src="data:image/jpeg;base64,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" alt="Profile" style="display: block;">
+
+        <br><br>
+
+       <input type="file" id="profileImageInput" accept="image/*" hidden="">
+
+<label for="profileImageInput" class="upload-btn">
+    <i class="fa-solid fa-camera"></i> Change Photo
+</label>
+
+        <br><br>
+
+        <label>Display Name</label>
+
+        <input type="text" id="displayName" placeholder="Enter your name">
+
+        <br><br>
+
+        <button onclick="saveDisplayName()">
+            Save Name
+        </button>
+
+    </div>
+
+</div>
+<div class="card settings-card">
+
+    <h3>
+        <i class="fa-solid fa-id-card"></i>
+        Student Details
+    </h3>
+
+    <div class="form-row">
+
+        <div class="form-group">
+            <label for="enrollmentNumber">Enrollment Number</label>
+            <input type="text" id="enrollmentNumber" placeholder="Enter enrollment number">
+        </div>
+
+        <div class="form-group">
+            <label for="semester">Semester</label>
+            <input type="number" id="semester" placeholder="Semester" min="1" max="6">
+        </div>
+
+    </div>
+
+    <div class="form-row">
+
+        <div class="form-group">
+            <label for="branch">Branch</label>
+            <input type="text" id="branch" placeholder="Enter branch">
+        </div>
+
+        <div class="form-group">
+            <label for="mobileNumber">Mobile Number</label>
+            <input type="tel" id="mobileNumber" placeholder="Enter mobile number">
+        </div>
+
+    </div>
+
+    <div class="form-group">
+        <label for="studentEmail">Email</label>
+        <input type="email" id="studentEmail" placeholder="Enter email">
+    </div>
+
+    <button class="primary-btn" onclick="saveStudentProfile()">
+        Save Profile
+    </button>
+
+</div>
+<div class="card settings-card">
+
+    <h3>
+        <i class="fa-solid fa-palette"></i>
+        Appearance
+    </h3>
+
+    <div class="form-group">
+
+        <label>
+            <input type="checkbox" id="theme-toggle-settings">
+            Enable Dark Mode
+        </label>
+
+    </div>
+
+    <div class="form-group">
+
+        <label>Theme Color</label>
+
+        <!-- <div class="color-options">
+
+            <button
+                class="color-dot blue"
+                onclick="changeAccentColor('#4f46e5')"
+            ></button>
+
+            <button
+                class="color-dot green"
+                onclick="changeAccentColor('#16a34a')"
+            ></button>
+
+            <button
+                class="color-dot purple"
+                onclick="changeAccentColor('#9333ea')"
+            ></button>
+
+            <button
+                class="color-dot red"
+                onclick="changeAccentColor('#dc2626')"
+            ></button>
+
+            <button
+                class="color-dot orange"
+                onclick="changeAccentColor('#ea580c')"
+            ></button>
+
+        </div> -->
+
+    </div>
+
+</div>
+<div class="card settings-card">
+
+    <h3>
+        <i class="fa-solid fa-shield-halved"></i>
+        Account
+    </h3>
+
+    <button id="changePasswordBtn" class="primary-btn">
+        <i class="fa-solid fa-key"></i>
+        Change Password
+    </button>
+
+    <div id="passwordSection" style="display:none;">
+
+        <div class="form-group">
+            <label>Current Password</label>
+            <input type="password" id="currentPassword" placeholder="Current Password">
+        </div>
+
+        <div class="form-group">
+            <label>New Password</label>
+            <input type="password" id="newPassword" placeholder="New Password">
+        </div>
+
+        <div class="form-group">
+            <label>Confirm Password</label>
+            <input type="password" id="confirmPassword" placeholder="Confirm New Password">
+        </div>
+
+        <button onclick="changePassword()" class="primary-btn">
+            Save Password
+        </button>
+
+    </div>
+
+    <hr>
+
+    <button id="logoutBtn" class="danger-btn">
+        <i class="fa-solid fa-right-from-bracket"></i>
+        Logout
+    </button>
+
+</div>
+
+</div>
+        </main>
+    </div>
+
+ 
+    <script src="./Polytechnic Student Portal - Working SPA_files/script.js.download"></script>
+
+ </body></html>

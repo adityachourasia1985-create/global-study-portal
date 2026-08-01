@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="/favicon.png?v=2">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <title>Register | PolyPortal</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        #organizationFields {
+    grid-column: 1 / -1;
+    display: none;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+}
+
+
+        body {
+            min-height: 100vh;
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #081426, #102a46);
+            color: white;
+            padding: 24px;
+        }
+
+        .register-card {
+            width: min(950px, 100%);
+            margin: 30px auto;
+            padding: 28px;
+            border-radius: 18px;
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(14px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.28);
+        }
+
+        .register-card h2 {
+            margin-bottom: 6px;
+            font-size: 28px;
+        }
+
+        .subtitle {
+            margin-bottom: 24px;
+            color: #c8d8e8;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 18px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 7px;
+        }
+
+        .form-group.full {
+            grid-column: 1 / -1;
+        }
+
+        label {
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 12px 14px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            background: rgba(255, 255, 255, 0.95);
+            color: #111;
+            font-size: 15px;
+            outline: none;
+        }
+
+        input:focus,
+        select:focus {
+            border-color: #3ea6ff;
+            box-shadow: 0 0 0 3px rgba(62, 166, 255, 0.16);
+        }
+
+        .primary-btn {
+            width: 100%;
+            margin-top: 22px;
+            padding: 13px 18px;
+            border: none;
+            border-radius: 10px;
+            background: #1c9cf4;
+            color: white;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .primary-btn:hover {
+            opacity: 0.92;
+        }
+
+        #registerMessage {
+            margin-top: 14px;
+            min-height: 22px;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .login-link {
+            text-align: center;
+            margin-top: 18px;
+            color: #c8d8e8;
+        }
+
+        .login-link a {
+            color: #45b4ff;
+            text-decoration: none;
+            font-weight: 700;
+        }
+
+        @media (max-width: 700px) {
+            body {
+                padding: 12px;
+            }
+
+            .register-card {
+                padding: 18px;
+                margin: 12px auto;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .form-group.full {
+                grid-column: auto;
+            }
+        }
+        .password-wrapper{
+    position:relative;
+    width:100%;
+}
+
+.password-wrapper input{
+    width:100%;
+    padding-right:52px;
+}
+
+.password-toggle{
+    position:absolute;
+    top:50%;
+    right:14px;
+    transform:translateY(-50%);
+    border:none;
+    background:transparent;
+    cursor:pointer;
+    padding:0;
+    font-size:22px;
+    line-height:1;
+    z-index:5;
+}
+
+.password-monkey{
+    display:block;
+}
+    </style>
+</head>
+
+<body>
+
+<div class="register-card">
+
+    <h2>User Registration</h2>
+    <p class="subtitle">
+        Create your PolyPortal account. Your account will remain pending until reviewed by the Owner.
+    </p>
+
+    <form id="registerForm">
+
+        <div class="form-grid">
+
+            <div class="form-group">
+                <label for="name">Full Name</label>
+                <input
+                    type="text"
+                    id="name"
+                    placeholder="Enter full name"
+                    required
+                >
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email Address</label>
+                <input
+                    type="email"
+                    id="email"
+                    placeholder="Enter email address"
+                    required
+                >
+            </div>
+
+    <div class="form-group">
+    <label for="password">Password</label>
+
+    <div class="password-wrapper">
+        <input
+            type="password"
+            id="password"
+            placeholder="Create password"
+            required
+        >
+
+        <button
+            type="button"
+            class="password-toggle"
+           onclick="
+const input = document.getElementById('password');
+const monkey = this.querySelector('.password-monkey');
+const hidden = input.type === 'password';
+input.type = hidden ? 'text' : 'password';
+monkey.textContent = hidden ? '🙊' : '🙈';
+"
+            aria-label="Show password"
+        >
+            <span class="password-monkey">🙈</span>
+        </button>
+    </div>
+</div>
+            <div class="form-group">
+                <label for="mobile">Mobile Number</label>
+                <input
+                    type="tel"
+                    id="mobile"
+                    placeholder="Enter mobile number"
+                >
+            </div>
+            <div class="form-group">
+    <label for="dateOfBirth">Date of Birth</label>
+    <input
+        type="date"
+        id="dateOfBirth"
+        name="dateOfBirth"
+        required
+    >
+</div>
+<div class="form-group">
+    <label for="gender">Gender</label>
+    <select id="gender" required>
+        <option value="">Select gender</option>
+        <option value="male">Male</option>
+        <option value="female">Female</option>
+        <option value="other">Other</option>
+        <option value="prefer_not_to_say">Prefer not to say</option>
+    </select>
+</div>
+    <div class="form-group">
+    <label for="accountType">Account Type</label>
+    <select id="accountType" required>
+        <option value="">Select account type</option>
+        <option value="individual">Individual</option>
+        <option value="organization">Organization</option>
+    </select>
+</div>
+
+
+    <div id="organizationFields" style="display: none;">
+            <div class="form-group">
+                <label for="enrollment">Enrollment Number</label>
+                <input
+                    type="text"
+                    id="enrollment"
+                    placeholder="Enter enrollment number"
+                >
+            </div>
+
+            <div class="form-group">
+                <label for="branch">Branch</label>
+                <input
+                    type="text"
+                    id="branch"
+                    placeholder="Example: CSE"
+                >
+            </div>
+<div class="form-group">
+    <label for="branchCode">Branch Code</label>
+    <input
+        type="text"
+        id="branchCode"
+        placeholder="Enter branch code"
+    >
+</div>
+            <div class="form-group">
+                <label for="admissionYear">Admission Year</label>
+                <input
+                    type="number"
+                    id="admissionYear"
+                    placeholder="Example: 2026"
+                >
+            </div>
+
+          <div class="form-group">
+    <label for="profession">Profession / Role</label>
+    <select id="profession">
+        <option value="">Select profession / role</option>
+        <option value="student">Student</option>
+        <option value="faculty">Faculty</option>
+        <option value="staff">Staff</option>
+        <option value="other">Other</option>
+    </select>
+</div>
+
+<div class="form-group">
+    <label for="organizationName">Organization / College Name</label>
+    <input
+        type="text"
+        id="organizationName"
+        name="organizationName"
+        placeholder="Enter organization or college name"
+    >
+</div>
+
+<div class="form-group" id="organizationCodeGroup">
+    <label for="organizationCode">Organization / College Code</label>
+    <input
+        type="text"
+        id="organizationCode"
+        placeholder="Enter organization or college code"
+    >
+</div>
+   
+
+    <div class="form-group">
+        <label for="semester">Semester</label>
+        <input
+            type="number"
+            id="semester"
+            min="1"
+            placeholder="Enter semester"
+        >
+    </div>
+
+   
+</div>
+ <!-- <button type="submit" class="primary-btn">
+            Create Account
+        </button> -->
+       
+
+        <div id="registerMessage"></div>
+            <button type="submit" class="primary-btn">
+                Create Account
+            </button>
+    </form>
+
+    <p class="login-link">
+        Already have an account?
+        <a href="/">Login</a>
+    </p>
+
+</div>
+<script>
+
+window.addEventListener("DOMContentLoaded", () => {
+    const isCreateGroupMode =
+        sessionStorage.getItem("createGroupMode") === "true";
+
+    const isJoinGroupMode =
+        sessionStorage.getItem("joinGroupMode") === "true";
+
+    if (!isCreateGroupMode && !isJoinGroupMode) return;
+
+    const accountTypeSelect = document.getElementById("accountType");
+    const organizationFields = document.getElementById("organizationFields");
+    const organizationCodeGroup = document.getElementById("organizationCodeGroup");
+    const organizationCodeInput = document.getElementById("organizationCode");
+
+    accountTypeSelect.value = "organization";
+    accountTypeSelect.disabled = true;
+    organizationFields.style.display = "grid";
+
+    if (isCreateGroupMode) {
+        organizationCodeGroup.style.display = "none";
+        organizationCodeInput.required = false;
+        organizationCodeInput.value = "";
+    }
+
+    if (isJoinGroupMode) {
+        organizationCodeGroup.style.display = "block";
+        organizationCodeInput.required = true;
+    }
+window.groupRegistrationMode = isJoinGroupMode ? "join" : "create";
+
+    sessionStorage.removeItem("createGroupMode");
+    sessionStorage.removeItem("joinGroupMode");
+});
+const accountType = document.getElementById("accountType");
+const organizationFields = document.getElementById("organizationFields");
+const organizationCodeGroup = document.getElementById("organizationCodeGroup");
+const organizationCodeInput = document.getElementById("organizationCode");
+function updateRegistrationFields() {
+    const isOrganization =
+        accountType.value === "organization";
+
+    // Academic fields दोनों account types में दिखेंगे
+    organizationFields.style.display = "grid";
+
+    const enrollmentGroup =
+        document.getElementById("enrollment")?.closest(".form-group");
+
+    const branchCodeGroup =
+        document.getElementById("branchCode")?.closest(".form-group");
+
+    const admissionYearGroup =
+        document.getElementById("admissionYear")?.closest(".form-group");
+
+    // Individual में ये fields नहीं दिखेंगी
+    if (enrollmentGroup) {
+        enrollmentGroup.style.display =
+            isOrganization ? "" : "none";
+    }
+
+    if (branchCodeGroup) {
+        branchCodeGroup.style.display =
+            isOrganization ? "" : "none";
+    }
+
+    if (admissionYearGroup) {
+        admissionYearGroup.style.display =
+            isOrganization ? "" : "none";
+    }
+
+    // Organization code user से manually नहीं लेना
+    if (organizationCodeGroup) {
+        organizationCodeGroup.style.display = "none";
+    }
+
+    if (organizationCodeInput) {
+        organizationCodeInput.required = false;
+        organizationCodeInput.value = "";
+    }
+}
+
+accountType.addEventListener(
+    "change",
+    updateRegistrationFields
+);
+
+updateRegistrationFields();
+
+    const registerForm = document.getElementById("registerForm");
+const registerMessage = document.getElementById("registerMessage");
+
+registerForm.addEventListener("submit", async function (e) {
+    e.preventDefault();
+
+    const type = document.getElementById("accountType").value;
+
+    const data = {
+        name: document.getElementById("name").value.trim(),
+        email: document.getElementById("email").value.trim(),
+        password: document.getElementById("password").value,
+        mobile: document.getElementById("mobile").value.trim(),
+       organizationName: document.getElementById("organizationName").value.trim(),
+        dateOfBirth: document.getElementById("dateOfBirth").value,
+        gender: document.getElementById("gender")?.value || "",
+     profession: document.getElementById("profession")?.value || "individual",
+     
+
+        accountType: type,
+
+        enrollment: type === "organization"
+            ? document.getElementById("enrollment").value.trim()
+            : "",
+
+  branch: document.getElementById("branch")?.value.trim() || "",
+
+semester: document.getElementById("semester")?.value || "",
+
+        admissionYear: type === "organization"
+            ? document.getElementById("admissionYear").value
+            : "",
+
+   branchCode: type === "organization"
+    ? document.querySelectorAll('[id="branchCode"]')[document.querySelectorAll('[id="branchCode"]').length - 1]?.value.trim() || ""
+    : "",
+
+organizationCode: type === "organization"
+    ? document.querySelectorAll('[id="organizationCode"]')[document.querySelectorAll('[id="organizationCode"]').length - 1]?.value.trim() || ""
+    : ""
+    
+    };
+
+    registerMessage.textContent = "Creating account...";
+
+    try {
+        const submitUrl =
+    window.groupRegistrationMode === "join"
+        ? "/api/groups/join"
+        : "/register";
+        const response = await fetch(submitUrl, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(data)
+        });
+
+        const result = await response.json();
+if (!response.ok || !result.success) {
+    registerMessage.textContent =
+        result.message || "Registration failed. Please try again.";
+    return;
+}
+
+if (window.groupRegistrationMode === "join") {
+    registerMessage.textContent =
+        "Your join request has been submitted successfully. Please wait for approval from the Owner or Super Admin.";
+} else if (type === "individual") {
+    registerMessage.textContent =
+        "Your account has been created successfully. You can log in now.";
+} else {
+    registerMessage.textContent =
+        result.message || "Organization created successfully.";
+}
+
+    } catch (error) {
+        registerMessage.textContent =
+            "Unable to register. Please try again.";
+    }
+});
+
+</script>
+<script>
+function togglePasswordVisibility(inputId, button) {
+    const input = document.getElementById(inputId);
+    const icon = button.querySelector("i");
+
+    if (!input || !icon) return;
+
+    const isHidden = input.type === "password";
+
+    input.type = isHidden ? "text" : "password";
+const monkey = button.querySelector(".password-monkey");
+
+if (monkey) {
+    monkey.textContent = isHidden ? "🙊" : "🙈";
+}
+}
+</script>
+</body>
+</html>

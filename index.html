@@ -1,0 +1,3586 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Global study portal - adityachourasia - Working SPA</title>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <link rel = "stylesheet" href="style.css">
+    
+</head>
+<body>
+
+    <div class="container">
+        <nav class="sidebar">
+            <div class="logo">
+                <i class="fa-solid fa-graduation-cap"></i>
+                <h2>Global Study Portal</h2>
+            </div>
+            <ul>
+                <li id="menu-dashboard" class="active" onclick="switchSection('dashboard-tab', 'menu-dashboard')"><a><i class="fa-solid fa-chart-pie"></i> Dashboard</a></li>
+                <li id="menu-timetable" onclick="switchSection('timetable-tab', 'menu-timetable')"><a><i class="fa-solid fa-calendar-days"></i> Timetable</a></li>
+                <li id="menu-attendance" onclick="switchSection('attendance-tab', 'menu-attendance')"><a><i class="fa-solid fa-user-check"></i> Attendance</a></li>
+
+               <li id="menu-progress" onclick="switchSection('progress-tab', 'menu-progress')">
+    <a>
+        <i class="fa-solid fa-chart-line"></i> Progress Report
+    </a>
+</li>   <li id="menu-analysis" onclick="switchSection('analysis-tab', 'menu-analysis')">
+    <a>
+        <i class="fa-solid fa-chart-simple"></i> Study Analysis
+    </a>
+</li>
+<li id="menu-notices" onclick="switchSection('notices-tab', 'menu-notices')">
+    <a>
+        <i class="fa-solid fa-bullhorn"></i> Notice Board
+    </a>
+</li>
+<li id="menu-users"
+    onclick="switchSection('users-tab', 'menu-users')"
+   >
+    <a>
+        <i class="fa-solid fa-users-gear"></i> User Management
+    </a>
+</li>
+
+ 
+<li id="menu-settings" onclick="switchSection('settings-tab', 'menu-settings')"><a><i class="fa-solid fa-gear"></i> Settings</a></li>
+<li id="menu-about" onclick="switchSection('about-tab', 'menu-about')">
+    <a href="javascript:void(0)">
+        <i class="fa-solid fa-circle-info"></i>
+        About us
+    </a>
+</li>                     
+            </ul>
+           
+            
+            <div class="theme-toggle-container">
+                <span>Dark Mode</span>
+                <input type="checkbox" id="theme-toggle">
+            </div>
+        </nav>
+        <main class="main-content">
+
+<div id="dashboard-tab" class="tab-content active-tab">
+<header class="dashboard-header">
+    <div class="welcome-text">
+        <h1>Welcome Back, <span id="welcomeName">Aditya</span></h1>
+    <p id="welcomeOrganizationName">Organization Name</p>
+    </div>
+<div id="roleBadge" class="role-badge">
+    OWNER
+</div>
+    <button
+        type="button"
+        class="notification-bell-btn"
+        id="notificationBellBtn"
+        aria-label="Open notifications"
+    >
+        <i class="fa-solid fa-bell"></i>
+        <span class="notification-badge" id="notificationBadge">3</span>
+    </button>
+</header>
+<section class="notification-board" id="notificationBoard">
+    <div class="notification-board-header">
+        <div>
+            <h2>Notifications</h2>
+            <p>Manage and search all your updates</p>
+        </div>
+<button
+    type="button"
+    class="mark-all-read-btn"
+    id="markAllReadBtn"
+>
+    <i class="fa-solid fa-check-double"></i>
+    Mark all as read
+</button>
+
+<button
+    type="button"
+    class="notification-close-btn"
+    id="notificationCloseBtn"
+    aria-label="Close notifications"
+>
+    <i class="fa-solid fa-xmark"></i>
+</button>
+
+        <button
+            type="button"
+            class="notification-close-btn"
+            id="notificationCloseBtn"
+            aria-label="Close notifications"
+        >
+            <i class="fa-solid fa-xmark"></i>
+        </button>
+    </div>
+
+    <div class="notification-search-wrap">
+        <i class="fa-solid fa-magnifying-glass"></i>
+
+        <input
+            type="search"
+            id="notificationSearch"
+            placeholder="Search notifications..."
+        >
+    </div>
+
+    <div class="notification-filters">
+        <button type="button" class="notification-filter active">All</button>
+        <button type="button" class="notification-filter">Unread</button>
+        <button type="button" class="notification-filter">Requests</button>
+        <button type="button" class="notification-filter">System</button>
+        <button type="button" class="notification-filter">Security</button>
+    </div>
+<div class="notification-list" id="notificationList">
+   <div class="notification-item unread" data-category="request">
+    <div class="notification-icon">
+        <i class="fa-solid fa-user-plus"></i>
+    </div>
+
+    <div class="notification-content">
+        <h3>New Join Request</h3>
+        <p>Rahul Sharma wants to join your organization.</p>
+        <span>2 minutes ago</span>
+    </div>
+
+    <div class="notification-actions">
+        <button type="button">View</button>
+    </div>
+</div>
+
+<div class="notification-item unread" data-category="role">
+    <div class="notification-icon">
+        <i class="fa-solid fa-user-shield"></i>
+    </div>
+
+    <div class="notification-content">
+        <h3>Role Updated</h3>
+        <p>A user has been promoted to Admin.</p>
+        <span>15 minutes ago</span>
+    </div>
+</div>
+
+ <div class="notification-item unread" data-category="request">
+
+    <div class="notification-icon">
+        <i class="fa-solid fa-user-plus"></i>
+    </div>
+
+    <div class="notification-content">
+
+        <div class="notification-top-row">
+            <h3>New Join Request</h3>
+            <span class="notification-priority">Important</span>
+        </div>
+
+        <p>
+            <strong>Rahul Sharma</strong>
+            wants to join your organization.
+        </p>
+
+        <div class="notification-meta">
+            <span>
+                <i class="fa-solid fa-user"></i>
+                Requested by Rahul Sharma
+            </span>
+
+            <span>
+                <i class="fa-solid fa-building"></i>
+                Organization: GPC Dindori
+            </span>
+
+            <span>
+                <i class="fa-solid fa-code-branch"></i>
+                Branch: CSE
+            </span>
+
+            <span>
+                <i class="fa-regular fa-clock"></i>
+                29 Jul 2026, 11:42 AM
+            </span>
+        </div>
+    </div>
+
+    <div class="notification-actions">
+        <button type="button">View Request</button>
+    </div>
+
+</div>
+</div>
+
+</section>
+    <section class="dashboard-grid">
+
+        <div class="card profile-dashboard-card">
+            <div class="dashboard-profile">
+
+                <img id="dashboardProfileImage" src="" alt="Profile">
+
+                <div class="profile-info">
+                    <h2 id="dashboardName">Aditya sir</h2>
+                    <p id="dashboardBranch">Branch: Not Set</p>
+                    <p id="dashboardSemester">Semester: Not Set</p>
+                    <p id="dashboardEnrollment">Enrollment: Not Set</p>
+                    <p id="dashboardEmail">Email: Not Set</p>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>📊 Overall Attendance</h3>
+            <h1 id="dashboard-attendance">0%</h1>
+            <p>Updated from Attendance</p>
+        </div>
+
+        <div class="card">
+            <h3>📚 Today's Study</h3>
+            <h1 id="dashboard-study">0h 0m</h1>
+            <p>From Pomodoro Tracker</p>
+        </div>
+
+        <div class="card">
+            <h3>🎯 Daily Goal</h3>
+            <h1 id="dashboard-goal">0%</h1>
+            <p id="dashboard-goal-text">0h / 0h</p>
+        </div>
+
+        <div class="card">
+            <h3>🔥 Study Streak</h3>
+            <h1 id="dashboard-streak">0 Days</h1>
+            <p>Keep learning!</p>
+        </div>
+
+        <div class="card">
+            <h3>📢 Latest Notice</h3>
+            <div class="notice-item">
+              <p id="dashboardLatestNotice">No notices available</p>
+            </div>
+        </div>
+
+        <div class="card focus-card">
+
+            <div class="focus-header">
+                <div>
+                    <h3>🎯 Today's Focus</h3>
+                    <p>Plan your most important tasks for today</p>
+                </div>
+            </div>
+
+            <div class="focus-input-row">
+                <input
+                    type="text"
+                    id="focusTaskInput"
+                    placeholder="Add a new task..."
+                >
+
+                <button type="button" onclick="addFocusTask()">
+                    <i class="fa-solid fa-plus"></i>
+                    Add
+                </button>
+            </div>
+
+            <ul id="todayFocusList" class="focus-list"></ul>
+
+        </div>
+
+    </section>
+
+</div>
+
+<div id="timetable-tab" class="tab-content">
+
+    <div class="card">
+
+        <div class="timetable-header">
+            <div>
+                <h2>
+                    <i class="fa-solid fa-calendar-days"></i>
+                    Timetable Management
+                </h2>
+                <p>Manage weekly lectures and class schedule.</p>
+            </div>
+
+            <button
+                type="button"
+                id="addLectureBtn"
+                class="primary-btn"
+                onclick="showLectureForm()"
+            >
+                <i class="fa-solid fa-plus"></i>
+                Add Lecture
+            </button>
+        </div>
+
+        <div id="lectureForm" style="display:none;">
+
+            <h3>Add / Edit Lecture</h3>
+
+            <div class="form-row">
+
+                <div class="form-group">
+                    <label>Day</label>
+
+                    <select id="lectureDay">
+                        <option value="">Select Day</option>
+                        <option value="Monday">Monday</option>
+                        <option value="Tuesday">Tuesday</option>
+                        <option value="Wednesday">Wednesday</option>
+                        <option value="Thursday">Thursday</option>
+                        <option value="Friday">Friday</option>
+                        <option value="Saturday">Saturday</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Time</label>
+                    <input
+                        type="time"
+                        id="lectureTime"
+                    >
+                </div>
+
+            </div>
+
+            <div class="form-row">
+
+                <div class="form-group">
+                    <label>Subject</label>
+                    <input
+                        type="text"
+                        id="lectureSubject"
+                        placeholder="Example: Java Programming"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label>Faculty</label>
+                    <input
+                        type="text"
+                        id="lectureFaculty"
+                        placeholder="Faculty name"
+                    >
+                </div>
+
+            </div>
+
+            <div class="form-row">
+
+                <div class="form-group">
+                    <label>Room</label>
+                    <input
+                        type="text"
+                        id="lectureRoom"
+                        placeholder="Example: Lab 2 / Room 101"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label>Lecture Type</label>
+
+                    <select id="lectureType">
+                        <option value="Theory">Theory</option>
+                        <option value="Practical">Practical</option>
+                        <option value="Lab">Lab</option>
+                        <option value="Project">Project</option>
+                    </select>
+                </div>
+
+            </div>
+
+            <button
+                type="button"
+                class="primary-btn"
+                onclick="saveLecture()"
+            >
+                Save Lecture
+            </button>
+
+            <button
+                type="button"
+                onclick="hideLectureForm()"
+            >
+                Cancel
+            </button>
+
+        </div>
+
+        <hr>
+
+        <div class="table-responsive">
+
+            <table class="custom-table">
+
+                <thead>
+                    <tr>
+                        <th>Day</th>
+                        <th>Time</th>
+                        <th>Subject</th>
+                        <th>Faculty</th>
+                        <th>Room</th>
+                        <th>Type</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+
+                <tbody id="timetableBody">
+
+                    <tr>
+                        <td colspan="7">
+                            No lectures added yet.
+                        </td>
+                    </tr>
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
+
+<div id="attendance-tab" class="tab-content">
+
+    <div class="card">
+        <h3>Attendance Management</h3>
+
+        <div class="attendance-form">
+
+            <input type="text" id="subjectName" placeholder="Enter Subject Name">
+
+            <input type="number" id="totalClasses" placeholder="Total Classes">
+
+            <input type="number" id="attendedClasses" placeholder="Attended Classes">
+
+            <button onclick="addAttendance()">
+                Add Subject
+            </button>
+
+        </div>
+
+        <table class="custom-table">
+            <thead>
+                <tr>
+                    <th>Subject</th>
+                    <th>Total Classes</th>
+                    <th>Present</th>
+                    <th>Attendance %</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+
+            <tbody id="attendanceTable">
+            </tbody>
+        </table>
+
+    </div>
+
+</div>
+<div id="progress-tab" class="tab-content">
+
+    <section class="progress-dashboard">
+
+        <!-- Pomodoro -->
+       <!-- Pomodoro -->
+<div class="progress-card pomodoro-card">
+
+    <div class="progress-card-header">
+        <div>
+            <span class="progress-card-kicker">Focus Session</span>
+            <h3>🍅 Pomodoro Timer</h3>
+        </div>
+
+        <span class="pomodoro-status" id="pomodoroStatus">
+            Ready
+        </span>
+    </div>
+
+    <div class="pomodoro-mode-switch">
+        <button
+            type="button"
+            class="pomodoro-mode active"
+            onclick="setPomodoroMode(25, this)"
+        >
+            Focus
+        </button>
+
+        <button
+            type="button"
+            class="pomodoro-mode"
+            onclick="setPomodoroMode(5, this)"
+        >
+            Short Break
+        </button>
+
+        <button
+            type="button"
+            class="pomodoro-mode"
+            onclick="setPomodoroMode(15, this)"
+        >
+            Long Break
+        </button>
+    </div>
+
+    <div class="pomodoro-timer-area">
+
+        <div class="pomodoro-ring">
+            <svg viewBox="0 0 220 220">
+                <circle
+                    class="pomodoro-ring-track"
+                    cx="110"
+                    cy="110"
+                    r="96"
+                ></circle>
+
+                <circle
+                    class="pomodoro-ring-progress"
+                    id="pomodoroRing"
+                    cx="110"
+                    cy="110"
+                    r="96"
+                ></circle>
+            </svg>
+
+            <div class="pomodoro-ring-content">
+                <span class="pomodoro-session-label">
+                    Focus Time
+                </span>
+
+                <div class="timer-display" id="timer">
+                    25:00
+                </div>
+
+                <span class="pomodoro-session-count">
+                    Session 1 of 4
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="progress-control-group">
+        <label for="timerInput">
+            Custom Timer
+        </label>
+
+        <div class="progress-input-row">
+            <input
+                type="number"
+                id="timerInput"
+                value="25"
+                min="1"
+                max="180"
+                placeholder="Minutes"
+            >
+
+            <button
+                type="button"
+                class="pomodoro-set-button"
+                onclick="setTimer()"
+            >
+                Set Timer
+            </button>
+        </div>
+    </div>
+
+    <div class="progress-action-grid pomodoro-actions">
+
+        <button
+            type="button"
+            class="progress-action-button start-action"
+            onclick="startTimer()"
+        >
+            <span>▶</span>
+            Start
+        </button>
+
+        <button
+            type="button"
+            class="progress-action-button pause-action"
+            onclick="pauseTimer()"
+        >
+            <span>Ⅱ</span>
+            Pause
+        </button>
+
+        <button
+            type="button"
+            class="progress-action-button reset-action"
+            onclick="resetTimer()"
+        >
+            <span>↻</span>
+            Reset
+        </button>
+
+    </div>
+
+    <div class="pomodoro-session-dots">
+        <span class="completed"></span>
+        <span></span>
+        <span></span>
+        <span></span>
+    </div>
+
+</div>
+
+
+        <!-- Stopwatch -->
+        <div class="progress-card stopwatch-card">
+
+            <div class="progress-card-header">
+                <div>
+                    <span class="progress-card-kicker">Time Tracking</span>
+                    <h3>⏱ Stopwatch</h3>
+                </div>
+            </div>
+
+            <div class="timer-display stopwatch-display" id="stopwatch">
+                00:00:00
+            </div>
+
+            <div class="progress-action-grid stopwatch-actions">
+                <button type="button" onclick="startStopwatch()">Start</button>
+                <button type="button" onclick="stopStopwatch()">Stop</button>
+                <button type="button" onclick="resetStopwatch()">Reset</button>
+            </div>
+
+        </div>
+
+
+        <!-- Daily Goal -->
+        <div class="progress-card goal-card">
+
+            <div class="progress-card-header">
+                <div>
+                    <span class="progress-card-kicker">Daily Target</span>
+                    <h3>🎯 Daily Goal Tracker</h3>
+                </div>
+            </div>
+
+            <div class="goal-layout">
+
+                <div class="goal-settings">
+                    <label for="goalInput">Set Daily Goal (Hours)</label>
+
+                    <div class="progress-input-row">
+                        <input
+                            type="number"
+                            id="goalInput"
+                            value="6"
+                            min="1"
+                            max="24"
+                        >
+
+                        <button type="button" onclick="saveGoal()">
+                            Save Goal
+                        </button>
+                    </div>
+                </div>
+
+                <div class="goal-summary">
+                    <h2 id="goal-hours">
+                        Completed : 0h 0m / 6h
+                    </h2>
+
+                    <div class="progress-container">
+                        <div
+                            class="progress-bar"
+                            id="goal-progress">
+                        </div>
+                    </div>
+
+                    <div class="goal-percent-row">
+                        <span>Today's Progress</span>
+                        <strong id="goal-percent">0%</strong>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+</div>
+
+<div id="analysis-tab" class="tab-content">
+
+    <section class="dashboard-grid">
+
+        <div class="card">
+            <h3>📚 Total Study Time</h3>
+            <h1 id="total-study">0h 0m</h1>
+        </div>
+
+        <div class="card">
+            <h3>🔥 Study Streak</h3>
+            <h1 id="streak">1 Day</h1>
+        </div>
+
+        <div class="card">
+            <h3>🎯 Productivity Score</h3>
+            <h1 id="productivity">0%</h1>
+        </div>
+        <div class="card">
+
+    <h3>📊 Weekly Study Report</h3>
+
+    <div id="weeklyChart" class="weekly-chart">
+
+    </div>
+
+</div>
+
+    </section>
+
+</div>
+ <div id="notices-tab" class="tab-content">
+
+    <div class="card">
+
+        <h2>📢 Notice Board</h2>
+   
+<div id="noticeAdminControls" style="display: none;">
+    <input type="text" id="noticeTitle" placeholder="Notice title">
+    <textarea id="noticeMessage" placeholder="Write notice"></textarea>
+    <button type="button" id="addNoticeBtn">Add Notice</button>
+</div>
+
+<div class="notice-search">
+
+    <input
+        type="text"
+        id="noticeSearch"
+        placeholder="Search notices..."
+        onkeyup="searchNotice()"
+    >
+
+</div>
+<div id="noticeList">
+        <div class="notice-item">
+            <h4>Mid Semester Examination</h4>
+            <p>Mid Semester exams will start from 25 July 2026.</p>
+            <small>Posted: Today</small>
+        </div>
+
+        <div class="notice-item">
+            <h4>Holiday Notice</h4>
+            <p>College will remain closed on Sunday.</p>
+            <small>Posted: Yesterday</small>
+        </div>
+
+        <div class="notice-item">
+            <h4>Library Notice</h4>
+            <p>Please return all library books before the due date.</p>
+            <small>Posted: 2 Days Ago</small>
+        </div>
+
+        </div>
+    </div>
+
+</div>
+
+<div id="users-tab" class="tab-content">
+
+    <div class="card">
+        <h2>
+            <i class="fa-solid fa-users-gear"></i>
+            User Management
+        </h2>
+
+        <p>Create and manage PolyPortal accounts.</p>
+
+        <div class="form-group">
+            <label>Full Name</label>
+            <input
+                type="text"
+                id="newUserName"
+                placeholder="Enter full name"
+            >
+        </div>
+
+        <div class="form-group">
+            <label>Email Address</label>
+            <input
+                type="email"
+                id="newUserEmail"
+                placeholder="Enter email address"
+            >
+        </div>
+
+        <div class="form-group">
+            <label>Password</label>
+   <div class="password-wrapper">
+    <input
+        type="password"
+        id="newUserPassword"
+        placeholder="Minimum 6 characters"
+    >
+
+    <button
+        type="button"
+        class="password-toggle"
+        onclick="togglePasswordVisibility('newUserPassword', this)"
+        aria-label="Show password"
+    >
+        <i class="fa-solid fa-eye"></i>
+    </button>
+</div>
+        </div>
+<div id="studentFields">
+
+    <div class="form-group">
+        <label>Mobile Number</label>
+        <input
+            type="tel"
+            id="newUserMobile"
+            placeholder="Enter mobile number"
+        >
+    </div>
+
+    <div class="form-group">
+        <label>Enrollment Number</label>
+        <input
+            type="text"
+            id="newUserEnrollment"
+            placeholder="Enter enrollment number"
+        >
+    </div>
+
+    <div class="form-group">
+        <label>Branch</label>
+        <input
+            type="text"
+            id="newUserBranch"
+            placeholder="Example: CSE"
+        >
+    </div>
+
+    <div class="form-group">
+        <label>Semester</label>
+        <input
+            type="number"
+            id="newUserSemester"
+            min="1"
+            max="6"
+            placeholder="Enter semester"
+        >
+    </div>
+
+    <div class="form-group">
+        <label>Admission Year</label>
+        <input
+            type="number"
+            id="newUserAdmissionYear"
+            min="2000"
+            max="2100"
+            placeholder="Example: 2026"
+        >
+    </div>
+<div class="form-group">
+    <label>Organization Code</label>
+    <input
+        type="text"
+        id="newUserOrganizationCode"
+        placeholder="Enter organization code"
+    >
+</div>
+
+</div>
+        <div class="form-group">
+            <label>Account Role</label>
+
+<select id="newUserRole" onchange="toggleStudentFields()">
+    <option value="user">User / Student</option>
+    <option value="admin">Administrator</option>
+    <option value="super_admin">Super Admin</option>
+</select>
+
+        </div>
+
+        <button
+            type="button"
+            id="createUserBtn"
+            class="primary-btn"
+        >
+            <i class="fa-solid fa-user-plus"></i>
+            Create Account
+        </button>
+
+        <p id="createUserMessage"></p>
+<hr>
+
+<h3>
+    <i class="fa-solid fa-users"></i>
+    Registered Users
+</h3>
+<div class="user-search-box">
+    <input
+        type="text"
+        id="userSearchInput"
+        placeholder="Search by name, email, enrollment, role..."
+        oninput="filterUsersTable()"
+    >
+</div>
+
+
+
+<div 
+class="table-responsive">
+    <table class="custom-table">
+        <thead>
+
+            <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Branch</th>
+                <th>Semester</th>
+                <th>Enrollment</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+
+       <tbody id="usersTableBody">
+    <tr>
+        <td colspan="7">Loading users...</td>
+    </tr>
+</tbody>
+    </table>
+<button type="button" id="showAllUsersBtn" class="primary-btn">
+  See All Users
+</button>
+
+</div>
+
+    </div>
+
+</div>
+<div id="userManagerModal" class="user-manager-modal" style="display:none;">
+
+    <div class="user-manager-box">
+
+        <div class="user-manager-header">
+            <h2>
+                <i class="fa-solid fa-user-gear"></i>
+                Manage User
+            </h2>
+
+            <button type="button" onclick="closeUserManager()">
+                ✕
+            </button>
+        </div>
+
+        <div id="managedUserInfo"></div>
+
+        <div class="user-manager-actions">
+     <button type="button" id="approveManagedUserBtn" onclick="approveCurrentManagedUser()">
+    ✓ Approve Account
+</button>
+<button type="button" id="permissionsManagedUserBtn" onclick="openCurrentManagedUserPermissions()">
+    🔐 Manage Permissions
+</button>
+            <button type="button" onclick="promoteManagedUser()">
+                ⬆ Promote
+            </button>
+
+
+            <button type="button" onclick="demoteManagedUser()">
+                ⬇ Demote
+            </button>
+
+            <button type="button" onclick="changeManagedUserPassword()">
+                🔑 Change Password
+            </button>
+
+            <button type="button" onclick="editManagedUser()">
+                ✏ Edit Profile
+            </button>
+<button type="button" onclick="deleteManagedUser(managedUserId)">
+    🗑 Remove Account
+</button>
+
+        </div>
+
+    </div>
+
+</div>
+
+<div id="settings-tab" class="tab-content">
+<div class="card settings-card">
+
+    <h3><i class="fa-solid fa-user"></i> Profile</h3>
+
+    <div class="profile-section">
+
+        <img id="profileImagePreview" src="" alt="Profile">
+
+        <br><br>
+
+       <input
+    type="file"
+    id="profileImageInput"
+    accept="image/*"
+    hidden
+>
+
+<label for="profileImageInput" class="upload-btn">
+    <i class="fa-solid fa-camera"></i> Change  your Photo
+</label>
+
+    </div>
+
+</div>
+<div class="card settings-card">
+
+
+    <div class="form-row">
+
+        <div class="form-group">
+            <label for="enrollmentNumber">Enrollment Number</label>
+            <input
+                type="text"
+                id="enrollmentNumber"
+                placeholder="Enter enrollment number"
+            >
+        </div>
+
+        <div class="form-group">
+            <label for="semester">Semester</label>
+            <input
+                type="number"
+                id="semester"
+                placeholder="Semester"
+                min="1"
+                max="6"
+            >
+        </div>
+
+    </div>
+
+    <div class="form-row">
+
+        <div class="form-group">
+            <label for="branch">Branch</label>
+            <input
+                type="text"
+                id="branch"
+                placeholder="Enter branch"
+            >
+        </div>
+
+        <div class="form-group">
+            <label for="mobileNumber">Mobile Number</label>
+            <input
+                type="tel"
+                id="mobileNumber"
+                placeholder="Enter mobile number"
+            >
+        </div>
+
+    </div>
+
+    <div class="form-group">
+        <label for="studentEmail">Email</label>
+        <input
+            type="email"
+            id="studentEmail"
+            placeholder="Enter email"
+        >
+    </div>
+
+    <button class="primary-btn" onclick="saveStudentProfile()">
+        Save Profile
+    </button>
+
+</div>
+<div class="card settings-card"
+    id = "studentDetailsCard">
+    <h3>
+        <i class="fa-solid fa-palette"></i>
+        Appearance
+    </h3>
+    <div class="appearance-panel">
+
+    <div class="appearance-info">
+        <div class="appearance-icon">
+            <i class="fa-solid fa-wand-magic-sparkles"></i>
+        </div>
+
+        <div>
+            <h4>Role-Based Theme</h4>
+            <p>Your dashboard theme is automatically selected according to your account role.</p>
+        </div>
+
+        <span class="theme-status">Active</span>
+    </div>
+
+    <div class="theme-preview">
+        <span></span>
+        <span></span>
+        <span></span>
+
+        <div>
+            <strong>Current Theme</strong>
+            <small>Optimized for your account</small>
+        </div>
+    </div>
+
+</div>
+
+</div>
+<div class="form-group appearance-color-group">
+    <label for="theme-color-picker">Custom Theme Color</label>
+
+    <div class="theme-color-controls">
+        <input
+            type="color"
+            id="theme-color-picker"
+            value="#2563eb"
+            aria-label="Choose theme color"
+        >
+
+        <input
+            type="range"
+            id="theme-opacity"
+            min="0"
+            max="100"
+            value="100"
+            aria-label="Theme transparency"
+        >
+
+        <span id="theme-opacity-value">100%</span>
+
+        <button type="button" id="save-theme-color">
+            Save Theme
+        </button>
+
+        <button type="button" id="reset-theme-color">
+            Reset
+        </button>
+    </div>
+</div>
+
+
+<div class="card settings-card" 
+    <h3>
+        <i class="fa-solid fa-shield-halved"></i>
+        Account
+    </h3>
+
+    <button id="changePasswordBtn" class="primary-btn">
+        <i class="fa-solid fa-key"></i>
+        Change Password
+    </button>
+
+    <div id="passwordSection" style="display:none;">
+
+        <div class="form-group">
+            <label>Current Password</label>
+            <input
+                type="password"
+                id="currentPassword"
+                placeholder="Current Password"
+            >
+        </div>
+
+        <div class="form-group">
+            <label>New Password</label>
+            <input
+                type="password"
+                id="newPassword"
+                placeholder="New Password"
+            >
+        </div>
+
+        <div class="form-group">
+            <label>Confirm Password</label>
+            <input
+                type="password"
+                id="confirmPassword"
+                placeholder="Confirm New Password"
+            >
+        </div>
+
+        <button onclick="changePassword()" class="primary-btn">
+            Save Password
+        </button>
+
+    </div>
+</div>
+   <button id="logoutBtn" class="danger-btn">
+        <i class="fa-solid fa-right-from-bracket"></i>
+        Logout
+    </button>
+   </div>
+<div id="about-tab" class="tab-content">
+    <section class="about-page">
+
+        <div class="about-hero">
+            <div class="about-hero-icon">
+                <i class="fa-solid fa-graduation-cap"></i>
+            </div>
+
+            <div class="about-hero-content">
+                <span class="about-label">ABOUT THE PLATFORM</span>
+
+                <h2>Smarter College Management, Simplified</h2>
+
+                <p>
+                    A unified digital platform designed to help students,
+                    administrators and institutions manage academics,
+                    attendance, progress, notices and daily productivity.
+                </p>
+            </div>
+
+            <span class="about-version">Version 1.0</span>
+             <button
+    type="button"
+    id="editAboutBtn"
+    class="edit-about-btn"
+    onclick="openAboutEditor()"
+>
+    <i class="fa-solid fa-pen-to-square"></i>
+    Edit About
+</button>   
+        </div>
+
+        <div class="about-grid">
+
+            <article class="about-card">
+                <div class="about-card-icon">
+                    <i class="fa-solid fa-bullseye"></i>
+                </div>
+
+                <h3>Our Purpose</h3>
+
+                <p>
+                    To provide a simple, responsive and reliable platform
+                    that improves communication, academic tracking and
+                    institutional management.
+                </p>
+            </article>
+
+            <article class="about-card">
+                <div class="about-card-icon">
+                    <i class="fa-solid fa-layer-group"></i>
+                </div>
+
+                <h3>Core Features</h3>
+
+                <p>
+                    Attendance, timetable, progress reports, study analysis,
+                    notice management, role-based accounts and organization
+                    management in one secure portal.
+                </p>
+            </article>
+
+ <article class="about-card founder-card">
+    <div class="about-card-icon">
+        <i class="fa-solid fa-user-astronaut"></i>
+    </div>
+
+    <h3>About Owner</h3>
+
+    <p class="founder-name">
+        Respected Aditya 
+    </p>
+
+    <p>
+        I am Aditya Chaurasiya, a student developer and founder
+        driven by the belief that technology should solve real
+        problems and create meaningful impact. After completing
+        my Polytechnic in Computer Science, I am now preparing
+        to continue my journey in B.Tech with a focus on AI/ML.
+        I am passionate about building practical digital
+        platforms, learning through real projects, and turning
+        ideas into useful solutions that can make education and
+        student management smarter, simpler, and more accessible.
+    </p>
+</article>
+<article class="about-card project-journey-card">
+    <div class="about-card-icon">
+        <i class="fa-solid fa-road"></i>
+    </div>
+
+    <h3>Project Journey</h3>
+
+    <div class="journey-entry">
+        <div class="journey-entry-header">
+            <h4>The Beginning of PolyPortal</h4>
+            <span class="journey-status">In Progress</span>
+        </div>
+
+        <p class="journey-duration">
+            Around 35–40 days of continuous development
+        </p>
+
+        <p>
+            PolyPortal began with a simple but meaningful idea:
+            to build a digital platform that could make academic
+            and institutional management easier, smarter, and
+            more organized.
+        </p>
+
+        <p>
+            The initial vision was to bring essential features
+            such as dashboards, attendance tracking, timetable
+            management, progress reports, notices, user
+            management, and personalized student tools into one
+            connected system.
+        </p>
+
+        <p>
+            Over the past 35–40 days, the project has been
+            developed through consistent effort, often involving
+            nearly eight hours of coding each day.
+        </p>
+
+        <p>
+            A major part of this journey has gone into debugging,
+            testing, restructuring features, fixing interface
+            issues, handling database problems, improving
+            role-based access, and making sure different users
+            receive the correct experience.
+        </p>
+
+        <p>
+            More than half of the development time was spent
+            identifying problems, fixing broken logic, and
+            improving features that did not work correctly on
+            the first attempt.
+        </p>
+
+        <p>
+            Despite these challenges, every issue became part of
+            the learning process. PolyPortal has gradually grown
+            from a basic idea into a working educational
+            management platform, and the project continues to
+            improve with every feature, fix, and real-world test.
+        </p>
+    </div>
+</article>
+        </div>
+
+        <div class="about-footer">
+            <span>
+                <i class="fa-solid fa-shield-halved"></i>
+                Secure role-based platform
+            </span>
+
+            <span>
+                <i class="fa-solid fa-mobile-screen-button"></i>
+                Built for every screen
+            </span>
+        </div>
+<!-- ================= CONTACT US SECTION ================= -->
+<div class="about-contact-section">
+
+    <div class="about-contact-heading">
+        <span class="about-contact-label">CONTACT & SOCIALS</span>
+        <h2>Connect With the Founder</h2>
+        <p>
+            For platform support, feedback, collaboration or professional
+            communication, connect through the options below.
+        </p>
+    </div>
+
+    <div class="about-contact-grid">
+
+        <a
+            href="tel:+919243645322"
+            class="about-contact-card"
+            aria-label="Call primary phone number"
+        >
+            <div class="about-contact-icon">
+                <i class="fa-solid fa-phone"></i>
+            </div>
+
+            <div class="about-contact-details">
+                <span>Primary Contact</span>
+                <strong>+91 92436 45322</strong>
+            </div>
+        </a>
+
+        <a
+            href="tel:+917509808031"
+            class="about-contact-card"
+            aria-label="Call alternate phone number"
+        >
+            <div class="about-contact-icon">
+                <i class="fa-solid fa-phone-volume"></i>
+            </div>
+
+            <div class="about-contact-details">
+                <span>Alternate Contact</span>
+                <strong>+91 75098 08031</strong>
+            </div>
+        </a>
+
+        <a
+            href="https://wa.me/919243645322"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="about-contact-card"
+            aria-label="Contact on WhatsApp"
+        >
+            <div class="about-contact-icon">
+                <i class="fa-brands fa-whatsapp"></i>
+            </div>
+
+            <div class="about-contact-details">
+                <span>WhatsApp</span>
+                <strong>Start a Conversation</strong>
+            </div>
+        </a>
+
+        <a
+            href="https://www.linkedin.com/in/aditya-chourasia-920a03353"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="about-contact-card"
+            aria-label="Open LinkedIn profile"
+        >
+            <div class="about-contact-icon">
+                <i class="fa-brands fa-linkedin-in"></i>
+            </div>
+
+            <div class="about-contact-details">
+                <span>Professional Profile</span>
+                <strong>LinkedIn</strong>
+            </div>
+        </a>
+
+        <a
+            href="https://www.instagram.com/arjittt_1985/"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="about-contact-card about-contact-card-wide"
+            aria-label="Open Instagram profile"
+        >
+            <div class="about-contact-icon">
+                <i class="fa-brands fa-instagram"></i>
+            </div>
+
+            <div class="about-contact-details">
+                <span>Social Profile</span>
+                <strong>Instagram — @arjittt_1985</strong>
+            </div>
+        </a>
+
+    </div>
+
+    <p class="about-contact-note">
+        Contact details are provided for genuine platform-related enquiries,
+        feedback and professional collaboration.
+    </p>
+
+</div>
+<!-- ================= CONTACT US SECTION END ================= -->
+
+    </section>
+</div>
+
+<!-- Account Management - Owner/Admin Only -->
+<div id="accountManagementCard" class="account-management-card">
+
+    <div class="account-management-header">
+        <div>
+            <h3>
+                <i class="fa-solid fa-users-gear"></i>
+                Account Management
+            </h3>
+
+            <p>Manage registered users and administrators.</p>
+        </div>
+    </div>
+
+    <div class="account-table-wrapper">
+
+        <table id="manageUsersTable" class="account-table">
+
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Role</th>
+               <!-- <th>Status</th> -->
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="managedUsersBody">
+                <!-- Users will load here -->
+            </tbody>
+        </table>
+        <button type="button" id="showAllManagedUsersBtn" class="primary-btn">
+  See All Users
+</button>
+   <button id="logoutBtn" class="danger-btn">
+        <i class="fa-solid fa-right-from-bracket"></i>
+        Logout
+    </button>
+    </div>
+</div>
+ 
+
+</div>
+
+
+</div>
+</div>
+
+
+        </main>
+    </div>
+<script>
+
+async function loadNotices() {
+    try {
+        const response = await fetch("/api/notices");
+        const data = await response.json();
+
+        if (data.success) {
+            const noticeList = document.getElementById("noticeList");
+            noticeList.innerHTML = "";
+            const dashboardLatestNotice = document.getElementById("dashboardLatestNotice");
+
+if (dashboardLatestNotice) {
+    if (data.notices && data.notices.length > 0) {
+        const latestNotice = data.notices[0];
+        dashboardLatestNotice.textContent =
+            latestNotice.title || latestNotice.message || "No notices available";
+    } else {
+        dashboardLatestNotice.textContent = "No notices available";
+    }
+}
+            data.notices.forEach(notice => {
+                noticeList.innerHTML += `
+                 <div class="notice-item">
+    <h4>${notice.title}</h4>
+    <p>${notice.message}</p>
+
+    <div class="notice-actions">
+        <button onclick="editNotice(${notice.id}, '${notice.title}', '${notice.message}')">
+            Edit
+        </button>
+
+        <button onclick="deleteNotice(${notice.id})">
+            Delete
+        </button>
+    </div>
+</div>
+                `;
+                loadTimetable();
+            });
+        }
+    } catch (error) {
+        console.error("Notice load error:", error);
+    }
+}
+
+
+loadNotices();
+async function deleteNotice(id) {
+    if (!confirm("Delete this notice?")) return;
+
+    const response = await fetch(`/api/notices/${id}`, {
+        method: "DELETE"
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+        loadNotices();
+    } else {
+        alert(data.error || "Failed to delete notice");
+    }
+}
+
+async function editNotice(id, title, message) {
+    const newTitle = prompt("Edit Title", title);
+    if (newTitle === null) return;
+
+    const newMessage = prompt("Edit Message", message);
+    if (newMessage === null) return;
+
+    const response = await fetch(`/api/notices/${id}`, {
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            title: newTitle,
+            message: newMessage
+        })
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+        loadNotices();
+    } else {
+        alert(data.error || "Failed to update notice");
+    }
+}
+function applyRoleTheme(data) {
+    const body = document.body;
+
+    // Remove any previous role theme
+    body.classList.remove(
+        "theme-owner",
+        "theme-super-admin",
+        "theme-admin",
+        "theme-user",
+        "theme-individual"
+    );
+if (data.role === "owner") {
+    body.classList.add("theme-owner");
+    return;
+}
+    // Individual account
+
+
+    // Organization accounts
+    switch (data.role) {
+        case "owner":
+            body.classList.add("theme-owner");
+            break;
+
+        case "super_admin":
+            body.classList.add("theme-super-admin");
+            break;
+
+        case "admin":
+            body.classList.add("theme-admin");
+            break;
+
+        default:
+            body.classList.add("theme-user");
+    }
+}
+
+async function loadCurrentUser() {
+    try {
+        const response = await fetch("/api/me");
+        const data = await response.json();
+
+        if (data.success) {
+            document.body.setAttribute("data-role", data.role);
+            applyRoleTheme(data);
+            const aboutOwnerControls = document.getElementById("aboutOwnerControls");
+
+if (aboutOwnerControls) {
+    aboutOwnerControls.style.display =
+        data.role === "owner" ? "block" : "none";
+}
+
+            const welcomeName = document.getElementById("welcomeName");
+const dashboardName = document.getElementById("dashboardName");
+const dashboardBranch = document.getElementById("dashboardBranch");
+const dashboardSemester = document.getElementById("dashboardSemester");
+const dashboardEnrollment = document.getElementById("dashboardEnrollment");
+const dashboardEmail = document.getElementById("dashboardEmail");
+
+if (welcomeName) {
+    welcomeName.textContent = data.name || "Student";
+}
+
+if (dashboardName) {
+    dashboardName.textContent = data.name || "Student";
+}
+
+if (dashboardBranch) {
+    dashboardBranch.textContent =
+        "Branch: " + (data.branch || "Not Set");
+}
+
+if (dashboardSemester) {
+    dashboardSemester.textContent =
+        "Semester: " + (data.semester || "Not Set");
+}
+
+if (dashboardEnrollment) {
+    dashboardEnrollment.textContent =
+        "Enrollment: " + (data.enrollment || "Not Set");
+}
+
+if (dashboardEmail) {
+    dashboardEmail.textContent =
+        "Email: " + (data.email || "Not Set");
+}
+            const userMenu = document.getElementById("menu-users");
+const adminRoleOption = document.getElementById("adminRoleOption");
+
+if (userMenu && (data.role === "owner" || data.role === "admin")) {
+    userMenu.style.display = "block";
+}
+if (
+    (data.role === "admin" || data.role === "super_admin")
+    && adminRoleOption
+) {
+
+    adminRoleOption.style.display = "none";
+}
+            const controls = document.getElementById("noticeAdminControls");
+
+if (
+    controls &&
+    (
+        data.role === "owner" ||
+        data.role === "super_admin" ||
+        data.role === "admin"
+    )
+){
+    controls.style.display = "block";
+}
+            console.log("Logged in role:", data.role);
+       console.log("Logged in role:", data.role);
+
+    if (data.role === "owner" || data.role === "super_admin" || data.role === "admin") {
+       loadUsers();
+}
+}
+
+    } catch (error) {
+        console.error("Role load error:", error);
+    }
+}
+
+loadNotices();
+loadCurrentUser();
+document.getElementById("addNoticeBtn").addEventListener("click", async () => {
+    const title = document.getElementById("noticeTitle").value.trim();
+    const message = document.getElementById("noticeMessage").value.trim();
+
+    if (!title || !message) {
+        alert("Title and message required");
+        return;
+    }
+
+    try {
+        const response = await fetch("/api/notices", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ title, message })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            alert("Notice added successfully");
+            document.getElementById("noticeTitle").value = "";
+            document.getElementById("noticeMessage").value = "";
+              loadNotices();
+        } else {
+            alert(data.message);
+        }
+    } catch (error) {
+        alert("Could not add notice");
+    }
+});
+const createUserBtn = document.getElementById("createUserBtn");
+
+if (createUserBtn) {
+    createUserBtn.addEventListener("click", async () => {
+        const name = document.getElementById("newUserName").value.trim();
+        const email = document.getElementById("newUserEmail").value.trim();
+        const password = document.getElementById("newUserPassword").value.trim();
+        const role = document.getElementById("newUserRole").value;
+        const messageBox = document.getElementById("createUserMessage");
+        const mobile = document.getElementById("newUserMobile")?.value.trim() || "";
+        const enrollment = document.getElementById("newUserEnrollment")?.value.trim() || "";
+        const branch = document.getElementById("newUserBranch")?.value.trim() || "";
+        const semester = document.getElementById("newUserSemester")?.value || "";
+        const admission_year = document.getElementById("newUserAdmissionYear")?.value || "";
+        const organization_code = document.getElementById("newUserOrganizationCode")?.value.trim() || "";
+
+        messageBox.textContent = "";
+
+        if (!name || !email || !password || !role) {
+            messageBox.textContent = "Please fill all fields.";
+            return;
+        }
+
+        try {
+            const response = await fetch("/api/users", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+             body: JSON.stringify({
+    name,
+    email,
+    password,
+    role,
+    mobile,
+    enrollment,
+    branch,
+    semester,
+    admission_year,
+    organization_code: document.getElementById("newUserOrganizationCode")?.value.trim() || ""
+})
+            });
+
+            const data = await response.json();
+
+            messageBox.textContent = data.message;
+
+            if (data.success) {
+                document.getElementById("newUserName").value = "";
+                document.getElementById("newUserEmail").value = "";
+                document.getElementById("newUserPassword").value = "";
+                document.getElementById("newUserRole").value = "user";
+                document.getElementById("newUserMobile").value = "";
+                document.getElementById("newUserEnrollment").value = "";
+                document.getElementById("newUserBranch").value = "";
+                document.getElementById("newUserSemester").value = "";
+                document.getElementById("newUserAdmissionYear").value = "";
+
+                toggleStudentFields();
+            }
+
+        } catch (error) {
+            messageBox.textContent = "Could not create account.";
+        }
+    });
+}
+function toggleStudentFields() {
+    const roleSelect = document.getElementById("newUserRole");
+    const studentFields = document.getElementById("studentFields");
+
+    if (!roleSelect || !studentFields) return;
+
+    if (roleSelect.value === "user") {
+        studentFields.style.display = "block";
+    } else {
+        studentFields.style.display = "none";
+    }
+}
+
+toggleStudentFields();
+let registeredUsers = [];
+
+async function loadUsers() {
+    const tableBody = document.getElementById("usersTableBody");
+
+    if (!tableBody) return;
+
+    try {
+        const response = await fetch("/api/users");
+        const data = await response.json();
+
+        if (!data.success) {
+            tableBody.innerHTML = `
+                <tr>
+                    <td colspan="7">${data.message || "Could not load users"}</td>
+                </tr>
+            `;
+            return;
+        }
+        registeredUsers = data.users;
+       const visibleUsers = registeredUsers.slice(0, 5);
+        tableBody.innerHTML = "";
+
+   visibleUsers.forEach(user => {
+            tableBody.innerHTML += `
+                <tr>
+                    <td>${user.name || "-"}</td>
+                    <td>${user.email || "-"}</td>
+                    <td>${user.role || "-"}</td>
+                    <td>${user.branch || "-"}</td>
+                    <td>${user.semester || "-"}</td>
+                    <td>${user.enrollment || "-"}</td>
+               <td>
+    <button
+        type="button"
+        class="primary-btn"
+        onclick="openUserManager(${user.id})"
+    >
+        Manage
+    </button>
+</td>
+
+                </tr>
+            `;
+          });
+
+        if (data.users.length === 0) {
+            tableBody.innerHTML = `
+                <tr>
+                    <td colspan="7">No registered users found.</td>
+                </tr>
+            `;
+        }
+
+    } catch (error) {
+        console.error("Users load error:", error);
+
+        tableBody.innerHTML = `
+            <tr>
+                <td colspan="7">Could not load users.</td>
+            </tr>
+        `;
+    }
+}
+
+
+const showAllUsersBtn = document.getElementById("showAllUsersBtn");
+
+if (showAllUsersBtn) {
+  showAllUsersBtn.addEventListener("click", () => {
+    const tableBody = document.getElementById("usersTableBody");
+
+    tableBody.innerHTML = "";
+
+    registeredUsers.forEach(user => {
+      tableBody.innerHTML += `
+        <tr>
+          <td>${user.name || "-"}</td>
+          <td>${user.email || "-"}</td>
+          <td>${user.role || "-"}</td>
+          <td>${user.branch || "-"}</td>
+          <td>${user.semester || "-"}</td>
+          <td>${user.enrollment || "-"}</td>
+          <td>
+            <button
+              type="button"
+              class="primary-btn"
+              onclick="openUserManager(${user.id})"
+            >
+              Manage
+            </button>
+          </td>
+        </tr>
+      `;
+    });
+
+    showAllUsersBtn.style.display = "none";
+  });
+}
+let managedUserId = null;
+let managedUserRole = null;
+function openUserManager(userId) {
+    // alert("NEW MANAGE FUNCTION RUNNING: " + userId);
+    const user = registeredUsers.find(
+        item => Number(item.id) === Number(userId)
+    );
+
+    if (!user) {
+        alert("User not found");
+        return;
+    }
+
+    managedUserId = userId;
+    managedUserRole = user.role;
+    const info = document.getElementById("managedUserInfo");
+
+    info.innerHTML = `
+        <p><strong>Name:</strong> ${user.name || "-"}</p>
+        <p><strong>Email:</strong> ${user.email || "-"}</p>
+        <p><strong>Role:</strong> ${user.role || "-"}</p>
+        <p><strong>Branch:</strong> ${user.branch || "-"}</p>
+        <p><strong>Semester:</strong> ${user.semester || "-"}</p>
+        <p><strong>Enrollment:</strong> ${user.enrollment || "-"}</p>
+    `;
+
+    document.getElementById("userManagerModal").style.display = "flex";
+}
+async function approveCurrentManagedUser() {
+    if (!managedUserId) {
+        alert("No user selected.");
+        return;
+    }
+
+    try {
+     const response = await fetch(`/api/users/${managedUserId}/approve`, {
+            method: "PATCH",
+            headers: {
+                "Content-Type": "application/json"
+            }
+        });
+        // const data = await response.json();
+        const responseText = await response.text();
+console.log("Approve response:", response.status, responseText);
+
+const data = responseText
+    ? JSON.parse(responseText)
+    : { success: false, message: `Server returned ${response.status}` };
+
+
+        if (!response.ok || !data.success) {
+            alert(data.message || "Could not approve user.");
+            return;
+        }
+
+        alert("User approved successfully!");
+
+        closeUserManager();
+
+        // Refresh User Management list
+        if (typeof loadUsers === "function") {
+            await loadUsers();
+        }
+
+        // Refresh Settings > Account Management too
+        if (typeof loadManagedUsers === "function") {
+            await loadManagedUsers();
+        }
+
+    } catch (error) {
+        console.error("Approve user error:", error);
+        alert("Could not approve user.");
+    }
+}
+function openCurrentManagedUserPermissions() {
+    if (!managedUserId) {
+        alert("No user selected.");
+        return;
+    }
+
+    const userName =
+        document.getElementById("userManagerName")?.textContent || "User";
+
+    closeUserManager();
+
+    if (typeof openPermissions === "function") {
+        openPermissions(managedUserId, userName);
+    } else {
+        alert("Permissions system is not available.");
+    }
+}
+
+function closeUserManager() {
+    document.getElementById("userManagerModal").style.display = "none";
+    managedUserId = null;
+}
+
+function filterUsersTable() {
+    const searchInput = document
+        .getElementById("userSearchInput")
+        .value
+        .toLowerCase()
+        .trim();
+
+    const rows = document.querySelectorAll("#usersTableBody tr");
+
+    rows.forEach(row => {
+        const rowText = row.textContent.toLowerCase();
+
+        if (rowText.includes(searchInput)) {
+            row.style.display = "";
+        } else {
+            row.style.display = "none";
+        }
+    });
+}
+async function updateManagedUserRole(newRole, actionName) {
+    if (!managedUserId) {
+        alert("No user selected");
+        return;
+    }
+
+    try {
+        const response = await fetch(`/api/users/${managedUserId}/role`, {
+            method: "PATCH",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                role: newRole
+            })
+        });
+
+        const responseText = await response.text();
+
+        let data;
+
+        try {
+            data = responseText
+                ? JSON.parse(responseText)
+                : {};
+        } catch (parseError) {
+            console.error("Invalid server response:", responseText);
+
+            alert(
+                `Server returned an invalid response. Status: ${response.status}`
+            );
+            return;
+        }
+
+        console.log(`${actionName} response:`, {
+            status: response.status,
+            data
+        });
+
+        if (!response.ok || !data.success) {
+            alert(
+                data.message ||
+                `Could not ${actionName.toLowerCase()} user.`
+            );
+            return;
+        }
+
+        managedUserRole = newRole;
+
+        alert(
+            data.message ||
+            `User ${actionName.toLowerCase()}d successfully.`
+        );
+
+        closeUserManager();
+        await loadUsers();
+
+    } catch (error) {
+        console.error(`${actionName} error:`, error);
+        alert(`Could not ${actionName.toLowerCase()} user.`);
+    }
+}
+
+
+async function promoteManagedUser() {
+    if (!managedUserId || !managedUserRole) {
+        alert("No user selected");
+        return;
+    }
+
+    const currentRole = String(managedUserRole)
+        .trim()
+        .toLowerCase();
+
+    const promoteMap = {
+        user: "admin",
+        admin: "super_admin"
+    };
+
+    const nextRole = promoteMap[currentRole];
+
+    if (!nextRole) {
+        alert("This user cannot be promoted further.");
+        return;
+    }
+
+    await updateManagedUserRole(nextRole, "Promote");
+}
+
+
+async function demoteManagedUser() {
+    if (!managedUserId || !managedUserRole) {
+        alert("No user selected");
+        return;
+    }
+
+    const currentRole = String(managedUserRole)
+        .trim()
+        .toLowerCase();
+
+    const demoteMap = {
+        super_admin: "admin",
+        admin: "user"
+    };
+
+    const nextRole = demoteMap[currentRole];
+
+    if (!nextRole) {
+        alert("This user cannot be demoted further.");
+        return;
+    }
+
+    await updateManagedUserRole(nextRole, "Demote");
+}
+async function deleteManagedUser() {
+    if (!managedUserId) {
+        alert("No user selected");
+        return;
+    }
+
+    const user = registeredUsers.find(
+        item => Number(item.id) === Number(managedUserId)
+    );
+
+    if (!user) {
+        alert("User not found");
+        return;
+    }
+
+    const confirmed = confirm(
+        `Are you sure you want to remove ${user.name || user.email}?`
+    );
+
+    if (!confirmed) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`/api/users/${managedUserId}`, {
+            method: "DELETE"
+        });
+
+    const responseText = await response.text();
+console.log("DELETE RESPONSE:", response.status, responseText);
+
+const data = responseText
+    ? JSON.parse(responseText)
+    : {
+        success: false,
+        message: `Server returned ${response.status}`
+    };
+    
+
+        alert(data.message);
+
+        if (data.success) {
+            closeUserManager();
+            loadUsers();
+        }
+
+    } catch (error) {
+        console.error("Delete user error:", error);
+        alert("Could not remove account");
+    }
+}
+async function changeManagedUserPassword() {
+    if (!managedUserId) {
+        alert("No user selected");
+        return;
+    }
+
+    const newPassword = prompt("Enter new password:");
+
+    if (!newPassword) {
+        return;
+    }
+
+    if (newPassword.length < 6) {
+        alert("Password must be at least 6 characters");
+        return;
+    }
+
+    try {
+        const response = await fetch(`/api/users/${managedUserId}/password`, {
+            method: "PATCH",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                password: newPassword
+            })
+        });
+
+        const data = await response.json();
+
+        alert(data.message);
+
+    } catch (error) {
+        console.error("Change password error:", error);
+        alert("Could not change password");
+    }
+}
+async function editManagedUser() {
+    if (!managedUserId) {
+        alert("No user selected");
+        return;
+    }
+
+    const user = registeredUsers.find(
+        item => Number(item.id) === Number(managedUserId)
+    );
+
+    if (!user) {
+        alert("User not found");
+        return;
+    }
+
+    const name = prompt("Full Name:", user.name || "");
+    if (name === null) return;
+
+    const email = prompt("Email:", user.email || "");
+    if (email === null) return;
+
+    const mobile = prompt("Mobile Number:", user.mobile || "");
+    if (mobile === null) return;
+
+    const enrollment = prompt(
+        "Enrollment Number:",
+        user.enrollment || ""
+    );
+    if (enrollment === null) return;
+
+    const branch = prompt("Branch:", user.branch || "");
+    if (branch === null) return;
+
+    const semester = prompt("Semester:", user.semester || "");
+    if (semester === null) return;
+
+    const admissionYear = prompt(
+        "Admission Year:",
+        user.admission_year || ""
+    );
+    if (admissionYear === null) return;
+
+    try {
+        const response = await fetch(
+            `/api/users/${managedUserId}/profile`,
+            {
+                method: "PATCH",
+
+                headers: {
+                    "Content-Type": "application/json"
+                },
+
+                body: JSON.stringify({
+                    name,
+                    email,
+                    mobile,
+                    enrollment,
+                    branch,
+                    semester,
+                    admission_year: admissionYear
+                })
+            }
+        );
+
+        const data = await response.json();
+
+        alert(data.message);
+
+        if (data.success) {
+            closeUserManager();
+            await loadUsers();
+        }
+
+    } catch (error) {
+        console.error("Edit profile error:", error);
+        alert("Could not update user profile");
+    }
+}
+let timetableLectures = [];
+
+function showLectureForm() {
+    const form = document.getElementById("lectureForm");
+    if (form) {
+        form.style.display = "block";
+    }
+}
+
+function hideLectureForm() {
+    const form = document.getElementById("lectureForm");
+    if (form) {
+        form.style.display = "none";
+    }
+}
+
+async function saveLecture() {
+    const day = document.getElementById("lectureDay").value;
+    const time = document.getElementById("lectureTime").value;
+    const subject = document.getElementById("lectureSubject").value.trim();
+    const faculty = document.getElementById("lectureFaculty").value.trim();
+    const room = document.getElementById("lectureRoom").value.trim();
+    const type = document.getElementById("lectureType").value;
+
+    if (!day || !time || !subject) {
+        alert("Day, Time and Subject are required");
+        return;
+    }
+
+    try {
+        const response = await fetch("/api/timetable", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                day,
+                time,
+                subject,
+                faculty,
+                room,
+                type
+            })
+        });
+
+        const data = await response.json();
+
+        alert(data.message);
+
+        if (data.success) {
+            document.getElementById("lectureDay").value = "";
+            document.getElementById("lectureTime").value = "";
+            document.getElementById("lectureSubject").value = "";
+            document.getElementById("lectureFaculty").value = "";
+            document.getElementById("lectureRoom").value = "";
+            document.getElementById("lectureType").value = "Theory";
+
+            hideLectureForm();
+
+            await loadTimetable();
+        }
+
+    } catch (error) {
+        console.error("Save lecture error:", error);
+        alert("Could not save lecture");
+    }
+}
+async function loadTimetable() {
+  
+    try {
+        const response = await fetch("/api/timetable");
+        const data = await response.json();
+
+        if (!data.success) {
+            console.error("Failed to load timetable");
+            return;
+        }
+
+        timetableLectures = data.timetable || [];
+
+        renderTimetable();
+
+    } catch (error) {
+        console.error("Load timetable error:", error);
+    }
+}
+loadTimetable();
+ 
+function renderTimetable() {
+    const body = document.getElementById("timetableBody");
+
+    if (!body) return;
+
+    if (timetableLectures.length === 0) {
+        body.innerHTML = `
+            <tr>
+                <td colspan="7">No lectures added yet.</td>
+            </tr>
+        `;
+        return;
+    }
+
+    body.innerHTML = "";
+
+    timetableLectures.forEach(lecture => {
+        body.innerHTML += `
+            <tr>
+                <td>${lecture.day}</td>
+                <td>${lecture.time}</td>
+                <td>${lecture.subject}</td>
+                <td>${lecture.faculty || "-"}</td>
+                <td>${lecture.room || "-"}</td>
+                <td>${lecture.type}</td>
+                <td>
+                    <button
+                        type="button"
+                        onclick="deleteLecture(${lecture.id})"
+                    >
+                        Delete
+                    </button>
+                </td>
+            </tr>
+        `;
+    });
+}
+
+async function deleteLecture(id) {
+    if (!confirm("Are you sure you want to delete this lecture?")) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`/api/timetable/${id}`, {
+            method: "DELETE"
+        });
+
+        const data = await response.json();
+
+        if (!data.success) {
+            alert(data.message || "Could not delete lecture");
+            return;
+        }
+
+        // Reload fresh timetable directly from SQLite
+        await loadTimetable();
+
+        alert("Lecture deleted successfully!");
+    } catch (error) {
+        console.error("Delete lecture error:", error);
+        alert("Could not delete lecture");
+    }
+}
+function renderAboutContent(about) {
+    const heading = document.querySelector(".about-hero h2");
+    const description = document.querySelector(".about-hero-content p");
+    const purpose = document.querySelector(".about-card:nth-child(1) p");
+    const features = document.querySelector(".about-card:nth-child(2) p");
+    const founderName = document.querySelector(".founder-name");
+    const founderDescription =
+        document.querySelector(".founder-card p:last-child");
+    const version = document.querySelector(".about-version");
+
+    if (heading) heading.textContent = about.heading || "";
+    if (description) description.textContent = about.description || "";
+    if (purpose) purpose.textContent = about.purpose || "";
+    if (features) features.textContent = about.features || "";
+    if (founderName) founderName.textContent = about.founder_name || "";
+    if (founderDescription) {
+        founderDescription.textContent =
+            about.founder_description || "";
+    }
+    if (version) version.textContent = about.version || "Version 1.0";
+}
+
+async function loadAboutContent() {
+    try {
+        const response = await fetch("/api/about");
+        const data = await response.json();
+
+        if (!response.ok || !data.success || !data.about) {
+            throw new Error(
+                data.message || "Could not load About content."
+            );
+        }
+
+        renderAboutContent(data.about);
+    } catch (error) {
+        console.error("Load About error:", error);
+    }
+}
+
+async function openAboutEditor() {
+    try {
+        const meResponse = await fetch("/api/me");
+        const meData = await meResponse.json();
+
+        if (
+            !meResponse.ok ||
+            !meData.success ||
+            meData.role !== "owner"
+        ) {
+            alert("Only the Owner can edit the About section.");
+            return;
+        }
+
+        const aboutResponse = await fetch("/api/about");
+        const aboutData = await aboutResponse.json();
+
+        if (
+            !aboutResponse.ok ||
+            !aboutData.success ||
+            !aboutData.about
+        ) {
+            throw new Error(
+                aboutData.message || "Could not load About content."
+            );
+        }
+
+        const current = aboutData.about;
+
+        const heading = prompt(
+            "About heading:",
+            current.heading || ""
+        );
+        if (heading === null) return;
+
+        const description = prompt(
+            "About description:",
+            current.description || ""
+        );
+        if (description === null) return;
+
+        const purpose = prompt(
+            "Our Purpose:",
+            current.purpose || ""
+        );
+        if (purpose === null) return;
+
+        const features = prompt(
+            "Core Features:",
+            current.features || ""
+        );
+        if (features === null) return;
+
+        const founderName = prompt(
+            "Founder name:",
+            current.founder_name || ""
+        );
+        if (founderName === null) return;
+
+        const founderDescription = prompt(
+            "Founder description:",
+            current.founder_description || ""
+        );
+        if (founderDescription === null) return;
+
+        const version = prompt(
+            "Platform version:",
+            current.version || "Version 1.0"
+        );
+        if (version === null) return;
+
+        const updateResponse = await fetch("/api/about", {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                heading,
+                description,
+                purpose,
+                features,
+                founder_name: founderName,
+                founder_description: founderDescription,
+                version
+            })
+        });
+
+        const updateData = await updateResponse.json();
+
+        if (!updateResponse.ok || !updateData.success) {
+            throw new Error(
+                updateData.message ||
+                "Could not update About content."
+            );
+        }
+
+        await loadAboutContent();
+        alert(updateData.message);
+    } catch (error) {
+        console.error("Update About error:", error);
+        alert(error.message || "Could not update About content.");
+    }
+}
+
+document.addEventListener("DOMContentLoaded", loadAboutContent);
+
+</script>
+ <!-- Permissions Modal -->
+<div id="permissionsModal"
+     style="
+        display:none;
+        position:fixed;
+        inset:0;
+        width:100vw;
+        height:100vh;
+        background:rgba(0,0,0,0.75);
+        z-index:999999;
+        align-items:center;
+        justify-content:center;
+        padding:25px;
+        box-sizing:border-box;
+     ">
+
+    <div style="
+        width:800px;
+        max-width:90vw;
+        min-height:400px;
+        max-height:85vh;
+        overflow-y:auto;
+        background:#17243f;
+        color:white;
+        border-radius:20px;
+        padding:32px;
+        box-sizing:border-box;
+        box-shadow:0 25px 80px rgba(0,0,0,0.65);
+        border:1px solid rgba(255,255,255,0.15);
+     ">
+
+
+        <h3 id="permissionsTitle">Manage Permissions</h3>
+
+        <label>
+            <input type="checkbox" id="permTimetableView">
+            Timetable View
+        </label>
+
+        <label>
+            <input type="checkbox" id="permTimetableManage">
+            Timetable Manage
+        </label>
+
+        <label>
+            <input type="checkbox" id="permAttendanceView">
+            Attendance View
+        </label>
+
+        <label>
+            <input type="checkbox" id="permAttendanceManage">
+            Attendance Manage
+        </label>
+
+        <label>
+            <input type="checkbox" id="permNoticesView">
+            Notices View
+        </label>
+
+        <label>
+            <input type="checkbox" id="permNoticesManage">
+            Notices Manage
+        </label>
+
+        <label>
+            <input type="checkbox" id="permUsersManage">
+            Manage Users
+        </label>
+
+        <label>
+            <input type="checkbox" id="permProfileEdit">
+            Edit Profile
+        </label>
+
+        <div style="margin-top:15px;">
+            <button type="button" class="primary-btn" onclick="savePermissions()">
+                Save Permissions
+            </button>
+
+            <button type="button" onclick="closePermissionsModal()">
+                Cancel
+            </button>
+        </div>
+
+    </div>
+</div>
+     <script src="/script.js?v=2"></script>
+<style>
+/* FORCE PROFESSIONAL PERMISSIONS MODAL */
+
+#permissionsModal {
+    position: fixed !important;
+    inset: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    background: rgba(5, 10, 20, 0.78) !important;
+    backdrop-filter: blur(7px) !important;
+    z-index: 999999 !important;
+    padding: 25px !important;
+    box-sizing: border-box !important;
+}
+
+/* Main rectangular box */
+#permissionsModal > div {
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+
+    width: 820px !important;
+    max-width: 90vw !important;
+    min-height: unset !important;
+    height: auto !important;
+
+    padding: 30px !important;
+
+    background: #17233a !important;
+    border: 1px solid rgba(255,255,255,0.12) !important;
+    border-radius: 18px !important;
+
+    box-shadow: 0 25px 70px rgba(0,0,0,0.6) !important;
+
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 12px !important;
+
+    box-sizing: border-box !important;
+}
+
+/* Heading */
+#permissionsTitle {
+    grid-column: 1 / -1 !important;
+
+    margin: 0 0 12px !important;
+    padding-bottom: 18px !important;
+
+    border-bottom: 1px solid rgba(255,255,255,0.12) !important;
+
+    font-size: 24px !important;
+    color: white !important;
+}
+
+/* Permission cards */
+#permissionsModal label {
+    width: auto !important;
+    margin: 0 !important;
+
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+
+    padding: 15px 16px !important;
+
+    background: rgba(255,255,255,0.055) !important;
+    border: 1px solid rgba(255,255,255,0.10) !important;
+    border-radius: 10px !important;
+
+    color: #eef4ff !important;
+    font-size: 15px !important;
+
+    box-sizing: border-box !important;
+}
+
+/* Checkbox */
+#permissionsModal input[type="checkbox"] {
+    width: 18px !important;
+    height: 18px !important;
+    margin: 0 !important;
+    flex-shrink: 0 !important;
+    accent-color: #27b6f6 !important;
+}
+
+/* Bottom buttons section */
+#permissionsModal > div > div:last-child {
+    grid-column: 1 / -1 !important;
+
+    margin-top: 12px !important;
+    padding-top: 20px !important;
+
+    border-top: 1px solid rgba(255,255,255,0.12) !important;
+
+    display: flex !important;
+    justify-content: flex-end !important;
+    gap: 12px !important;
+}
+
+/* Both buttons */
+#permissionsModal button {
+    padding: 11px 22px !important;
+    min-width: 130px !important;
+
+    border: none !important;
+    border-radius: 9px !important;
+
+    font-size: 14px !important;
+    font-weight: 600 !important;
+
+    cursor: pointer !important;
+}
+
+/* Save */
+#permissionsModal .primary-btn {
+    background: #27b6f6 !important;
+    color: white !important;
+}
+
+/* Cancel */
+#permissionsModal button:not(.primary-btn) {
+    background: #334155 !important;
+    color: white !important;
+    border: 1px solid rgba(255,255,255,.15) !important;
+}
+
+@media(max-width:700px) {
+    #permissionsModal > div {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+/* ===== OWNER THEME — BLACK + GOLD ===== */
+body.theme-owner {
+    --role-primary: #d4af37;
+    --role-secondary: #ffd700;
+    --role-dark: #111111;
+    --role-surface: #1a1a1a;
+}
+
+body.theme-owner .sidebar {
+    background: linear-gradient(180deg, #0b0b0b, #1a1605);
+}
+
+body.theme-owner .sidebar a.active,
+body.theme-owner .sidebar a:hover {
+    background: rgba(212, 175, 55, 0.18);
+    color: #ffd700;
+}
+
+body.theme-owner .primary-btn,
+body.theme-owner button.primary-btn {
+    background: linear-gradient(135deg, #b8860b, #ffd700);
+    color: #111;
+    border: none;
+}
+
+body.theme-owner .card {
+    border-color: rgba(212, 175, 55, 0.35);
+}
+
+body.theme-owner h1,
+body.theme-owner h2 {
+    color: #d4af37;
+}
+/* OWNER THEME — EXTENDED UI */
+body.theme-owner .section-title,
+body.theme-owner .page-title,
+body.theme-owner .dashboard-title,
+body.theme-owner .notice-title,
+body.theme-owner .progress-title,
+body.theme-owner .settings-title,
+body.theme-owner .card-title {
+    color: #d4af37 !important;
+}
+
+body.theme-owner button,
+body.theme-owner .btn,
+body.theme-owner .action-btn,
+body.theme-owner .notice-actions button {
+    border-color: rgba(212, 175, 55, 0.45);
+}
+
+body.theme-owner .notice-actions button,
+body.theme-owner .progress-section button,
+body.theme-owner .settings-section button {
+    background: linear-gradient(135deg, #b8860b, #ffd700);
+    color: #111;
+}
+
+body.theme-owner .notice-item,
+body.theme-owner .progress-card,
+body.theme-owner .settings-card,
+body.theme-owner .dashboard-card {
+    border: 1px solid rgba(212, 175, 55, 0.28);
+}
+
+body.theme-owner input:focus,
+body.theme-owner select:focus,
+body.theme-owner textarea:focus {
+    border-color: #d4af37;
+    box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.12);
+}
+/* =========================================
+   OWNER THEME — BLACK + GOLD FINAL OVERRIDE
+   ========================================= */
+
+body.theme-owner {
+    --owner-gold: #FFD700;
+    --owner-gold-dark: #B8860B;
+    --owner-black: #080808;
+    --owner-surface: #141414;
+
+    background: linear-gradient(135deg, #080808, #161616) !important;
+    color: #ffffff;
+}
+
+/* Sidebar */
+body.theme-owner .sidebar {
+    background: linear-gradient(180deg, #050505, #151515) !important;
+    border-right: 1px solid rgba(255, 215, 0, 0.25);
+}
+
+/* Sidebar selected item + hover */
+body.theme-owner .sidebar a.active,
+body.theme-owner .sidebar a:hover {
+    background: linear-gradient(
+        135deg,
+        #B8860B,
+        #FFD700
+    ) !important;
+
+    color: #080808 !important;
+    box-shadow: 0 4px 18px rgba(255, 215, 0, 0.25);
+}
+
+/* Sidebar icons */
+body.theme-owner .sidebar a.active i,
+body.theme-owner .sidebar a:hover i {
+    color: #080808 !important;
+}
+
+/* Main buttons */
+body.theme-owner .primary-btn,
+body.theme-owner button.primary {
+    background: linear-gradient(
+        135deg,
+        #B8860B,
+        #FFD700
+    ) !important;
+
+    color: #080808 !important;
+    border: none !important;
+}
+
+/* Cards */
+body.theme-owner .card {
+    background: linear-gradient(
+        145deg,
+        #111111,
+        #1b1b1b
+    ) !important;
+
+    border: 1px solid rgba(255, 215, 0, 0.20) !important;
+}
+
+/* Important headings / accents */
+body.theme-owner h1,
+body.theme-owner h2,
+body.theme-owner h3 {
+    color: #FFD700;
+}
+/* Owner — remove remaining blue active navigation */
+body.theme-owner .sidebar a.active {
+    background: linear-gradient(135deg, #B8860B, #FFD700) !important;
+    color: #080808 !important;
+}
+
+body.theme-owner .sidebar a.active i {
+    color: #080808 !important;
+}
+/* Owner active sidebar menu */
+body.theme-owner .sidebar li.active > a {
+    background: linear-gradient(135deg, #c59416, #e6c715df) !important;
+    color: #080808 !important;
+    box-shadow: 0 4px 18px rgba(255, 215, 0, 0.30) !important;
+}
+
+body.theme-owner .sidebar li.active > a i {
+    color: #080808 !important;
+}
+body.theme-owner .profile img,
+body.theme-owner .profile-card img,
+body.theme-owner .profile-photo img {
+    border: 3px solid #fcfcfc !important;
+}
+/* Owner profile photo gold border */
+body.theme-owner #dashboardProfileImage {
+border: 3px solid #D4AF37 !important;
+    box-shadow: 0 0 12px rgba(255, 215, 0, 0.25) !important;
+}
+/* OWNER — force remaining icons/accents to gold */
+body.theme-owner .logo i,
+body.theme-owner .sidebar-logo i {
+    color: #D4AF37 !important;
+}
+/* OWNER — Timetable Gold Theme */
+body.theme-owner #timetable-tab th {
+    color: #D4AF37 !important;
+}
+
+body.theme-owner #timetable-tab td {
+    color: #ffffff;
+}
+
+body.theme-owner #timetable-tab table {
+    border-color: rgba(212, 175, 55, 0.25) !important;
+}
+
+body.theme-owner #timetable-tab .empty-message,
+body.theme-owner #timetable-tab tbody p {
+    color: #D4AF37 !important;
+}
+/* =========================================
+   TIMETABLE — SUPER RESPONSIVE NO SCROLL
+   ========================================= */
+
+/* Desktop / Tablet */
+#timetable-tab {
+    width: 100%;
+}
+
+#timetable-tab table {
+    width: 100%;
+    border-collapse: collapse;
+   table-layout: auto;
+}
+#timetable-tab th,
+#timetable-tab td {
+    word-break: normal !important;
+    overflow-wrap: normal !important;
+}
+
+#timetable-tab td:first-child,
+#timetable-tab th:first-child,
+#timetable-tab td:nth-child(2),
+#timetable-tab th:nth-child(2) {
+    white-space: nowrap;
+}
+
+#timetable-tab > button,
+#timetable-tab .add-lecture-btn {
+    white-space: nowrap !important;
+    width: auto !important;
+    max-width: none !important;
+}
+#timetable-tab th,
+#timetable-tab td {
+    padding: 14px 10px;
+    vertical-align: middle;
+    text-align: left;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
+#timetable-tab th:nth-child(1),
+#timetable-tab td:nth-child(1) {
+    width: 11%;
+}
+
+#timetable-tab th:nth-child(2),
+#timetable-tab td:nth-child(2) {
+    width: 13%;
+}
+
+#timetable-tab th:nth-child(3),
+#timetable-tab td:nth-child(3) {
+    width: 18%;
+}
+
+#timetable-tab th:nth-child(4),
+#timetable-tab td:nth-child(4) {
+    width: 18%;
+}
+
+#timetable-tab th:nth-child(5),
+#timetable-tab td:nth-child(5) {
+    width: 11%;
+}
+
+#timetable-tab th:nth-child(6),
+#timetable-tab td:nth-child(6) {
+    width: 13%;
+}
+
+#timetable-tab th:nth-child(7),
+#timetable-tab td:nth-child(7) {
+    width: 16%;
+    text-align: center;
+}
+
+#timetable-tab button {
+    width: 100%;
+    max-width: 100px;
+    padding: 9px 8px;
+}
+
+/* Tablet */
+@media (max-width: 900px) {
+    #timetable-tab th,
+    #timetable-tab td {
+        padding: 10px 6px;
+        font-size: 13px;
+    }
+
+    #timetable-tab button {
+        font-size: 12px;
+        padding: 8px 5px;
+    }
+}
+
+/* Mobile — Convert rows into cards */
+@media (max-width: 600px) {
+
+    #timetable-tab table,
+    #timetable-tab thead,
+    #timetable-tab tbody,
+    #timetable-tab th,
+    #timetable-tab td,
+    #timetable-tab tr {
+        display: block;
+        width: 100%;
+    }
+
+    #timetable-tab thead {
+        display: none;
+    }
+
+    #timetable-tab tbody tr {
+        margin-bottom: 16px;
+        padding: 14px;
+        border-radius: 14px;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    #timetable-tab td {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        padding: 9px 0;
+        border: none !important;
+        text-align: right;
+    }
+
+    #timetable-tab td::before {
+        font-weight: 700;
+        text-align: left;
+        color: #D4AF37;
+    }
+
+    #timetable-tab td:nth-child(1)::before {
+        content: "Day";
+    }
+
+    #timetable-tab td:nth-child(2)::before {
+        content: "Time";
+    }
+
+    #timetable-tab td:nth-child(3)::before {
+        content: "Subject";
+    }
+
+    #timetable-tab td:nth-child(4)::before {
+        content: "Faculty";
+    }
+
+    #timetable-tab td:nth-child(5)::before {
+        content: "Room";
+    }
+
+    #timetable-tab td:nth-child(6)::before {
+        content: "Type";
+    }
+
+    #timetable-tab td:nth-child(7)::before {
+        content: "Action";
+    }
+
+    #timetable-tab td:nth-child(7) {
+        justify-content: space-between;
+    }
+
+    #timetable-tab button {
+        width: auto;
+        min-width: 90px;
+    }
+}
+
+/* OWNER THEME */
+body.theme-owner #timetable-tab th {
+    color: #D4AF37 !important;
+}
+
+body.theme-owner #timetable-tab td {
+    color: #ffffff;
+}
+
+body.theme-owner #timetable-tab tbody tr {
+    border-color: rgba(212, 175, 55, 0.20);
+}
+
+/* OWNER — Timetable action button */
+body.theme-owner #timetable-tab .delete-btn,
+body.theme-owner #timetable-tab button.delete,
+body.theme-owner #timetable-tab td:last-child button {
+    background: linear-gradient(135deg, #B8860B, #D4AF37) !important;
+    color: #080808 !important;
+    border: none !important;
+    box-shadow: 0 4px 12px rgba(212, 175, 55, 0.20) !important;
+}
+/* =========================================
+   OWNER TIMETABLE — MOBILE FINAL POLISH
+   ========================================= */
+
+@media (max-width: 600px) {
+
+    body.theme-owner #timetable-tab td::before {
+        color: #D4AF37 !important;
+    }
+
+    body.theme-owner #timetable-tab tbody tr {
+        border: 1px solid rgba(212, 175, 55, 0.30) !important;
+        background: #161616 !important;
+    }
+
+    body.theme-owner #timetable-tab td:last-child button {
+        background: linear-gradient(
+            135deg,
+            #B8860B,
+            #D4AF37
+        ) !important;
+
+        color: #080808 !important;
+        border: none !important;
+        box-shadow: 0 3px 10px rgba(212, 175, 55, 0.25) !important;
+    }
+}
+/* =========================================
+   ATTENDANCE — GLOBAL PREMIUM RESPONSIVE UI
+   SAME LAYOUT FOR ALL ROLES
+   ========================================= */
+
+#attendance-tab {
+    width: 100%;
+}
+
+#attendance-tab > .card {
+    width: 100%;
+    padding: 26px;
+    border-radius: 22px;
+}
+
+/* Heading */
+#attendance-tab h3 {
+    margin-bottom: 18px;
+    font-size: 24px;
+    font-weight: 800;
+}
+
+/* Form */
+#attendance-tab .attendance-form {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr auto;
+    gap: 12px;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+#attendance-tab .attendance-form input {
+    width: 100%;
+    min-width: 0;
+    padding: 13px 14px;
+    border-radius: 12px;
+    outline: none;
+    font-size: 14px;
+}
+
+#attendance-tab .attendance-form button {
+    width: auto;
+    min-width: 130px;
+    padding: 13px 18px;
+    border-radius: 12px;
+    font-weight: 700;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: transform 0.2s ease,
+                box-shadow 0.2s ease;
+}
+
+#attendance-tab .attendance-form button:hover {
+    transform: translateY(-2px);
+}
+
+/* Table */
+#attendance-tab .custom-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 10px;
+    table-layout: auto;
+}
+
+#attendance-tab .custom-table thead th {
+    padding: 14px 12px;
+    text-align: left;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+#attendance-tab .custom-table tbody tr {
+    transition: transform 0.18s ease,
+                box-shadow 0.18s ease;
+}
+
+#attendance-tab .custom-table tbody tr:hover {
+    transform: translateY(-2px);
+}
+
+#attendance-tab .custom-table td {
+    padding: 16px 12px;
+    vertical-align: middle;
+    word-break: normal;
+    overflow-wrap: normal;
+}
+
+#attendance-tab .custom-table td:first-child {
+    font-weight: 700;
+}
+
+#attendance-tab .custom-table th:last-child,
+#attendance-tab .custom-table td:last-child {
+    text-align: center;
+}
+
+#attendance-tab .custom-table td:last-child button {
+    width: auto;
+    min-width: 84px;
+    padding: 9px 14px;
+    border-radius: 10px;
+    white-space: nowrap;
+    font-weight: 700;
+}
+
+/* =========================
+   TABLET
+   ========================= */
+
+@media (max-width: 900px) {
+
+    #attendance-tab > .card {
+        padding: 20px;
+    }
+
+    #attendance-tab .attendance-form {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    #attendance-tab .attendance-form button {
+        width: 100%;
+    }
+
+    #attendance-tab .custom-table th,
+    #attendance-tab .custom-table td {
+        padding: 12px 8px;
+        font-size: 13px;
+    }
+}
+
+/* =========================
+   MOBILE — NO HORIZONTAL SCROLL
+   ROWS BECOME CARDS
+   ========================= */
+
+@media (max-width: 600px) {
+
+    #attendance-tab > .card {
+        padding: 16px;
+        border-radius: 18px;
+    }
+
+    #attendance-tab h3 {
+        font-size: 20px;
+    }
+
+    #attendance-tab .attendance-form {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+
+    #attendance-tab .attendance-form input,
+    #attendance-tab .attendance-form button {
+        width: 100%;
+    }
+
+    #attendance-tab .custom-table,
+    #attendance-tab .custom-table thead,
+    #attendance-tab .custom-table tbody,
+    #attendance-tab .custom-table tr,
+    #attendance-tab .custom-table th,
+    #attendance-tab .custom-table td {
+        display: block;
+        width: 100%;
+    }
+
+    #attendance-tab .custom-table thead {
+        display: none;
+    }
+
+    #attendance-tab .custom-table tbody tr {
+        margin-bottom: 14px;
+        padding: 14px;
+        border-radius: 16px;
+    }
+
+    #attendance-tab .custom-table td {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 15px;
+        padding: 9px 0;
+        border: none !important;
+        text-align: right;
+    }
+
+    #attendance-tab .custom-table td::before {
+        font-weight: 700;
+        text-align: left;
+    }
+
+    #attendance-tab .custom-table td:nth-child(1)::before {
+        content: "Subject";
+    }
+
+    #attendance-tab .custom-table td:nth-child(2)::before {
+        content: "Total Classes";
+    }
+
+    #attendance-tab .custom-table td:nth-child(3)::before {
+        content: "Present";
+    }
+
+    #attendance-tab .custom-table td:nth-child(4)::before {
+        content: "Attendance";
+    }
+
+    #attendance-tab .custom-table td:nth-child(5)::before {
+        content: "Action";
+    }
+
+    #attendance-tab .custom-table td:last-child {
+        text-align: right;
+    }
+}
+/* =========================================
+   OWNER THEME — ATTENDANCE
+   ========================================= */
+
+body.theme-owner #attendance-tab > .card {
+    background: #151515 !important;
+    border: 1px solid rgba(212, 175, 55, 0.28) !important;
+}
+
+body.theme-owner #attendance-tab h3 {
+    color: #D4AF37 !important;
+}
+
+body.theme-owner #attendance-tab .attendance-form input {
+    background: #101010 !important;
+    color: #ffffff !important;
+    border: 1px solid rgba(212, 175, 55, 0.30) !important;
+}
+
+body.theme-owner #attendance-tab .attendance-form input:focus {
+    border-color: #D4AF37 !important;
+    box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.10);
+}
+
+body.theme-owner #attendance-tab .attendance-form button {
+    background: linear-gradient(
+        135deg,
+        #B8860B,
+        #D4AF37
+    ) !important;
+
+    color: #080808 !important;
+    border: none !important;
+}
+
+body.theme-owner #attendance-tab .custom-table thead th {
+    color: #D4AF37 !important;
+    background: #1c2229;
+}
+
+body.theme-owner #attendance-tab .custom-table tbody tr {
+    background: #171717;
+    border: 1px solid rgba(212, 175, 55, 0.14);
+}
+
+body.theme-owner #attendance-tab .custom-table td:first-child {
+    color: #D4AF37 !important;
+}
+
+body.theme-owner #attendance-tab .custom-table td:last-child button {
+    background: linear-gradient(
+        135deg,
+        #B8860B,
+        #D4AF37
+    ) !important;
+
+    color: #080808 !important;
+    border: none !important;
+}
+
+@media (max-width: 600px) {
+
+    body.theme-owner #attendance-tab .custom-table td::before {
+        color: #D4AF37 !important;
+    }
+
+    body.theme-owner #attendance-tab .custom-table tbody tr {
+        background: #171717 !important;
+        border: 1px solid rgba(212, 175, 55, 0.25) !important;
+    }
+}
+
+</style>
+    </body>
+</html> 

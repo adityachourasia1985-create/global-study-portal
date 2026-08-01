@@ -1,0 +1,890 @@
+
+        // Direct Section Switching Function
+        function switchSection(tabId, menuId) {
+            // ye sre functions lo hide kreg 
+            var tabs = document.getElementsByClassName('tab-content');
+            for (var i = 0; i < tabs.length; i++) {
+                tabs[i].classList.remove('active-tab');
+            }
+            
+            var menuItems = document.querySelectorAll('.sidebar ul li');
+            menuItems.forEach(function(item) {
+                item.classList.remove('active');
+            });
+
+            document.getElementById(tabId).classList.add('active-tab');
+            document.getElementById(menuId).classList.add('active');
+        if(tabId === "analysis-tab"){
+    updateWeeklyChart();
+}
+        }
+
+        // Dark Mode Logic
+       const toggleSwitch = document.querySelector("#theme-toggle");
+const settingsToggle = document.querySelector("#theme-toggle-settings");
+
+// Load saved theme
+const savedTheme = localStorage.getItem("theme") || "light";
+
+document.documentElement.setAttribute("data-theme", savedTheme);
+
+if (savedTheme === "dark") {
+    toggleSwitch.checked = true;
+    if (settingsToggle) settingsToggle.checked = true;
+}
+
+// Sidebar Toggle
+toggleSwitch.addEventListener("change", () => {
+    const theme = toggleSwitch.checked ? "dark" : "light";
+
+    document.documentElement.setAttribute("data-theme", theme);
+    localStorage.setItem("theme", theme);
+
+    if (settingsToggle) settingsToggle.checked = toggleSwitch.checked;
+});
+
+// Settings Toggle
+if (settingsToggle) {
+    settingsToggle.addEventListener("change", () => {
+        const theme = settingsToggle.checked ? "dark" : "light";
+
+        document.documentElement.setAttribute("data-theme", theme);
+        localStorage.setItem("theme", theme);
+
+        toggleSwitch.checked = settingsToggle.checked;
+    });
+}
+        // ================= Pomodoro Timer =================
+let time = 30*60;
+let timer;
+let running = false;
+let currentSessionMinites = 30;
+
+function updateTimer() {
+    let min = Math.floor(time / 60);
+    let sec = time % 60;
+    document.getElementById("timer").innerHTML =
+        String(min).padStart(2, "0") + ":" +
+        String(sec).padStart(2, "0");
+}
+
+function startTimer() {
+;
+    if (running) return;
+
+    running = true;
+
+
+    timer = setInterval(() => {
+
+        if (time > 0) {
+
+            time--;
+            updateTimer();
+
+        } else {
+
+            clearInterval(timer);
+            running = false;
+
+            pomodoroCount++;
+            completedMinutes += currentSessionMinutes;
+            updateGoal();
+            updateStreak();
+            saveDailyStudy(currentSessionMinutes);
+            alert("🎉 Pomodoro Complete! Great Job!");
+
+           time = currentSessionMinutes * 60;
+            updateTimer();
+
+        }
+
+    }, 1000);
+
+}
+
+function pauseTimer() {
+    clearInterval(timer);
+    running = false;
+}
+
+function resetTimer() {
+    clearInterval(timer);
+    running = false;
+   time = currentSessionMinutes * 60;
+    updateTimer();
+}
+
+function setTimer(){
+
+    let minutes = Number(document.getElementById("timerInput").value);
+
+    currentSessionMinutes = minutes;
+
+    time = minutes * 60;
+
+    updateTimer();
+}
+
+updateTimer();
+
+
+// ================= Stopwatch =================
+let swTime = 0;
+let swInterval;
+
+function updateStopwatch() {
+    let hrs = Math.floor(swTime / 3600);
+    let mins = Math.floor((swTime % 3600) / 60);
+    let secs = swTime % 60;
+
+    document.getElementById("stopwatch").innerHTML =
+        String(hrs).padStart(2, "0") + ":" +
+        String(mins).padStart(2, "0") + ":" +
+        String(secs).padStart(2, "0");
+}
+
+function startStopwatch() {
+    if (swInterval) return;
+
+    swInterval = setInterval(() => {
+        swTime++;
+        updateStopwatch();
+    }, 1000);
+}
+
+function stopStopwatch() {
+    clearInterval(swInterval);
+    swInterval = null;
+}
+
+function resetStopwatch() {
+    stopStopwatch();
+    swTime = 0;
+    updateStopwatch();
+}
+
+updateStopwatch();
+// ========== Goal Tracker ==========
+
+let goalHours = Number(localStorage.getItem("goalHours")) || 6;
+
+let goalMinutes = goalHours * 60;
+
+
+
+// 6 Hours = 360 Minutes
+    let completedMinutes = Number(localStorage.getItem("completedMinutes")) || 0;
+let pomodoroCount = 0;
+
+function updateGoal() {
+
+    let percent = (completedMinutes / goalMinutes) * 100;
+
+    if (percent > 100) percent = 100;
+
+    let hrs = Math.floor(completedMinutes / 60);
+    let mins = completedMinutes % 60;
+    document.getElementById("goal-hours").innerHTML =
+    "Completed : " + hrs + "h " + mins + "m / " + goalHours + "h";
+
+    document.getElementById("goal-percent").innerHTML =
+        Math.round(percent) + "% Completed";
+
+    document.getElementById("goal-progress").style.width =
+        percent + "%";
+        localStorage.setItem("completedMinutes", completedMinutes);
+        updateAnalysis();
+}
+function updateAnalysis(){
+
+    let hrs = Math.floor(completedMinutes / 60);
+    let mins = completedMinutes % 60;
+
+    document.getElementById("total-study").innerHTML =
+    hrs + "h " + mins + "m";
+
+
+    let score = Math.min(
+        Math.round((completedMinutes / (goalMinutes)) * 100),
+        100
+    );
+
+
+    document.getElementById("productivity").innerHTML =
+    score + "%";
+
+}
+    let hrs = Math.floor(completedMinutes / 60);
+    // let mins = completedMinutes % 60;
+    let mins = Math.floor(completedMinutes % 60);
+
+    // Total Study Time
+    document.getElementById("total-study").innerHTML =
+        hrs + "h " + mins + "m";
+
+
+    // Productivity Score
+    let productivity = Math.round(
+        (completedMinutes / goalMinutes) * 100
+    );
+
+    if(productivity > 100){
+        productivity = 100;
+    }
+
+    document.getElementById("productivity").innerHTML =
+        productivity + "%";
+
+
+    // Study Streak
+    let streak = Number(localStorage.getItem("studyStreak")) || 0;
+
+    document.getElementById("streak").innerHTML =
+        streak + " Days";
+
+
+
+function saveGoal() {
+
+    goalHours = Number(document.getElementById("goalInput").value);
+
+    goalMinutes = goalHours * 60;
+
+    localStorage.setItem("goalHours", goalHours);
+
+    updateGoal();
+}
+
+document.getElementById("goalInput").value = goalHours;
+
+updateGoal();
+updateAnalysis();
+const logoutBtn = document.getElementById("logoutBtn");
+
+
+if (logoutBtn) {
+    logoutBtn.addEventListener("click", () => {
+        window.location.href = "/logout";
+    });
+}
+function saveDisplayName() {
+
+    const name = document.getElementById("displayName").value.trim();
+
+    if (name === "") {
+        alert("Please enter a display name.");
+        return;
+    }
+
+    localStorage.setItem("displayName", name);
+
+    document.getElementById("welcomeName").textContent = name;
+
+    alert("Display name updated successfully!");
+}
+
+
+
+ // Load saved name when page opens
+
+window.addEventListener("load", () => {
+    const savedName = localStorage.getItem("displayName");
+
+    if (savedName) {
+        document.getElementById("welcomeName").innerHTML = savedName;
+        document.getElementById("displayName").value = savedName;
+    }
+});
+const profileImageInput = document.getElementById("profileImageInput");
+const profileImagePreview = document.getElementById("profileImagePreview");
+
+if (profileImageInput) {
+    profileImageInput.addEventListener("change", function () {
+
+        const file = this.files[0];
+
+        if (!file) return;
+
+        const reader = new FileReader();
+
+        reader.onload = function (e) {
+            profileImagePreview.src = e.target.result;
+            profileImagePreview.style.display = "block";
+
+            // Save image in localStorage
+            localStorage.setItem("profileImage", e.target.result);
+        };
+
+        reader.readAsDataURL(file);
+    });
+}
+
+// Load saved image
+window.addEventListener("load", function () {
+
+    const savedImage = localStorage.getItem("profileImage");
+
+    if (savedImage) {
+        profileImagePreview.src = savedImage;
+        profileImagePreview.style.display = "block";
+    }
+
+});
+const changePasswordBtn = document.getElementById("changePasswordBtn");
+const passwordModal = document.getElementById("passwordModal");
+const closePasswordBtn = document.getElementById("closePasswordBtn");
+
+changePasswordBtn.addEventListener("click", () => {
+    passwordModal.style.display = "flex";
+});
+
+closePasswordBtn.addEventListener("click", () => {
+    passwordModal.style.display = "none";
+});
+
+// Modal ke bahar click karne par bhi close ho
+window.addEventListener("click", (e) => {
+    if (e.target === passwordModal) {
+        passwordModal.style.display = "none";
+    }
+});
+const savePasswordBtn = document.getElementById("savePasswordBtn");
+
+savePasswordBtn.addEventListener("click", async () => {
+
+    const currentPassword = document.getElementById("currentPassword").value;
+    const newPassword = document.getElementById("newPassword").value;
+    const confirmPassword = document.getElementById("confirmPassword").value;
+
+    if (newPassword !== confirmPassword) {
+        alert("New passwords do not match.");
+        return;
+    }
+
+    const response = await fetch("/change-password", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            currentPassword,
+            newPassword
+        })
+    });
+
+    const data = await response.json();
+
+    alert(data.message);
+
+    if (data.success) {
+        passwordModal.style.display = "none";
+
+        document.getElementById("currentPassword").value = "";
+        document.getElementById("newPassword").value = "";
+        document.getElementById("confirmPassword").value = "";
+    }
+
+});
+document.getElementById("changePasswordBtn").addEventListener("click", function () {
+    document.getElementById("passwordSection").style.display = "block";
+});
+
+async function changePassword() {
+    const currentPassword =
+        document.getElementById("currentPassword").value;
+
+    const newPassword =
+        document.getElementById("newPassword").value;
+
+    const confirmPassword =
+        document.getElementById("confirmPassword").value;
+
+    if (!currentPassword || !newPassword || !confirmPassword) {
+        alert("Please fill all fields.");
+        return;
+    }
+
+    if (newPassword !== confirmPassword) {
+        alert("New passwords do not match.");
+        return;
+    }
+
+    try {
+        const response = await fetch("/change-password", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                currentPassword,
+                newPassword
+            })
+        });
+
+        const data = await response.json();
+
+        alert(data.message);
+
+        if (data.success) {
+            document.getElementById("currentPassword").value = "";
+            document.getElementById("newPassword").value = "";
+            document.getElementById("confirmPassword").value = "";
+        }
+    } catch (error) {
+        alert("Server connection failed.");
+    }
+}
+function saveStudentProfile() {
+    const enrollmentNumber =
+        document.getElementById("enrollmentNumber").value;
+
+    const branch =
+        document.getElementById("branch").value;
+
+    const semester =
+        document.getElementById("semester").value;
+
+    const mobileNumber =
+        document.getElementById("mobileNumber").value;
+
+    const studentEmail =
+        document.getElementById("studentEmail").value;
+
+    if (
+        enrollmentNumber === "" ||
+        branch === "" ||
+        semester === "" ||
+        mobileNumber === "" ||
+        studentEmail === ""
+    ) {
+        alert("Please fill all profile fields.");
+        return;
+    }
+
+    localStorage.setItem("enrollmentNumber", enrollmentNumber);
+    localStorage.setItem("branch", branch);
+    localStorage.setItem("semester", semester);
+    localStorage.setItem("mobileNumber", mobileNumber);
+    localStorage.setItem("studentEmail", studentEmail);
+    
+    alert("Student profile saved successfully!");
+    loadDashboardProfile();
+}
+window.addEventListener("load", function () {
+
+    document.getElementById("enrollmentNumber").value =
+        localStorage.getItem("enrollmentNumber") || "";
+
+    document.getElementById("branch").value =
+        localStorage.getItem("branch") || "";
+
+    document.getElementById("semester").value =
+        localStorage.getItem("semester") || "";
+
+    document.getElementById("mobileNumber").value =
+        localStorage.getItem("mobileNumber") || "";
+
+    document.getElementById("studentEmail").value =
+        localStorage.getItem("studentEmail") || "";
+
+});
+function searchNotice() {
+
+    const input = document.getElementById("noticeSearch").value.toLowerCase();
+
+    const notices = document.querySelectorAll(".notice-item");
+
+    notices.forEach((notice) => {
+
+        if (notice.innerText.toLowerCase().includes(input)) {
+            notice.style.display = "block";
+        } else {
+            notice.style.display = "none";
+        }
+
+    });
+
+}
+let attendanceData = [];
+function addAttendance(){
+
+    const subject = document.getElementById("subjectName").value;
+    const total = document.getElementById("totalClasses").value;
+    const attended = document.getElementById("attendedClasses").value;
+
+    if(subject === "" || total === "" || attended === ""){
+        alert("Please fill all fields");
+        return;
+    }
+
+    const percentage = Math.round((attended / total) * 100);
+
+    attendanceData.push({
+        subject: subject,
+        total: total,
+        attended: attended,
+        percentage: percentage
+    });
+
+    alert("Subject Added Successfully");
+
+    console.log(attendanceData);
+}
+function addAttendance(){
+
+    const subject = document.getElementById("subjectName").value;
+    const total = Number(document.getElementById("totalClasses").value);
+    const attended = Number(document.getElementById("attendedClasses").value);
+
+    if(subject === "" || total <= 0 || attended < 0){
+        alert("Please fill correct details");
+        return;
+    }
+
+    const percentage = Math.round((attended / total) * 100);
+
+
+    const table = document.getElementById("attendanceTable");
+
+
+    table.innerHTML += `
+        <tr>
+            <td>${subject}</td>
+            <td>${total}</td>
+            <td>${attended}</td>
+            <td>${percentage}%</td>
+            <td>
+                <button onclick="this.parentElement.parentElement.remove()">
+                    Delete
+                </button>
+            </td>
+        </tr>
+    `;
+
+
+    document.getElementById("subjectName").value = "";
+    document.getElementById("totalClasses").value = "";
+    document.getElementById("attendedClasses").value = "";
+
+}
+function saveTimetable() {
+
+    let timetable = document.querySelector("#timetable-tab table").innerHTML;
+
+    localStorage.setItem("timetableData", timetable);
+
+    alert("Timetable Saved Successfully!");
+
+}
+
+
+window.onload = function(){
+
+    let savedTimetable = localStorage.getItem("timetableData");
+
+    if(savedTimetable){
+
+        document.querySelector("#timetable-tab table").innerHTML = savedTimetable;
+
+    }
+
+}
+
+function updateStreak(){
+
+    let today = new Date().toDateString();
+
+    let lastStudyDate = localStorage.getItem("lastStudyDate");
+
+    let streak = Number(localStorage.getItem("studyStreak")) || 0;
+
+
+    if(lastStudyDate !== today){
+
+        streak++;
+
+        localStorage.setItem("studyStreak", streak);
+        localStorage.setItem("lastStudyDate", today);
+
+    }
+
+
+    document.getElementById("streak").innerHTML =
+        streak + " Days";
+
+}
+
+function saveDailyStudy(minutes){
+
+    let today = new Date().toDateString();
+
+    let studyHistory = JSON.parse(
+        localStorage.getItem("studyHistory")
+    ) || {};
+
+    if(studyHistory[today]){
+        studyHistory[today] += minutes;
+    }
+    else{
+        studyHistory[today] = minutes;
+    }
+
+
+    localStorage.setItem(
+        "studyHistory",
+        JSON.stringify(studyHistory)
+    );
+
+}function saveDailyStudy(minutes){
+
+    let today = new Date().toDateString();
+
+    let studyHistory = JSON.parse(
+        localStorage.getItem("studyHistory")
+    ) || {};
+
+    if(studyHistory[today]){
+
+        studyHistory[today] += minutes;
+
+    } else {
+
+        studyHistory[today] = minutes;
+
+    }
+
+
+    localStorage.setItem(
+        "studyHistory",
+        JSON.stringify(studyHistory)
+    );
+}
+function updateWeeklyChart(){
+
+    let history = getStudyHistory();
+
+    let chart = document.getElementById("weeklyChart");
+
+    chart.innerHTML = "";
+
+    for(let date in history){
+
+        let minutes = history[date];
+
+        let height = minutes * 5;
+
+        chart.innerHTML += `
+            <div>
+                <div class="study-bar" style="height:${height}px"></div>
+                <span>${date.substring(0,3)}</span>
+            </div>
+        `;
+    }
+
+}
+//updateWeeklyChart();
+
+
+function getStudyHistory(){
+
+    let studyHistory = JSON.parse(
+        localStorage.getItem("studyHistory")
+    ) || {};
+
+    console.log(studyHistory);
+
+    return studyHistory;
+}
+function updateWeeklyChart(){
+
+    const chart = document.getElementById("weeklyChart");
+
+    if(!chart){
+        console.log("Weekly chart not found");
+        return;
+    }
+
+    let history = JSON.parse(localStorage.getItem("studyHistory")) || {};
+
+    chart.innerHTML = "";
+
+    for(let date in history){
+
+        let minutes = history[date];
+
+        chart.innerHTML += `
+        <div>
+            <div class="study-bar" style="height:${minutes*5}px"></div>
+            <span>${date.substring(0,3)}</span>
+        </div>
+        `;
+    }
+}
+function loadDashboardProfile(){
+
+    const name = localStorage.getItem("displayName") || "Aditya sir";
+
+    const branch = localStorage.getItem("branch") || "Not Set";
+
+    const semester = localStorage.getItem("semester") || "Not Set";
+
+    const enrollment = localStorage.getItem("enrollmentNumber") || "Not Set";
+
+    const email = localStorage.getItem("studentEmail") || "Not Set";
+
+    const image = localStorage.getItem("profileImage");
+
+
+    document.getElementById("dashboardName").innerHTML = name;
+
+    document.getElementById("dashboardBranch").innerHTML =
+    "Branch: " + branch;
+
+    document.getElementById("dashboardSemester").innerHTML =
+    "Semester: " + semester;
+
+    document.getElementById("dashboardEnrollment").innerHTML =
+    "Enrollment: " + enrollment;
+
+    document.getElementById("dashboardEmail").innerHTML =
+    "Email: " + email;
+
+
+    if(image){
+
+        document.getElementById("dashboardProfileImage").src = image;
+
+    }
+}
+loadDashboardProfile();
+// ========== Today's Focus Task Manager ==========
+
+let dailyTasks = JSON.parse(localStorage.getItem("dailyTasks")) || [];
+
+
+function addTask(){
+
+    let input = document.getElementById("taskInput");
+
+    let text = input.value.trim();
+
+
+    if(text === ""){
+        alert("Please enter a task");
+        return;
+    }
+
+
+    dailyTasks.push({
+        name:text,
+        completed:false
+    });
+
+
+    localStorage.setItem(
+        "dailyTasks",
+        JSON.stringify(dailyTasks)
+    );
+
+
+    input.value = "";
+
+    displayTasks();
+
+}
+
+
+
+function displayTasks(){
+
+    let list = document.getElementById("taskList");
+
+    list.innerHTML = "";
+
+    if(dailyTasks.length === 0){
+
+        list.innerHTML =
+        "<li>No dailyTasks added yet</li>";
+
+        updateTaskProgress();
+
+        return;
+    }
+
+
+   dailyTasks.forEach((task,index)=>{
+
+
+        list.innerHTML += `
+
+        <li class="${dailyTasks.completed ? "completed":""}"
+        onclick="completeTask(${index})">
+
+            ${dailyTasks.name}
+
+        </li>
+
+        `;
+
+
+    });
+
+
+    updateTaskProgress();
+
+}
+
+
+
+function completeTask(index){
+
+    dailyTasks[index].completed =
+    !dailyTasks[index].completed;
+
+
+    localStorage.setItem(
+        "dailyTasks",
+        JSON.stringify(dailyTasks)
+    );
+
+
+    displayTasks();
+
+}
+
+
+
+function updateTaskProgress(){
+
+    let total = dailyTasks.length;
+
+    let completed =
+    dailyTasks.filter(task=>task.completed).length;
+
+
+    let percent = 0;
+
+
+    if(total > 0){
+
+        percent =
+        Math.round((completed/total)*100);
+
+    }
+
+
+    document.getElementById("taskProgress")
+    .innerHTML = percent + "%";
+
+
+    document.getElementById("taskProgressBar")
+    .style.width = percent + "%";
+
+}
+
+
+displayTasks();
+
+
+
