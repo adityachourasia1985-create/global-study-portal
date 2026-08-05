@@ -278,38 +278,54 @@ db.run(`
         'Version 1.0'
     )
 `);
-db.run(`
-CREATE TABLE IF NOT EXISTS about_settings (
-    id INTEGER PRIMARY KEY CHECK(id = 1),
+db.serialize(() => {
+    db.run(`
+        CREATE TABLE IF NOT EXISTS about_settings (
+            id INTEGER PRIMARY KEY CHECK(id = 1),
 
-    platform_title TEXT DEFAULT 'Global Study Portal',
-    platform_description TEXT,
+            platform_title TEXT DEFAULT 'Global Study Portal',
+            platform_description TEXT,
 
-    founder_name TEXT DEFAULT 'Aditya Chourasia',
-    founder_role TEXT DEFAULT 'Owner, Founder & Developer',
-    founder_bio TEXT,
+            founder_name TEXT DEFAULT 'Aditya Chourasia',
+            founder_role TEXT DEFAULT 'Owner, Founder & Developer',
+            founder_bio TEXT,
 
-    founder_email TEXT DEFAULT 'adityachaurasia1985@gmail.com',
-    founder_whatsapp TEXT DEFAULT '+919243645322',
-    founder_instagram TEXT DEFAULT 'https://www.instagram.com/arjittt_1985/',
-    founder_linkedin TEXT DEFAULT 'https://www.linkedin.com/in/aditya-chourasia-920a03353',
+            founder_email TEXT DEFAULT 'adityachaurasia1985@gmail.com',
+            founder_whatsapp TEXT DEFAULT '+919243645322',
+            founder_instagram TEXT,
+            founder_linkedin TEXT,
 
-    founder_skills TEXT,
+            founder_skills TEXT,
+            founder_image TEXT DEFAULT '/uploads/about/owner-profile.jpg',
 
-    founder_image TEXT DEFAULT '/uploads/about/owner-profile.jpg',
+            cofounder_enabled INTEGER DEFAULT 0,
+            cofounder_name TEXT,
+            cofounder_role TEXT,
+            cofounder_bio TEXT,
+            cofounder_image TEXT
+        )
+    `, (createError) => {
+        if (createError) {
+            console.error("about_settings table error:", createError);
+            return;
+        }
 
-    cofounder_enabled INTEGER DEFAULT 0,
-    cofounder_name TEXT,
-    cofounder_role TEXT,
-    cofounder_bio TEXT,
-    cofounder_image TEXT
-);
-`);
-
-db.run(`
-INSERT OR IGNORE INTO about_settings (id)
-VALUES (1);
-`);
+        db.run(
+            `INSERT OR IGNORE INTO about_settings (id)
+             VALUES (1)`,
+            (insertError) => {
+                if (insertError) {
+                    console.error(
+                        "about_settings default row error:",
+                        insertError
+                    );
+                } else {
+                    console.log("About settings ready");
+                }
+            }
+        );
+    });
+});
 const express = require("express");
 const session = require("express-session");
 const transporter = nodemailer.createTransport({
