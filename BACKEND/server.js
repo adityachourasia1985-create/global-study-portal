@@ -1,5 +1,9 @@
+const multer = require("multer");
+const path = require("path");
+const fs = require("fs");
 const OpenAI = require("openai");
-
+const crypto = require("crypto");
+const nodemailer = require("nodemailer");
 const openai = process.env.OPENAI_API_KEY
     ? new OpenAI({
         apiKey: process.env.OPENAI_API_KEY
@@ -14,6 +18,7 @@ const db = new sqlite3.Database(__dirname + "/polyportal.db", (err) => {
         console.log("SQLite database connected");
     }
 });
+const bcrypt = require("bcryptjs");
 db.run(
     "ALTER TABLE users ADD COLUMN permissions TEXT DEFAULT '{}'",
     (error) => {
@@ -37,6 +42,19 @@ db.serialize(() => {
         
         )
     `);
+
+
+ db.run(`
+    CREATE TABLE IF NOT EXISTS password_reset_tokens (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        token_hash TEXT NOT NULL,
+        expires_at INTEGER NOT NULL,
+        used_at INTEGER DEFAULT NULL,
+        created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    )
+`);   
 db.run(
     `ALTER TABLE users ADD COLUMN gender TEXT`,
     (err) => {
@@ -57,6 +75,7 @@ db.run(`ALTER TABLE users ADD COLUMN semester INTEGER`, () => {});
 db.run(`ALTER TABLE users ADD COLUMN admission_year INTEGER`, () => {});
 db.run(`ALTER TABLE users ADD COLUMN status TEXT DEFAULT 'active'`, () => {});
 db.run(`ALTER TABLE users ADD COLUMN profession TEXT`, () => {});
+db.run(`ALTER TABLE users ADD COLUMN profile_image TEXT`, () => {});
 db.run(`ALTER TABLE users ADD COLUMN branch_code TEXT`, () => {});
 db.run(`ALTER TABLE users ADD COLUMN group_id TEXT`, () => {});
 db.run(`ALTER TABLE users ADD COLUMN organization_code TEXT`, () => {});
@@ -259,11 +278,47 @@ db.run(`
         'Version 1.0'
     )
 `);
+db.run(`
+CREATE TABLE IF NOT EXISTS about_settings (
+    id INTEGER PRIMARY KEY CHECK(id = 1),
 
+    platform_title TEXT DEFAULT 'Global Study Portal',
+    platform_description TEXT,
+
+    founder_name TEXT DEFAULT 'Aditya Chourasia',
+    founder_role TEXT DEFAULT 'Owner, Founder & Developer',
+    founder_bio TEXT,
+
+    founder_email TEXT DEFAULT 'adityachaurasia1985@gmail.com',
+    founder_whatsapp TEXT DEFAULT '+919243645322',
+    founder_instagram TEXT DEFAULT 'https://www.instagram.com/arjittt_1985/',
+    founder_linkedin TEXT DEFAULT 'https://www.linkedin.com/in/aditya-chourasia-920a03353',
+
+    founder_skills TEXT,
+
+    founder_image TEXT DEFAULT '/uploads/about/owner-profile.jpg',
+
+    cofounder_enabled INTEGER DEFAULT 0,
+    cofounder_name TEXT,
+    cofounder_role TEXT,
+    cofounder_bio TEXT,
+    cofounder_image TEXT
+);
+`);
+
+db.run(`
+INSERT OR IGNORE INTO about_settings (id)
+VALUES (1);
+`);
 const express = require("express");
 const session = require("express-session");
-const path = require("path");
-
+const transporter = nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+        user: "adityachourasia1985@gmail.com",
+        pass: "srztnvutcoczijmr"
+    }
+});
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -275,6 +330,20 @@ app.use(
     })
 );
 app.use(express.static(__dirname));
+app.use("/uploads", express.static(path.join(__dirname, "public", "uploads")));
+// ===== Password Reset Helper =====
+function generateResetToken() {
+    return crypto.randomBytes(32).toString("hex");
+}
+
+function hashResetToken(token) {
+    return crypto.createHash("sha256").update(token).digest("hex");
+}
+
+function getResetTokenExpiry() {
+    return Math.floor(Date.now() / 1000) + (15 * 60); // 15 minutes
+}
+
 function createNotification({
     title,
     message,
@@ -396,6 +465,61 @@ function notifyUsers({
         });
     });
 }
+const profileUploadDir = path.join(
+    __dirname,
+    "public",
+    "uploads",
+    "profiles"
+);
+
+if (!fs.existsSync(profileUploadDir)) {
+    fs.mkdirSync(profileUploadDir, {
+        recursive: true
+    });
+}
+
+const profileStorage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, profileUploadDir);
+    },
+
+    filename: (req, file, cb) => {
+        const extension = path
+            .extname(file.originalname)
+            .toLowerCase();
+
+        const fileName =
+            `user-${req.session.userId}-${Date.now()}${extension}`;
+
+        cb(null, fileName);
+    }
+});
+
+const uploadProfileImage = multer({
+    storage: profileStorage,
+
+    limits: {
+        fileSize: 5 * 1024 * 1024
+    },
+
+    fileFilter: (req, file, cb) => {
+        const allowedTypes = [
+            "image/jpeg",
+            "image/png",
+            "image/webp"
+        ];
+
+        if (!allowedTypes.includes(file.mimetype)) {
+            return cb(
+                new Error(
+                    "Only JPG, PNG and WEBP images are allowed"
+                )
+            );
+        }
+
+        cb(null, true);
+    }
+});
 
 app.get("/api/notifications", (req, res) => {
     if (!req.session || !req.session.userId) {
@@ -486,50 +610,81 @@ app.post("/api/notifications/test", (req, res) => {
     });
 });
 app.get("/api/notices", (req, res) => {
+    if (!req.session.isLoggedIn) {
+        return res.status(401).json({
+            success: false,
+            message: "Please login first."
+        });
+    }
+
     const scope = getScope(req);
-    console.log("NOTICE GET SCOPE:", req.session.role, scope);
-    let sql;
+
+    console.log(
+        "NOTICE GET SCOPE:",
+        req.session.role,
+        scope
+    );
+
+    let sql = "";
     let params = [];
 
     if (scope.isOwner) {
-        // Owner -> all notices
+        // Owner can see all notices
         sql = `
-            SELECT * FROM notices
+            SELECT *
+            FROM notices
             ORDER BY created_at DESC
         `;
     } else if (req.session.role === "super_admin") {
-        // Super Admin -> entire organization
+        // Super Admin can see all notices from own organization
         sql = `
-            SELECT * FROM notices
+            SELECT *
+            FROM notices
             WHERE organization_code = ?
             ORDER BY created_at DESC
         `;
-        params = [scope.organizationCode];
+
+        params = [
+            scope.organizationCode
+        ];
     } else {
-        // Admin/User -> organization + branch
+        // Admin/User can see:
+        // 1. notices for their own branch
+        // 2. organization-wide notices created without a branch
         sql = `
-            SELECT * FROM notices
+            SELECT *
+            FROM notices
             WHERE organization_code = ?
-            AND branch_code = ?
+            AND (
+                branch_code = ?
+                OR branch_code IS NULL
+                OR TRIM(branch_code) = ''
+            )
             ORDER BY created_at DESC
         `;
+
         params = [
             scope.organizationCode,
             scope.branchCode
         ];
     }
 
-    db.all(sql, params, (err, rows) => {
-        if (err) {
+    db.all(sql, params, (error, notices) => {
+        if (error) {
+            console.error(
+                "Load notices error:",
+                error
+            );
+
             return res.status(500).json({
                 success: false,
-                message: err.message
+                message: "Could not load notices."
             });
         }
 
-        res.json({
+        return res.json({
             success: true,
-            notices: rows
+            notices
         });
     });
 });
@@ -624,6 +779,115 @@ app.delete("/api/notifications/:id", (req, res) => {
         }
     );
 });
+app.get("/api/about", (req, res) => {
+    db.get(
+        `SELECT * FROM about_settings WHERE id = 1`,
+        [],
+        (error, aboutData) => {
+            if (error) {
+                console.error("Load About error:", error);
+
+                return res.status(500).json({
+                    success: false,
+                    message: "Could not load About details."
+                });
+            }
+
+            return res.json({
+                success: true,
+                about: aboutData || {}
+            });
+        }
+    );
+});
+app.put("/api/about", (req, res) => {
+    if (
+        !req.session ||
+        !req.session.isLoggedIn ||
+        req.session.role !== "owner"
+    ) {
+        return res.status(403).json({
+            success: false,
+            message: "Only the owner can update About details."
+        });
+    }
+
+    const {
+        platform_title,
+        platform_description,
+        founder_name,
+        founder_role,
+        founder_bio,
+        founder_email,
+        founder_whatsapp,
+        founder_instagram,
+        founder_linkedin,
+        founder_skills,
+        founder_image,
+        cofounder_enabled,
+        cofounder_name,
+        cofounder_role,
+        cofounder_bio,
+        cofounder_image
+    } = req.body;
+
+    db.run(
+        `
+        UPDATE about_settings
+        SET
+            platform_title = ?,
+            platform_description = ?,
+            founder_name = ?,
+            founder_role = ?,
+            founder_bio = ?,
+            founder_email = ?,
+            founder_whatsapp = ?,
+            founder_instagram = ?,
+            founder_linkedin = ?,
+            founder_skills = ?,
+            founder_image = ?,
+            cofounder_enabled = ?,
+            cofounder_name = ?,
+            cofounder_role = ?,
+            cofounder_bio = ?,
+            cofounder_image = ?
+        WHERE id = 1
+        `,
+        [
+            platform_title || "Global Study Portal",
+            platform_description || "",
+            founder_name || "Aditya Chourasia",
+            founder_role || "Owner, Founder & Developer",
+            founder_bio || "",
+            founder_email || "",
+            founder_whatsapp || "",
+            founder_instagram || "",
+            founder_linkedin || "",
+            founder_skills || "",
+            founder_image || "/uploads/about/owner-profile.jpg",
+            cofounder_enabled ? 1 : 0,
+            cofounder_name || "",
+            cofounder_role || "",
+            cofounder_bio || "",
+            cofounder_image || ""
+        ],
+        function (error) {
+            if (error) {
+                console.error("Update About error:", error);
+
+                return res.status(500).json({
+                    success: false,
+                    message: "Could not update About details."
+                });
+            }
+
+            return res.json({
+                success: true,
+                message: "About details updated successfully."
+            });
+        }
+    );
+});
 
     // const notificationId = req.params.id;
     // const userId = req.session.userId;
@@ -657,47 +921,83 @@ app.delete("/api/notifications/:id", (req, res) => {
     // });
 
 
-app.post("/api/notices", (req, res) => {
-    const { title, message } = req.body;
-    const scope = getScope(req);
-    console.log("NOTICE POST SCOPE:", req.session.role, scope);
-    if (!title || !message) {
-        return res.status(400).json({
-            success: false,
-            message: "Title and message are required"
-        });
-    }
+app.post(
+    "/api/notices",
+    allowRoles("owner", "super_admin", "admin"),
+    (req, res) => {
+        const title = String(req.body.title || "").trim();
+        const message = String(req.body.message || "").trim();
+        const scope = getScope(req);
 
-    db.run(
-        `INSERT INTO notices (
-            title,
-            message,
-            organization_code,
-            branch_code
-        )
-        VALUES (?, ?, ?, ?)`,
-        [
-            title,
-            message,
-            scope.organizationCode,
-            scope.branchCode
-        ],
-        function (err) {
-            if (err) {
-                return res.status(500).json({
-                    success: false,
-                    message: err.message
-                });
-            }
+        console.log(
+            "NOTICE POST SCOPE:",
+            req.session.role,
+            scope
+        );
 
-            res.json({
-                success: true,
-                message: "Notice added successfully",
-                id: this.lastID
+        if (!title || !message) {
+            return res.status(400).json({
+                success: false,
+                message: "Title and message are required."
             });
         }
-    );
-});
+
+        let organizationCode = null;
+        let branchCode = null;
+
+        if (scope.isOwner) {
+            organizationCode =
+                req.body.organizationCode?.trim() || null;
+
+            branchCode =
+                req.body.branchCode?.trim() || null;
+        } else if (req.session.role === "super_admin") {
+            // Super Admin notice is organization-wide
+            organizationCode = scope.organizationCode;
+            branchCode = null;
+        } else if (req.session.role === "admin") {
+            // Admin notice is branch-specific
+            organizationCode = scope.organizationCode;
+            branchCode = scope.branchCode;
+        }
+
+        db.run(
+            `INSERT INTO notices (
+                title,
+                message,
+                organization_code,
+                branch_code
+            )
+            VALUES (?, ?, ?, ?)`,
+            [
+                title,
+                message,
+                organizationCode,
+                branchCode
+            ],
+            function (error) {
+                if (error) {
+                    console.error(
+                        "Create notice error:",
+                        error
+                    );
+
+                    return res.status(500).json({
+                        success: false,
+                        message: "Could not add notice."
+                    });
+                }
+
+                return res.json({
+                    success: true,
+                    message: "Notice added successfully.",
+                    id: this.lastID
+                });
+            }
+        );
+    }
+);
+
 app.get("/api/progress", (req, res) => {
     const scope = getScope(req);
 
@@ -964,140 +1264,322 @@ function getScope(req) {
         branchCode: req.session.branchCode
     };
 }
+app.post(
+    "/api/users",
+    allowRoles("owner", "super_admin", "admin"),
+    (req, res) => {
+        const name = String(req.body.name || "").trim();
+        const email = String(req.body.email || "")
+            .trim()
+            .toLowerCase();
 
-// app.post("/api/users", allowRoles("owner", "admin"), (req, res) => {
-  app.post(
-  "/api/users",
-  allowRoles("owner", "super_admin", "admin"),
-  (req, res) => { 
+        const password = String(req.body.password || "").trim();
+        const role = String(req.body.role || "")
+            .trim()
+            .toLowerCase();
 
-console.log("POST /api/users HIT");
-console.log("SESSION =", req.session.role);
-console.log("BODY ROLE =", req.body.role);
-    const name = String(req.body.name || "").trim();
-const email = String(req.body.email || "").trim().toLowerCase();
-const password = String(req.body.password || "").trim();
-const role = String(req.body.role || "").trim().toLowerCase();
+        const mobile = String(req.body.mobile || "").trim();
+        const enrollment = String(req.body.enrollment || "").trim();
+        const branch = String(req.body.branch || "").trim();
 
-const mobile = String(req.body.mobile || "").trim();
-const enrollment = String(req.body.enrollment || "").trim();
-const branch = String(req.body.branch || "").trim();
-const semester = req.body.semester ? Number(req.body.semester) : null;
-const admissionYear = req.body.admission_year
-    ? Number(req.body.admission_year)
-    : null;
-const organizationCode = String(req.body.organization_code || "").trim();
+        const semester =
+            req.body.semester !== undefined &&
+            req.body.semester !== null &&
+            req.body.semester !== ""
+                ? Number(req.body.semester)
+                : null;
 
-    if (!name || !email || !password || !role) {
-       console.log("SESSION ROLE =",
-         req.session.role);
-        console.log("REQUEST ROLE =", role);
-        return res.status(400).json({
-            success: false,
-            message: "All fields are required"
-        });
-    }
-    // Owner admin aur user dono bana sakta hai.
-    console.log("SESSION =", req.session.role, "ROLE =", role);
-// Role creation rules
-if (req.session.role === "admin" && role !== "user") {
-    return res.status(403).json({
-        success: false,
-        message: "Admin can only create user accounts."
-    });
-}
+        const admissionYear =
+            req.body.admission_year !== undefined &&
+            req.body.admission_year !== null &&
+            req.body.admission_year !== ""
+                ? Number(req.body.admission_year)
+                : null;
 
-if (
-    req.session.role === "super_admin" &&
-    !["admin", "user"].includes(role)
-) {
-    return res.status(403).json({
-        success: false,
-        message: "Super Admin can only create Admin and User accounts."
-    });
-}
+        const requestedOrganizationCode = String(
+            req.body.organization_code || ""
+        ).trim();
 
-if (
-    req.session.role === "owner" &&
-    !["super_admin", "admin", "user"].includes(role)
-) {
-    return res.status(400).json({
-        success: false,
-        message: "Invalid role selected."
-    });
-}
+        if (!name || !email || !password || !role) {
+            return res.status(400).json({
+                success: false,
+                message: "Name, email, password and role are required"
+            });
+        }
 
+        if (password.length < 6) {
+            return res.status(400).json({
+                success: false,
+                message: "Password must be at least 6 characters"
+            });
+        }
 
-if (
-    req.session.role === "owner" &&
-    !["super_admin", "admin", "user"].includes(role)
-) {
-        return res.status(400).json({
-            success: false,
-            message: "Owner can only create admin or user accounts"
-        });
-    }
+        const allowedRoles = [
+            "owner",
+            "super_admin",
+            "admin",
+            "user"
+        ];
 
-    if (password.length < 6) {
-        return res.status(400).json({
-            success: false,
-            message: "Password must be at least 6 characters"
-        });
-    }
+        if (!allowedRoles.includes(role)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid role selected"
+            });
+        }
 
-    db.run(
-      `INSERT INTO users (
-    name,
-    email,
-    password,
-    role,
-    mobile,
-    enrollment,
-    branch,
-    semester,
-    admission_year,
-    organization_code,
-    branch_code
+        db.get(
+            `SELECT
+                id,
+                name,
+                email,
+                role,
+                organization_code,
+                branch,
+                branch_code
+             FROM users
+             WHERE LOWER(TRIM(email)) = LOWER(TRIM(?))`,
+            [req.session.email],
+            (currentUserErr, currentUser) => {
+                if (currentUserErr) {
+                    console.error(
+                        "Create user current account fetch error:",
+                        currentUserErr
+                    );
 
-)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-[
-    name,
-    email,
-    password,
-    role,
-    mobile || null,
-    enrollment || null,
-    branch || null,
-    semester,
-    admissionYear,
-    organizationCode || req.session.organizationCode || null,
-    req.session.branchCode
-],
-
-        function (err) {
-            if (err) {
-                if (err.message.includes("UNIQUE")) {
-                    return res.status(409).json({
+                    return res.status(500).json({
                         success: false,
-                        message: "This email is already registered"
+                        message: "Unable to verify current account"
                     });
                 }
 
-                return res.status(500).json({
-                    success: false,
-                    message: err.message
-                });
-            }
+                if (!currentUser) {
+                    return res.status(404).json({
+                        success: false,
+                        message: "Logged-in account not found"
+                    });
+                }
 
-            res.json({
-                success: true,
-                message: `${role} account created successfully`,
-                userId: this.lastID
-            });
-        }
-    );
-});
+                const currentRole = String(
+                    currentUser.role || ""
+                )
+                    .trim()
+                    .toLowerCase();
+
+                if (
+                    currentRole === "admin" &&
+                    role !== "user"
+                ) {
+                    return res.status(403).json({
+                        success: false,
+                        message: "Admin can only create User accounts"
+                    });
+                }
+
+                if (
+                    currentRole === "super_admin" &&
+                    !["admin", "user"].includes(role)
+                ) {
+                    return res.status(403).json({
+                        success: false,
+                        message:
+                            "Super Admin can only create Admin and User accounts"
+                    });
+                }
+
+                if (
+                    currentRole === "owner" &&
+                    !["super_admin", "admin", "user"].includes(role)
+                ) {
+                    return res.status(403).json({
+                        success: false,
+                        message:
+                            "Owner can only create Super Admin, Admin and User accounts"
+                    });
+                }
+
+                let finalOrganizationCode = "";
+                let finalBranch = branch;
+                let finalBranchCode = branch;
+
+                if (currentRole === "owner") {
+                    finalOrganizationCode =
+                        requestedOrganizationCode;
+
+                    if (!finalOrganizationCode) {
+                        return res.status(400).json({
+                            success: false,
+                            message:
+                                "Organization code is required when Owner creates an account"
+                        });
+                    }
+                } else {
+                    finalOrganizationCode = String(
+                        currentUser.organization_code || ""
+                    ).trim();
+
+                    if (!finalOrganizationCode) {
+                        return res.status(400).json({
+                            success: false,
+                            message:
+                                "Your account does not have an organization code"
+                        });
+                    }
+                }
+
+                if (currentRole === "admin") {
+                    finalBranch = String(
+                        currentUser.branch ||
+                        currentUser.branch_code ||
+                        ""
+                    ).trim();
+
+                    finalBranchCode = String(
+                        currentUser.branch_code ||
+                        currentUser.branch ||
+                        ""
+                    ).trim();
+
+                    if (!finalBranchCode) {
+                        return res.status(400).json({
+                            success: false,
+                            message:
+                                "Your Admin account does not have a branch"
+                        });
+                    }
+                }
+
+                if (
+                    currentRole === "super_admin" &&
+                    !finalBranchCode
+                ) {
+                    finalBranchCode = finalBranch;
+                }
+
+                if (
+                    currentRole === "owner" &&
+                    !finalBranchCode
+                ) {
+                    finalBranchCode = finalBranch;
+                }
+
+                db.get(
+                    `SELECT id
+                     FROM users
+                     WHERE LOWER(TRIM(email)) = LOWER(TRIM(?))`,
+                    [email],
+                    (existingUserErr, existingUser) => {
+                        if (existingUserErr) {
+                            console.error(
+                                "Existing user check error:",
+                                existingUserErr
+                            );
+
+                            return res.status(500).json({
+                                success: false,
+                                message:
+                                    "Unable to verify email availability"
+                            });
+                        }
+
+                        if (existingUser) {
+                            return res.status(409).json({
+                                success: false,
+                                message:
+                                    "This email is already registered"
+                            });
+                        }
+
+                        let hashedPassword;
+
+                        try {
+                            hashedPassword =
+                                bcrypt.hashSync(password, 10);
+                        } catch (hashErr) {
+                            console.error(
+                                "Password hashing error:",
+                                hashErr
+                            );
+
+                            return res.status(500).json({
+                                success: false,
+                                message:
+                                    "Unable to secure the password"
+                            });
+                        }
+
+                        db.run(
+                            `INSERT INTO users (
+                                name,
+                                email,
+                                password,
+                                role,
+                                mobile,
+                                enrollment,
+                                branch,
+                                semester,
+                                admission_year,
+                                organization_code,
+                                branch_code
+                            )
+                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                            [
+                                name,
+                                email,
+                                hashedPassword,
+                                role,
+                                mobile || null,
+                                enrollment || null,
+                                finalBranch || null,
+                                semester,
+                                admissionYear,
+                                finalOrganizationCode,
+                                finalBranchCode || null
+                            ],
+                            function (insertErr) {
+                                if (insertErr) {
+                                    console.error(
+                                        "Create user insert error:",
+                                        insertErr
+                                    );
+
+                                    if (
+                                        String(insertErr.message)
+                                            .toLowerCase()
+                                            .includes("unique")
+                                    ) {
+                                        return res.status(409).json({
+                                            success: false,
+                                            message:
+                                                "This email is already registered"
+                                        });
+                                    }
+
+                                    return res.status(500).json({
+                                        success: false,
+                                        message: insertErr.message
+                                    });
+                                }
+
+                                return res.json({
+                                    success: true,
+                                    message: `${role} account created successfully`,
+                                    userId: this.lastID,
+                                    organization_code:
+                                        finalOrganizationCode,
+                                    branch: finalBranch || null,
+                                    branch_code:
+                                        finalBranchCode || null
+                                });
+                            }
+                        );
+                    }
+                );
+            }
+        );
+    }
+);
+
 // Get all registered users - Owner/Admin only
 app.get(
     "/api/users",
@@ -1163,24 +1645,33 @@ app.get(
         }
 
         // ADMIN → assigned organization + branch
-        db.all(
-            `SELECT ${fields}
-             FROM users
-             WHERE organization_code = ?
+     db.all(
+    `SELECT ${fields}
+     FROM users
+     WHERE organization_code = ?
+     AND (
+         role = 'super_admin'
+         OR (
+             role = 'user'
              AND branch_code = ?
-             ORDER BY id DESC`,
-            [scope.organizationCode, scope.branchCode],
-            (err, users) => {
-                if (err) {
-                    return res.status(500).json({
-                        success: false,
-                        message: err.message
-                    });
-                }
+         )
+     )
+     ORDER BY id DESC`,
+    [scope.organizationCode, scope.branchCode],
+    (err, users) => {
+        if (err) {
+            return res.status(500).json({
+                success: false,
+                message: err.message
+            });
+        }
 
-                return res.json({ success: true, users });
-            }
-        );
+        return res.json({
+            success: true,
+            users
+        });
+    }
+);
     }
 );
 app.patch(
@@ -1234,7 +1725,24 @@ app.patch(
                         message: "Owner role cannot be changed"
                     });
                 }
-
+                if (
+    req.session.role === "super_admin" &&
+    account.organization_code !== req.session.organizationCode
+) {
+    return res.status(403).json({
+        success: false,
+        message: "You can only manage users from your own organization."
+    });
+}       
+if (
+    req.session.role === "super_admin" &&
+    account.role === "super_admin"
+) {
+    return res.status(403).json({
+        success: false,
+        message: "Super Admin cannot modify another Super Admin."
+    });
+}
                 if (
                     req.session.role === "super_admin" &&
                     newRole === "super_admin"
@@ -1319,6 +1827,15 @@ db.get(
                 message: "Owner account cannot be deleted"
             });
         }
+        if (
+    req.session.role === "super_admin" &&
+    account.role === "super_admin"
+) {
+    return res.status(403).json({
+        success: false,
+        message: "Super Admin cannot remove another Super Admin."
+    });
+}
 
 const currentRole = req.session.role;
 
@@ -1442,10 +1959,10 @@ app.patch(
                         message: "Admin can manage only normal users"
                     });
                 }
-
+                const hashedPassword = bcrypt.hashSync(newPassword, 10);
                 db.run(
                     "UPDATE users SET password = ? WHERE id = ?",
-                    [newPassword, userId],
+                    [hashedPassword, userId],
                     function (err) {
                         if (err) {
                             console.error("Password update error:", err);
@@ -1554,16 +2071,7 @@ db.run(
     ["Aditya", "aditya@polyportal.com", "admin123", "owner"]
 );
 
-const PORT = 3001;
-// "C:\Program Files\MongoDB\Server\8.3\bin\mongod.exe" --config "C:\Program Files\MongoDB\Server\8.3\bin\mongod.cfg"
-// mongoose.connect("mongodb://127.0.0.1:27017/polyportal")
-//     .then(() => {
-//         console.log("MongoDB Connected Successfully");
-//     })
-//     .catch((error) => {
-//         console.log("MongoDB Connection Error:", error);
-//     });
-// Project ka main folder
+const PORT = process.env.PORT || 3001;
 const FRONTEND_FOLDER = path.resolve(__dirname, "..");
 
 app.use(express.json());
@@ -1655,7 +2163,7 @@ app.post("/register", async (req, res) => {
         dateOfBirth,
         profession,
         accountType,
-        organizatonAction,
+        organizationAction,
         organizationName,
         enrollment,
         branch,
@@ -1664,6 +2172,7 @@ app.post("/register", async (req, res) => {
         branchCode,
         organizationCode
     } = req.body;
+    const hashedPassword = bcrypt.hashSync(password, 10);
 
     if (!name || !email || !password || !profession || !accountType) {
         return res.status(400).json({
@@ -1693,10 +2202,22 @@ if (
         message: "Organization Name is required."
     });
 }
-const isIndividual = accountType === "individual";
-const isNewOrganization = accountType === "organization";
+const normalizedOrganizationAction = String(
+    req.body.organizationAction || ""
+).trim().toLowerCase();
 
-let finalOrganizationCode = organizationCode?.trim() || null;
+const isIndividual =
+    accountType === "individual";
+const isNewOrganization =
+    accountType === "organization" &&
+    organizationAction === "create";
+
+const isJoiningOrganization =
+    accountType === "organization" &&
+    organizationAction === "join";
+
+let finalOrganizationCode =
+    organizationCode?.trim() || null;
 
 if (isNewOrganization) {
     try {
@@ -1755,8 +2276,8 @@ const newStatus =
         [
             name.trim(),
             email.trim().toLowerCase(),
-            password,
-          accountType === "individual" ? "admin" : "user",
+            hashedPassword,
+          newRole,
 
             mobile?.trim() || null,
             dateOfBirth || null,
@@ -1775,7 +2296,7 @@ const newStatus =
                 ? branchCode?.trim() || null
                 : null,
             finalOrganizationCode,
-                accountType === "individual" ? "approved" : "pending",
+                newStatus,
                 
 
         ],
@@ -1799,8 +2320,8 @@ const newStatus =
                 });
             }
 
-   if (accountType === "organization" && organizationName?.trim()) {
-    db.run(
+ if (isNewOrganization && organizationName?.trim()) {
+     db.run(
         `INSERT OR IGNORE INTO organizations (name, organization_code)
          VALUES (?, ?)`,
         [organizationName.trim(), finalOrganizationCode]
@@ -1819,25 +2340,45 @@ const newStatus =
 }
 }
 const newUserId = this.lastID;
+if (isJoiningOrganization) {
 notifyUsers({
     title: "New Registration Request",
     message: `${name} submitted an organization registration request.`,
     category: "request",
     priority: "important",
-    actorUserId: this.lastID,
-    targetUserId: this.lastID,
+    actorUserId: newUserId,
+targetUserId: newUserId,
     organizationCode: finalOrganizationCode || null,
     branchCode: branchCode?.trim() || null,
     recipientRoles: ["owner", "super_admin", "superadmin"],
     actionUrl: "/dashboard"
 });
+}if (isNewOrganization) {
+    return res.json({
+        success: true,
+        message:
+            `Organization created successfully. ` +
+            `Your organization code is ${finalOrganizationCode}. ` +
+            `You can login now.`,
+        organizationCode: finalOrganizationCode
+    });
+}
 
-            return res.json({
+if (isJoiningOrganization) {
+    return res.json({
+        success: true,
+        message:
+            "Registration submitted successfully. " +
+            "Your account is waiting for Super Admin approval.",
+        organizationCode: finalOrganizationCode
+    });
+}
+
+return res.json({
     success: true,
-    message: `Organization created successfully. Your organization code is ${finalOrganizationCode}. Please save this code.`,
-    organizationCode: finalOrganizationCode || organizationCode || null
+    message: "Individual account created successfully. You can login now.",
+    organizationCode: null
 });
-
         }
     );
 });
@@ -1848,6 +2389,7 @@ app.post("/api/groups/join", (req, res) => {
         password,
         mobile,
         dateOfBirth,
+        gender,
         profession,
         enrollment,
         branch,
@@ -1857,35 +2399,64 @@ app.post("/api/groups/join", (req, res) => {
         organizationCode
     } = req.body;
 
-    const cleanOrganizationCode = String(organizationCode || "")
+    const cleanName = String(name || "").trim();
+
+    const cleanEmail = String(email || "")
+        .trim()
+        .toLowerCase();
+
+    const cleanPassword = String(password || "");
+
+    const cleanOrganizationCode = String(
+        organizationCode || ""
+    )
         .trim()
         .toUpperCase();
 
-    const cleanBranchCode = String(branchCode || "")
+    // Branch Code खाली हो तो Branch को fallback बनाओ
+    const cleanBranchCode = String(
+        branchCode || branch || ""
+    )
         .trim()
         .toUpperCase();
+
+    const cleanBranch = String(branch || "").trim();
 
     if (
-        !name?.trim() ||
-        !email?.trim() ||
-        !password ||
+        !cleanName ||
+        !cleanEmail ||
+        !cleanPassword ||
         !cleanOrganizationCode ||
         !cleanBranchCode
     ) {
         return res.status(400).json({
             success: false,
-            message: "Please fill all required details."
+            message:
+                "Name, email, password, organization code and branch are required."
         });
     }
 
-    db.get(
-        `SELECT id
-         FROM organizations
-         WHERE organization_code = ?`,
-        [cleanOrganizationCode],
+    if (cleanPassword.length < 6) {
+        return res.status(400).json({
+            success: false,
+            message: "Password must be at least 6 characters."
+        });
+    }
+
+   db.get(
+    `SELECT id, organization_code
+     FROM users
+     WHERE UPPER(TRIM(organization_code)) = UPPER(TRIM(?))
+     AND LOWER(TRIM(role)) IN ('super_admin', 'owner')
+     LIMIT 1`,
+    [cleanOrganizationCode],
+
         (organizationError, organization) => {
             if (organizationError) {
-                console.error("Organization lookup error:", organizationError);
+                console.error(
+                    "Organization lookup error:",
+                    organizationError
+                );
 
                 return res.status(500).json({
                     success: false,
@@ -1900,108 +2471,175 @@ app.post("/api/groups/join", (req, res) => {
                 });
             }
 
-            db.run(
-
-                `INSERT INTO users (
-                    name,
-                    email,
-                    password,
-                    role,
-                    mobile,
-                    date_of_birth,
-                    gender,
-                    enrollment,
-                    branch,
-                    semester,
-                    admission_year,
-                    profession,
-                    branch_code,
-                    organization_code,
-                    status
-                )
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-                [
-                    name.trim(),
-                    email.trim().toLowerCase(),
-                    password,
-                    "user",
-                    mobile?.trim() || null,
-                    dateOfBirth || null,
-                    enrollment?.trim() || null,
-                    branch?.trim() || null,
-                    semester || null,
-                    admissionYear || null,
-                    profession?.trim() || "Student",
-                    cleanBranchCode,
-                    cleanOrganizationCode,
-                    "pending"
-                ],
-                function (userError) {
-                    if (userError) {
-                        console.error("Join user creation error:", userError);
-
-                        if (
-                            String(userError.message)
-                                .toLowerCase()
-                                .includes("unique")
-                        ) {
-                            return res.status(409).json({
-                                success: false,
-                                message: "This email is already registered."
-                            });
-                        }
+            db.get(
+                `SELECT id
+                 FROM users
+                 WHERE LOWER(TRIM(email)) = LOWER(TRIM(?))`,
+                [cleanEmail],
+                (emailError, existingUser) => {
+                    if (emailError) {
+                        console.error(
+                            "Join email check error:",
+                            emailError
+                        );
 
                         return res.status(500).json({
                             success: false,
-                            message: "Could not create join request."
+                            message: "Could not verify email."
                         });
                     }
 
-                    const newUserId = this.lastID;
+                    if (existingUser) {
+                        return res.status(409).json({
+                            success: false,
+                            message: "This email is already registered."
+                        });
+                    }
+
+                    let hashedPassword;
+
+                    try {
+                        hashedPassword = bcrypt.hashSync(
+                            cleanPassword,
+                            10
+                        );
+                    } catch (hashError) {
+                        console.error(
+                            "Join password hash error:",
+                            hashError
+                        );
+
+                        return res.status(500).json({
+                            success: false,
+                            message: "Could not secure password."
+                        });
+                    }
 
                     db.run(
-                        `INSERT INTO group_join_requests (
-                            user_id,
+                        `INSERT INTO users (
+                            name,
+                            email,
+                            password,
+                            role,
+                            mobile,
+                            date_of_birth,
+                            gender,
+                            enrollment,
+                            branch,
+                            semester,
+                            admission_year,
+                            profession,
+                            branch_code,
                             organization_code,
-                            branch_code
+                            status
                         )
-                        VALUES (?, ?, ?)`,
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
                         [
-                            newUserId,
+                            cleanName,
+                            cleanEmail,
+                            hashedPassword,
+                            "user",
+                            String(mobile || "").trim() || null,
+                            dateOfBirth || null,
+                            String(gender || "").trim() || null,
+                            String(enrollment || "").trim() || null,
+                            cleanBranch || cleanBranchCode,
+                            semester ? Number(semester) : null,
+                            admissionYear
+                                ? Number(admissionYear)
+                                : null,
+                            String(profession || "").trim() ||
+                                "Student",
+                            cleanBranchCode,
                             cleanOrganizationCode,
-                            cleanBranchCode
+                            "pending"
                         ],
-                        function (requestError) {
-                            if (requestError) {
+                        function (userError) {
+                            if (userError) {
                                 console.error(
-                                    "Join request insert error:",
-                                    requestError
+                                    "Join user creation error:",
+                                    userError
                                 );
+
+                                if (
+                                    String(userError.message)
+                                        .toLowerCase()
+                                        .includes("unique")
+                                ) {
+                                    return res.status(409).json({
+                                        success: false,
+                                        message:
+                                            "This email is already registered."
+                                    });
+                                }
 
                                 return res.status(500).json({
                                     success: false,
-                                    message: "Could not submit join request."
+                                    message:
+                                        "Could not create join request."
                                 });
                             }
 
-                            notifyUsers({
-                                title: "New Join Request",
-                                message: `${name.trim()} wants to join ${cleanOrganizationCode}.`,
-                                category: "request",
-                                priority: "important",
-                                actorUserId: newUserId,
-                                targetUserId: newUserId,
-                                organizationCode: cleanOrganizationCode,
-                                branchCode: cleanBranchCode,
-                                recipientRoles: ["owner", "super_admin"],
-                                actionUrl: "/dashboard"
-                            });
+                            const newUserId = this.lastID;
 
-                            return res.json({
-                                success: true,
-                                message:
-                                    "Join request submitted successfully. Wait for approval."
-                            });
+                            db.run(
+                                `INSERT INTO group_join_requests (
+                                    user_id,
+                                    organization_code,
+                                    branch_code
+                                )
+                                VALUES (?, ?, ?)`,
+                                [
+                                    newUserId,
+                                    cleanOrganizationCode,
+                                    cleanBranchCode
+                                ],
+                                function (requestError) {
+                                    if (requestError) {
+                                        console.error(
+                                            "Join request insert error:",
+                                            requestError
+                                        );
+
+                                        // आधा बना user हटाओ
+                                        db.run(
+                                            `DELETE FROM users
+                                             WHERE id = ?`,
+                                            [newUserId]
+                                        );
+
+                                        return res.status(500).json({
+                                            success: false,
+                                            message:
+                                                "Could not submit join request."
+                                        });
+                                    }
+
+                                    notifyUsers({
+                                        title: "New Join Request",
+                                        message:
+                                            `${cleanName} wants to join ${cleanOrganizationCode}.`,
+                                        category: "request",
+                                        priority: "important",
+                                        actorUserId: newUserId,
+                                        targetUserId: newUserId,
+                                        organizationCode:
+                                            cleanOrganizationCode,
+                                        branchCode: cleanBranchCode,
+                                        recipientRoles: [
+                                            "owner",
+                                            "super_admin"
+                                        ],
+                                        actionUrl: "/dashboard"
+                                    });
+
+                                    return res.json({
+                                        success: true,
+                                        message:
+                                            "Join request submitted successfully. Wait for approval."
+                                    });
+                                }
+                            );
                         }
                     );
                 }
@@ -2153,9 +2791,11 @@ app.post("/login", (req, res) => {
     const password = String(req.body.password || "").trim();
 
     db.get(
+        
         "SELECT * FROM users WHERE LOWER(email) = ?",
         [email],
         (err, account) => {
+            console.log(account)
             if (err) {
                 return res.status(500).json({
                     success: false,
@@ -2163,7 +2803,14 @@ app.post("/login", (req, res) => {
                 });
             }
 
-            if (!account || String(account.password).trim() !== password) {
+                if (
+    !account ||
+    !account.password ||
+    !bcrypt.compareSync(
+    password,
+    account.password
+)
+) {
                 return res.status(401).json({
                     success: false,
                     message: "Invalid email or password"
@@ -2187,7 +2834,8 @@ if (account.status === "rejected") {
             req.session.email = email;
             req.session.userId = account.id;
             req.session.role = account.role;
-            req.session.organizationCode = account.organization_code;
+            req.session.organizationCode =
+    account.organization_code || "OWNER";
 req.session.branchCode = account.branch_code;
             return res.json({
                 success: true,
@@ -2198,7 +2846,250 @@ req.session.branchCode = account.branch_code;
         }
     );
 });
+app.post("/forgot-password", (req, res) => {
+    const email = String(req.body.email || "")
+        .trim()
+        .toLowerCase();
 
+    const genericResponse = {
+        success: true,
+        message:
+            "If an account exists for this email, reset instructions have been generated."
+    };
+
+    if (!email) {
+        return res.status(400).json({
+            success: false,
+            message: "Please enter your registered email."
+        });
+    }
+
+    db.get(
+        `SELECT id, email
+         FROM users
+         WHERE LOWER(email) = ?`,
+        [email],
+        (findError, user) => {
+            if (findError) {
+                console.error(
+                    "Forgot password lookup error:",
+                    findError
+                );
+
+                return res.status(500).json({
+                    success: false,
+                    message: "Could not process reset request."
+                });
+            }
+
+            // Registered email है या नहीं, यह reveal नहीं करेंगे
+            if (!user) {
+                return res.json(genericResponse);
+            }
+
+            const resetToken = generateResetToken();
+            const tokenHash = hashResetToken(resetToken);
+            console.log("Generated Hash:", tokenHash);
+            const expiresAt = getResetTokenExpiry();
+            const currentTime = Math.floor(Date.now() / 1000);
+
+            // पुराने unused tokens invalidate करो
+            db.run(
+                `UPDATE password_reset_tokens
+                 SET used_at = ?
+                 WHERE user_id = ?
+                   AND used_at IS NULL`,
+                [currentTime, user.id],
+                (invalidateError) => {
+                    if (invalidateError) {
+                        console.error(
+                            "Old token invalidation error:",
+                            invalidateError
+                        );
+
+                        return res.status(500).json({
+                            success: false,
+                            message: "Could not process reset request."
+                        });
+                    }
+
+                    db.run(
+                        `INSERT INTO password_reset_tokens
+                         (user_id, token_hash, expires_at)
+                         VALUES (?, ?, ?)`,
+                        [user.id, tokenHash, expiresAt],
+                        (insertError) => {
+                            if (insertError) {
+                                console.error(
+                                    "Reset token creation error:",
+                                    insertError
+                                );
+
+                                return res.status(500).json({
+                                    success: false,
+                                    message: "Could not create reset request."
+                                });
+                            }
+
+                          const resetLink =
+    `http://localhost:3001/reset-password?token=${resetToken}`;
+
+transporter.sendMail(
+    {
+        from: '"Global Study Portal" <adityachourasia1985@gmail.com>',
+        to: email,
+        subject: "Reset Your Global Study Portal Password",
+        html: `
+            <h2>Password Reset Request</h2>
+
+            <p>Hello,</p>
+
+            <p>
+                We received a request to reset your
+                Global Study Portal password.
+            </p>
+
+            <p>
+                <a
+                    href="${resetLink}"
+                    style="
+                        display:inline-block;
+                        padding:12px 22px;
+                        background:#2563eb;
+                        color:#ffffff;
+                        text-decoration:none;
+                        border-radius:8px;
+                        font-weight:bold;
+                    "
+                >
+                    Reset Password
+                </a>
+            </p>
+
+            <p>This link will expire in 15 minutes.</p>
+
+            <p>
+                If you did not request this password reset,
+                you can ignore this email.
+            </p>
+
+            <hr>
+
+            <p><strong>Global Study Portal</strong></p>
+        `
+    },
+    (mailError) => {
+        if (mailError) {
+            console.error("Reset email error:", mailError);
+
+            return res.status(500).json({
+                success: false,
+                message: "Could not send reset email."
+            });
+        }
+
+        return res.json(genericResponse);
+    }
+);
+                            return res.json({
+                                ...genericResponse,
+
+                                // अभी सिर्फ local testing के लिए
+                                resetToken
+                            });
+                        }
+                    );
+                }
+            );
+        }
+    );
+});
+app.get("/reset-password", (req, res) => {
+    res.sendFile("reset-password.html", {
+        root: path.join(__dirname, "..")
+    });
+});
+app.post("/reset-password", (req, res) => {
+    const token = String(req.body.token || "").trim();
+    const newPassword = String(req.body.newPassword || "").trim();
+
+    if (!token || !newPassword) {
+        return res.status(400).json({
+            success: false,
+            message: "Token and password are required."
+        });
+    }
+
+    if (newPassword.length < 6) {
+        return res.status(400).json({
+            success: false,
+            message: "Password must be at least 6 characters."
+        });
+    }
+
+    const tokenHash = hashResetToken(token);
+    console.log("Received Hash:", tokenHash);
+    const currentTime = Math.floor(Date.now() / 1000);
+
+    db.get(
+        `SELECT *
+         FROM password_reset_tokens
+         WHERE token_hash = ?
+         AND used_at IS NULL
+         AND expires_at > ?`,
+        [tokenHash, currentTime],
+        (err, resetRow) => {
+
+            if (err) {
+                console.error(err);
+
+                return res.status(500).json({
+                    success: false,
+                    message: "Failed to verify token."
+                });
+            }
+
+            if (!resetRow) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Invalid or expired reset token."
+                });
+            }
+
+            const hashedPassword = bcrypt.hashSync(newPassword, 10);
+
+            db.run(
+                `UPDATE users
+                 SET password = ?
+                 WHERE id = ?`,
+                [hashedPassword, resetRow.user_id],
+                function (err) {
+
+                    if (err) {
+                        console.error(err);
+
+                        return res.status(500).json({
+                            success: false,
+                            message: "Could not update password."
+                        });
+                    }
+
+                    db.run(
+                        `UPDATE password_reset_tokens
+                         SET used_at = ?
+                         WHERE id = ?`,
+                        [currentTime, resetRow.id]
+                    );
+
+                    return res.json({
+                        success: true,
+                        message: "Password reset successfully."
+                    });
+                }
+            );
+        }
+    );
+});
 app.get("/api/groups/requests", allowRoles("owner", "admin"), (req, res) => {
 
     db.all(`
@@ -2225,9 +3116,8 @@ app.get("/api/groups/requests", allowRoles("owner", "admin"), (req, res) => {
     });
 
 });
-
 app.get("/api/me", (req, res) => {
-    if (!req.session.isLoggedIn) {
+    if (!req.session || !req.session.isLoggedIn) {
         return res.status(401).json({
             success: false,
             message: "Not logged in"
@@ -2240,20 +3130,21 @@ app.get("/api/me", (req, res) => {
             name,
             email,
             role,
-         organization_code,
+            organization_code,
             profession,
             mobile,
             enrollment,
             branch,
             semester,
-            admission_year
+            admission_year,
+            profile_image
          FROM users
          WHERE email = ?`,
         [req.session.email],
         (err, account) => {
-                console.log(err,account)
-                console.log("SESSION USER ID:",req.session.userId)
             if (err) {
+                console.error("/api/me error:", err);
+
                 return res.status(500).json({
                     success: false,
                     message: err.message
@@ -2267,23 +3158,90 @@ app.get("/api/me", (req, res) => {
                 });
             }
 
-            res.json({
+            const accountType = account.organization_code
+                ? "organization"
+                : "individual";
+
+            return res.json({
                 success: true,
+
                 userId: account.id,
+                id: account.id,
                 name: account.name,
                 email: account.email,
                 role: account.role,
-                accountType: account.organization_code ? "organization" : "individual",
+                accountType,
+                account_type: accountType,
+                organization_code: account.organization_code,
                 profession: account.profession,
                 mobile: account.mobile,
                 enrollment: account.enrollment,
                 branch: account.branch,
                 semester: account.semester,
-                admission_year: account.admission_year
+                admission_year: account.admission_year,
+
+                user: {
+                    ...account,
+                    accountType,
+                    account_type: accountType
+                }
             });
         }
     );
-});// Get permissions of CURRENT logged-in user
+});
+app.post(
+    "/api/profile/photo",
+    uploadProfileImage.single("profile_image"),
+    (req, res) => {
+        if (!req.session?.email) {
+            return res.status(401).json({
+                success: false,
+                message: "Please login first"
+            });
+        }
+
+        if (!req.file) {
+            return res.status(400).json({
+                success: false,
+                message: "Please select a profile photo"
+            });
+        }
+
+        const imagePath = `/uploads/profiles/${req.file.filename}`;
+
+        db.run(
+            `UPDATE users
+             SET profile_image = ?
+             WHERE LOWER(TRIM(email)) = LOWER(TRIM(?))`,
+            [imagePath, req.session.email],
+            function (err) {
+                if (err) {
+                    console.error("Profile photo update error:", err);
+
+                    return res.status(500).json({
+                        success: false,
+                        message: "Could not update profile photo"
+                    });
+                }
+
+                if (this.changes === 0) {
+                    return res.status(404).json({
+                        success: false,
+                        message: "Logged-in user not found"
+                    });
+                }
+
+                return res.json({
+                    success: true,
+                    message: "Profile photo updated successfully",
+                    profile_image: imagePath
+                });
+            }
+        );
+    }
+);
+
+;// Get permissions of CURRENT logged-in user
 app.get("/api/my-permissions", (req, res) => {
     if (!req.session.isLoggedIn) {
         return res.status(401).json({
@@ -2363,7 +3321,10 @@ AND (
     );
 });
 
-app.get("/api/users/:id/permissions", (req, res) => {
+app.get(
+    "/api/users/:id/permissions",
+    allowRoles("owner", "super_admin", "admin"),
+    (req, res) => {
     if (!req.session.isLoggedIn) {
         return res.status(401).json({
             success: false,
@@ -2412,7 +3373,8 @@ app.get("/api/users/:id/permissions", (req, res) => {
             });
         }
     );
-});
+    }
+);
 app.put("/api/users/:id/permissions", allowRoles("owner"), (req, res) => {
     const userId = Number(req.params.id);
     const permissions = req.body;
@@ -2502,38 +3464,6 @@ app.get("/api/user", allowRoles("owner", "admin", "user"), (req, res) => {
         message: "User access granted"
     });
 });
-// Attendance load
-
-app.get("/api/attendance", (req, res) => {
-    const scope = getScope(req);
-    const sql = scope.isOwner
-    ? `SELECT * FROM attendance ORDER BY id DESC`
-    : `SELECT * FROM attendance
-       WHERE organization_code = ?
-       AND branch_code = ?
-       ORDER BY id DESC`;
-    db.all(
-    sql,
-    scope.isOwner
-        ? []
-        : [scope.organizationCode, scope.branchCode],
-
-        (err, rows) => {
-            if (err) {
-                return res.status(500).json({
-                    success: false,
-                    message: err.message
-                });
-            }
-
-            res.json({
-                success: true,
-                attendance: rows
-            });
-        }
-    );
-});
-
 // Delete attendance record
 app.delete("/api/attendance/:id", (req, res) => {
     const id = req.params.id;
@@ -2565,111 +3495,450 @@ app.delete("/api/attendance/:id", (req, res) => {
         }
     );
 });
-
-// Attendance add - only Owner/Admin
-app.post("/api/attendance",
-    allowRoles("owner","super_admin", "admin"),
-    (req, res) => {
-        const {
-            student_email,
-            subject,
-            total_classes,
-            attended_classes
-        } = req.body;
-
-        if (!student_email || !subject) {
-            return res.status(400).json({
-                success: false,
-                message: "Student email and subject are required"
-            });
-        }
-
-        db.run(
-            `INSERT INTO attendance
-(student_email, subject, total_classes, attended_classes, organization_code, branch_code)
-VALUES (?, ?, ?, ?, ?, ?)`,
-          [
-    student_email,
-    subject,
-    Number(total_classes),
-    Number(attended_classes),
-    req.session.organizationCode,
-    req.session.branchCode
-],
-            function (err) {
-                if (err) {
-                    return res.status(500).json({
-                        success: false,
-                        message: err.message
-                    });
-                }
-
-                res.json({
-                    success: true,
-                    message: "Attendance saved successfully",
-                    id: this.lastID
-                });
-            }
-        );
-    }
-);
-app.post(
-    "/api/attendance",
-    allowRoles("owner", "super_admin", "admin"),
-    (req, res) => {
-    const {
-        student_email,
-        subject,
-        total_classes,
-        attended_classes
-    } = req.body;
-
-    if (!student_email || !subject || total_classes == null || attended_classes == null) {
-        return res.status(400).json({
+// ================================
+// GET ATTENDANCE
+// ================================
+app.get("/api/attendance", (req, res) => {
+    if (!req.session?.email) {
+        return res.status(401).json({
             success: false,
-            message: "All attendance fields are required"
+            message: "Please login first"
         });
     }
 
-    db.run(
-        `INSERT INTO attendance
-        (student_email, subject, total_classes, attended_classes)
-        VALUES (?, ?, ?, ?)`,
-        [student_email, subject, total_classes, attended_classes],
-        function(err) {
-            if (err) {
+    db.get(
+        `SELECT
+            id,
+            role,
+            email,
+            organization_code,
+            branch,
+            branch_code
+         FROM users
+         WHERE LOWER(email) = LOWER(?)`,
+        [req.session.email],
+        (userErr, currentUser) => {
+            if (userErr) {
+                console.error("Attendance user fetch error:", userErr);
+
                 return res.status(500).json({
                     success: false,
-                    message: err.message
+                    message: "Unable to load user details"
                 });
             }
 
-            res.json({
-                success: true,
-                message: "Attendance saved successfully",
-                id: this.lastID
+            if (!currentUser) {
+                return res.status(404).json({
+                    success: false,
+                    message: "Logged-in user not found"
+                });
+            }
+
+            const role = String(currentUser.role || "")
+                .trim()
+                .toLowerCase();
+
+            const organizationCode = String(
+                currentUser.organization_code || ""
+            ).trim();
+
+            const branchCode = String(
+                currentUser.branch_code ||
+                currentUser.branch ||
+                ""
+            ).trim();
+
+            let sql = "";
+            let params = [];
+
+            if (role === "owner") {
+                // Owner can see all attendance records
+                sql = `
+                    SELECT *
+                    FROM attendance
+                    ORDER BY id DESC
+                `;
+            } else if (role === "super_admin") {
+                // Super Admin can see only its organization
+                sql = `
+                    SELECT *
+                    FROM attendance
+                    WHERE LOWER(TRIM(organization_code)) = LOWER(TRIM(?))
+                    ORDER BY id DESC
+                `;
+
+                params = [organizationCode];
+            } else if (role === "admin") {
+                // Admin can see only its organization and branch
+                sql = `
+                    SELECT *
+                    FROM attendance
+                    WHERE LOWER(TRIM(organization_code)) = LOWER(TRIM(?))
+                    AND LOWER(TRIM(branch_code)) = LOWER(TRIM(?))
+                    ORDER BY id DESC
+                `;
+
+                params = [organizationCode, branchCode];
+            } else {
+                // Normal user sees only their own attendance
+                sql = `
+                    SELECT *
+                    FROM attendance
+                    WHERE LOWER(TRIM(student_email)) = LOWER(TRIM(?))
+                    ORDER BY id DESC
+                `;
+
+                params = [currentUser.email];
+            }
+
+            db.all(sql, params, (attendanceErr, rows) => {
+                if (attendanceErr) {
+                    console.error(
+                        "Attendance fetch error:",
+                        attendanceErr
+                    );
+
+                    return res.status(500).json({
+                        success: false,
+                        message: "Unable to load attendance"
+                    });
+                }
+
+                return res.json({
+                    success: true,
+                    attendance: rows || []
+                });
+            });
+        }
+    );
+});
+app.get("/api/attendance/students", (req, res) => {
+    if (!req.session?.email) {
+        return res.status(401).json({
+            success: false,
+            message: "Please login first"
+        });
+    }
+
+    db.get(
+        `SELECT
+            role,
+            organization_code,
+            branch,
+            branch_code
+         FROM users
+         WHERE LOWER(TRIM(email)) = LOWER(TRIM(?))`,
+        [req.session.email],
+        (currentUserError, currentUser) => {
+            if (currentUserError) {
+                console.error(
+                    "Attendance students current user error:",
+                    currentUserError
+                );
+
+                return res.status(500).json({
+                    success: false,
+                    message: "Unable to load current account"
+                });
+            }
+
+            if (!currentUser) {
+                return res.status(404).json({
+                    success: false,
+                    message: "Logged-in account not found"
+                });
+            }
+
+            const role = String(currentUser.role || "")
+                .trim()
+                .toLowerCase();
+
+            const organizationCode = String(
+                currentUser.organization_code || ""
+            ).trim();
+
+            const branchCode = String(
+                currentUser.branch_code ||
+                currentUser.branch ||
+                ""
+            ).trim();
+
+            let sql = "";
+            let params = [];
+
+            if (role === "owner") {
+                sql = `
+                    SELECT id, name, email, role, branch
+                    FROM users
+                    WHERE LOWER(TRIM(role)) = 'user'
+                    ORDER BY name ASC
+                `;
+           } else if (role === "super_admin") {
+    sql = `
+        SELECT id, name, email, role, branch, organization_code
+        FROM users
+        WHERE LOWER(TRIM(role)) = 'user'
+        ORDER BY name ASC
+    `;
+
+    params = [];
+            } else if (role === "admin") {
+                sql = `
+                    SELECT id, name, email, role, branch
+                    FROM users
+                    WHERE LOWER(TRIM(role)) = 'user'
+                    AND LOWER(TRIM(organization_code)) =
+                        LOWER(TRIM(?))
+                    AND LOWER(
+                        TRIM(COALESCE(branch_code, branch, ''))
+                    ) = LOWER(TRIM(?))
+                    ORDER BY name ASC
+                `;
+
+                params = [
+                    organizationCode,
+                    branchCode
+                ];
+            } else {
+                return res.status(403).json({
+                    success: false,
+                    message: "Access denied"
+                });
+            }
+
+            db.all(sql, params, (studentsError, students) => {
+                if (studentsError) {
+                    console.error(
+                        "Attendance students fetch error:",
+                        studentsError
+                    );
+
+                    return res.status(500).json({
+                        success: false,
+                        message: "Unable to load students"
+                    });
+                }
+
+                return res.json({
+                    success: true,
+                    users: students || []
+                });
             });
         }
     );
 });
 
-app.post("/change-password", (req, res) => {
-    const { currentPassword, newPassword } = req.body;
 
-    if (currentPassword !== user.password) {
-        return res.status(400).json({
-            success: false,
-            message: "Current password is incorrect."
-        });
+// ================================
+// ADD ATTENDANCE
+// ================================
+app.post(
+    "/api/attendance",
+    allowRoles("owner", "super_admin", "admin"),
+    (req, res) => {
+        const studentEmail = String(
+            req.body.student_email || ""
+        ).trim();
+
+        const subject = String(
+            req.body.subject || ""
+        ).trim();
+
+        const totalClasses = Number(req.body.total_classes);
+        const attendedClasses = Number(req.body.attended_classes);
+
+        if (
+            !studentEmail ||
+            !subject ||
+            !Number.isFinite(totalClasses) ||
+            !Number.isFinite(attendedClasses)
+        ) {
+            return res.status(400).json({
+                success: false,
+                message: "All attendance fields are required"
+            });
+        }
+
+        if (
+            totalClasses < 0 ||
+            attendedClasses < 0 ||
+            attendedClasses > totalClasses
+        ) {
+            return res.status(400).json({
+                success: false,
+                message: "Attendance values are invalid"
+            });
+        }
+
+        // First load logged-in account
+        db.get(
+            `SELECT
+                role,
+                email,
+                organization_code,
+                branch,
+                branch_code
+             FROM users
+             WHERE LOWER(email) = LOWER(?)`,
+            [req.session.email],
+            (currentUserErr, currentUser) => {
+                if (currentUserErr) {
+                    console.error(
+                        "Current user fetch error:",
+                        currentUserErr
+                    );
+
+                    return res.status(500).json({
+                        success: false,
+                        message: "Unable to verify current user"
+                    });
+                }
+
+                if (!currentUser) {
+                    return res.status(404).json({
+                        success: false,
+                        message: "Logged-in user not found"
+                    });
+                }
+
+                // Now load the student whose attendance is being added
+                db.get(
+                    `SELECT
+                        id,
+                        email,
+                        role,
+                        organization_code,
+                        branch,
+                        branch_code
+                     FROM users
+                     WHERE LOWER(TRIM(email)) = LOWER(TRIM(?))`,
+                    [studentEmail],
+                    (studentErr, student) => {
+                        if (studentErr) {
+                            console.error(
+                                "Attendance student fetch error:",
+                                studentErr
+                            );
+
+                            return res.status(500).json({
+                                success: false,
+                                message: "Unable to verify student"
+                            });
+                        }
+
+                        if (!student) {
+                            return res.status(404).json({
+                                success: false,
+                                message:
+                                    "No user account found with this email"
+                            });
+                        }
+
+                        const currentRole = String(
+                            currentUser.role || ""
+                        )
+                            .trim()
+                            .toLowerCase();
+
+                        const currentOrganization = String(
+                            currentUser.organization_code || ""
+                        ).trim();
+
+                        const currentBranch = String(
+                            currentUser.branch_code ||
+                            currentUser.branch ||
+                            ""
+                        ).trim();
+
+                        const studentOrganization = String(
+                            student.organization_code || ""
+                        ).trim();
+
+                        const studentBranch = String(
+                            student.branch_code ||
+                            student.branch ||
+                            ""
+                        ).trim();
+
+                        // Super Admin can add attendance only
+                        // inside its own organization
+                        if (
+                            currentRole === "super_admin" &&
+                            currentOrganization.toLowerCase() !==
+                                studentOrganization.toLowerCase()
+                        ) {
+                            return res.status(403).json({
+                                success: false,
+                                message:
+                                    "You cannot manage another organization's attendance"
+                            });
+                        }
+
+                        // Admin can add attendance only
+                        // inside its own organization and branch
+                        if (
+                            currentRole === "admin" &&
+                            (
+                                currentOrganization.toLowerCase() !==
+                                    studentOrganization.toLowerCase() ||
+                                currentBranch.toLowerCase() !==
+                                    studentBranch.toLowerCase()
+                            )
+                        ) {
+                            return res.status(403).json({
+                                success: false,
+                                message:
+                                    "You can manage attendance only for your own branch"
+                            });
+                        }
+
+                        db.run(
+                            `INSERT INTO attendance
+                            (
+                                student_email,
+                                subject,
+                                total_classes,
+                                attended_classes,
+                                organization_code,
+                                branch_code
+                            )
+                            VALUES (?, ?, ?, ?, ?, ?)`,
+                            [
+                                student.email.trim(),
+                                subject,
+                                totalClasses,
+                                attendedClasses,
+                                studentOrganization,
+                                studentBranch
+                            ],
+                            function (insertErr) {
+                                if (insertErr) {
+                                    console.error(
+                                        "Attendance insert error:",
+                                        insertErr
+                                    );
+
+                                    return res.status(500).json({
+                                        success: false,
+                                        message:
+                                            "Unable to save attendance"
+                                    });
+                                }
+
+                                return res.json({
+                                    success: true,
+                                    message:
+                                        "Attendance saved successfully",
+                                    id: this.lastID
+                                });
+                            }
+                        );
+                    }
+                );
+            }
+        );
     }
-
-    user.password = newPassword;
-
-    return res.json({
-        success: true,
-        message: "Password changed successfully."
-    });
-});
+);
 
 
 // Protected dashboard
@@ -2683,44 +3952,7 @@ app.get("/dashboard", (req, res) => {
     });
 });
 // Change password
-app.post("/change-password", (req, res) => {
-    if (!req.session.isLoggedIn) {
-        return res.status(401).json({
-            success: false,
-            message: "Please login first"
-        });
-    }
-
-    const { currentPassword, newPassword } = req.body;
-
-    if (!currentPassword || !newPassword) {
-        return res.status(400).json({
-            success: false,
-            message: "All fields are required"
-        });
-    }
-
-    if (currentPassword !== user.password) {
-        return res.status(401).json({
-            success: false,
-            message: "Current password is incorrect"
-        });
-    }
-
-    if (newPassword.length < 6) {
-        return res.status(400).json({
-            success: false,
-            message: "New password must be at least 6 characters"
-        });
-    }
-
-    user.password = newPassword;
-
-    return res.json({
-        success: true,
-        message: "Password changed successfully"
-    });
-});
+;
 
 // Logout
 app.get("/logout", (req, res) => {
@@ -2728,44 +3960,10 @@ app.get("/logout", (req, res) => {
         res.redirect("/");
     });
 });
-// Get complete timetable
-app.get("/api/timetable", (req, res) => {
-const scope = getScope(req);
-    db.all(
-   scope.isOwner
-? `SELECT * FROM timetable ORDER BY id ASC`
-: `SELECT * FROM timetable
-   WHERE organization_code = ?
-   AND branch_code = ?
-   ORDER BY id ASC`,
-      scope.isOwner
-? []
-: [req.session.organizationCode, req.session.branchCode],
-        (err, rows) => {
-
-            if (err) {
-                console.error(err);
-
-                return res.status(500).json({
-                    success: false,
-                    message: "Failed to load timetable"
-                });
-            }
-
-            res.json({
-                success: true,
-                timetable: rows
-            });
-        }
-    );
-
-});
-// Add timetable lecture - Owner/Admin only
 app.post(
     "/api/timetable",
-    allowRoles("owner","super_admin","admin"),
+    allowRoles("owner", "super_admin", "admin"),
     (req, res) => {
-
         const day = String(req.body.day || "").trim();
         const time = String(req.body.time || "").trim();
         const subject = String(req.body.subject || "").trim();
@@ -2776,14 +3974,41 @@ app.post(
         if (!day || !time || !subject) {
             return res.status(400).json({
                 success: false,
-                message: "Day, time and subject are required"
+                message: "Day, time and subject are required."
             });
         }
 
+        const scope = getScope(req);
+
+        let organizationCode = null;
+        let branchCode = null;
+
+        if (scope.isOwner) {
+            organizationCode =
+                String(req.body.organizationCode || "").trim() || null;
+
+            branchCode =
+                String(req.body.branchCode || "").trim() || null;
+        } else if (req.session.role === "super_admin") {
+            organizationCode = scope.organizationCode;
+            branchCode = null;
+        } else if (req.session.role === "admin") {
+            organizationCode = scope.organizationCode;
+            branchCode = scope.branchCode;
+        }
+
         db.run(
-            `INSERT INTO timetable
-(day, time, subject, faculty, room, type, organization_code, branch_code)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+            `INSERT INTO timetable (
+                day,
+                time,
+                subject,
+                faculty,
+                room,
+                type,
+                organization_code,
+                branch_code
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
             [
                 day,
                 time,
@@ -2791,27 +4016,121 @@ VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
                 faculty || null,
                 room || null,
                 type,
-                 req.session.organizationCode,
-                 req.session.branchCode
+                organizationCode,
+                branchCode
             ],
-            function (err) {
+            function (error) {
+                if (error) {
+                    console.error("Timetable insert error:", error);
 
-                if (err) {
                     return res.status(500).json({
                         success: false,
-                        message: err.message
+                        message: "Could not add lecture."
                     });
                 }
 
-                res.json({
+                return res.json({
                     success: true,
-                    message: "Lecture added successfully",
+                    message: "Lecture added successfully.",
                     id: this.lastID
                 });
             }
         );
     }
 );
+app.get("/api/timetable", (req, res) => {
+    if (!req.session.isLoggedIn || !req.session.userId) {
+        return res.status(401).json({
+            success: false,
+            message: "Please login first."
+        });
+    }
+
+    db.get(
+        `SELECT id, role, organization_code, branch_code
+         FROM users
+         WHERE id = ?`,
+        [req.session.userId],
+        (userError, user) => {
+            if (userError) {
+                console.error("Timetable user lookup error:", userError);
+
+                return res.status(500).json({
+                    success: false,
+                    message: "Could not load user scope."
+                });
+            }
+
+            if (!user) {
+                return res.status(404).json({
+                    success: false,
+                    message: "Logged-in user not found."
+                });
+            }
+
+            let sql = "";
+            let params = [];
+
+            if (user.role === "owner") {
+                sql = `
+                    SELECT *
+                    FROM timetable
+                    ORDER BY id ASC
+                `;
+            } else if (user.role === "super_admin") {
+                sql = `
+                    SELECT *
+                    FROM timetable
+                    WHERE organization_code = ?
+                    ORDER BY id ASC
+                `;
+
+                params = [user.organization_code];
+            } else {
+                sql = `
+                    SELECT *
+                    FROM timetable
+                    WHERE organization_code = ?
+                    AND (
+                        branch_code = ?
+                        OR branch_code IS NULL
+                        OR TRIM(branch_code) = ''
+                    )
+                    ORDER BY id ASC
+                `;
+
+                params = [
+                    user.organization_code,
+                    user.branch_code
+                ];
+            }
+
+            db.all(sql, params, (error, rows) => {
+                if (error) {
+                    console.error("Timetable fetch error:", error);
+
+                    return res.status(500).json({
+                        success: false,
+                        message: "Could not load timetable."
+                    });
+                }
+
+                console.log("TIMETABLE GET:", {
+                    userId: user.id,
+                    role: user.role,
+                    organizationCode: user.organization_code,
+                    branchCode: user.branch_code,
+                    records: rows.length
+                });
+
+                return res.json({
+                    success: true,
+                    timetable: rows
+                });
+            });
+        }
+    );
+});
 // Delete timetable lecture - Owner/Admin only
 app.delete(
     "/api/timetable/:id",
@@ -3042,6 +4361,98 @@ app.get("/api/debug-notices", (req, res) => {
     );
 });
 
+app.post("/change-password", (req, res) => {
+    if (!req.session.isLoggedIn || !req.session.userId) {
+        return res.status(401).json({
+            success: false,
+            message: "Please login first."
+        });
+    }
+
+    const { currentPassword, newPassword } = req.body;
+
+    if (!currentPassword || !newPassword) {
+        return res.status(400).json({
+            success: false,
+            message: "All fields are required."
+        });
+    }
+
+    if (newPassword.length < 6) {
+        return res.status(400).json({
+            success: false,
+            message: "New password must be at least 6 characters."
+        });
+    }
+
+    db.get(
+        `SELECT id, password FROM users WHERE id = ?`,
+        [req.session.userId],
+        async (error, user) => {
+            if (error) {
+                console.error("Change password lookup error:", error);
+
+                return res.status(500).json({
+                    success: false,
+                    message: "Database error."
+                });
+            }
+
+            if (!user) {
+                return res.status(404).json({
+                    success: false,
+                    message: "User account not found."
+                });
+            }
+
+            try {
+                const passwordMatches = await bcrypt.compare(
+                    currentPassword,
+                    user.password
+                );
+
+                if (!passwordMatches) {
+                    return res.status(401).json({
+                        success: false,
+                        message: "Current password is incorrect."
+                    });
+                }
+
+                const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+                db.run(
+                    `UPDATE users SET password = ? WHERE id = ?`,
+                    [hashedPassword, req.session.userId],
+                    function (updateError) {
+                        if (updateError) {
+                            console.error(
+                                "Change password update error:",
+                                updateError
+                            );
+
+                            return res.status(500).json({
+                                success: false,
+                                message: "Unable to change password."
+                            });
+                        }
+
+                        return res.json({
+                            success: true,
+                            message: "Password changed successfully."
+                        });
+                    }
+                );
+            } catch (passwordError) {
+                console.error("Password processing error:", passwordError);
+
+                return res.status(500).json({
+                    success: false,
+                    message: "Unable to process password."
+                });
+            }
+        }
+    );
+});
 
 
 app.get("/api/debug-user/:email", (req, res) => {
@@ -3131,4 +4542,7 @@ server.on("close", () => {
 
 server.on("error", (err) => {
     console.error("!!! SERVER ERROR !!!", err);
+});
+app.listen(PORT, "0.0.0.0", () => {
+    console.log(`Server running on port ${PORT}`);
 });

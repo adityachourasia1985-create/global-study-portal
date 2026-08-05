@@ -41,8 +41,33 @@ function switchSection(tabId, menuId) {
     window.scrollTo(0, 0);
 }
 
- function applyRoleTheme(role, accountType = "") {
+function applyRoleTheme(role, accountType = "") {
+    const directRole = String(role || "")
+        .trim()
+        .toLowerCase();
+
+    if (directRole === "owner") {
+        document.body.classList.remove(
+            "theme-super-admin",
+            "theme-admin",
+            "theme-user",
+            "theme-individual"
+        );
+
+        document.body.classList.add("theme-owner");
+        document.body.dataset.role = "owner";
+        return;
+    }
     const body = document.body;
+
+    const normalizedRole = String(role || "")
+        .trim()
+        .toLowerCase()
+        .replaceAll("_", "-");
+
+    const normalizedAccountType = String(accountType || "")
+        .trim()
+        .toLowerCase();
 
     body.classList.remove(
         "theme-owner",
@@ -52,27 +77,31 @@ function switchSection(tabId, menuId) {
         "theme-individual"
     );
 
-    if (accountType === "individual") {
+   if (normalizedRole === "owner") {
+    body.classList.remove(
+        "theme-super-admin",
+        "theme-admin",
+        "theme-user",
+        "theme-individual"
+    );
+
+    body.classList.add("theme-owner");
+    body.dataset.role = "owner";
+    return;
+}
+
+    if (normalizedAccountType === "individual") {
         body.classList.add("theme-individual");
         return;
     }
 
-    const normalizedRole = String(role || "user")
-        .toLowerCase()
-        .replaceAll("_", "-");
-
-    const allowedThemes = [
-        "owner",
-        "super-admin",
-        "admin",
-        "user"
-    ];
-
-    const selectedTheme = allowedThemes.includes(normalizedRole)
-        ? normalizedRole
-        : "user";
-
-    body.classList.add(`theme-${selectedTheme}`);
+    if (normalizedRole === "super-admin") {
+        body.classList.add("theme-super-admin");
+    } else if (normalizedRole === "admin") {
+        body.classList.add("theme-admin");
+    } else if (normalizedRole === "user") {
+    body.classList.add("theme-user");
+}
 }
 
 function applyRoleVisibility(role, accountType) {
@@ -106,7 +135,7 @@ if (profileSection) {
     /* User Management sidebar tab */
     if (userManagementMenu) {
         userManagementMenu.style.display =
-            canManageAccounts ? "" : "none";
+            canManageAccounts ? "block" : "none";
     }
 
     /* User Management actual page */
@@ -128,48 +157,29 @@ if (profileSection) {
     }
 
 }
-
-// Dark Mode Logic
-// Dark Mode Logic
 const toggleSwitch = document.getElementById("theme-toggle");
-const settingsToggle = document.getElementById("settings-theme-toggle");
-
-function applyTheme(theme) {
-    const selectedTheme = theme === "dark" ? "dark" : "light";
-    const isDark = selectedTheme === "dark";
-
-    document.body.classList.toggle("theme-dark", isDark);
-    document.body.classList.toggle("theme-light", !isDark);
-
-    localStorage.setItem("theme", selectedTheme);
-
-    if (toggleSwitch) {
-        toggleSwitch.checked = isDark;
-    }
-
-    if (settingsToggle) {
-        settingsToggle.checked = isDark;
-    }
-}
-
-function handleThemeChange(event) {
-    applyTheme(event.target.checked ? "dark" : "light");
-}
-
-const savedTheme = localStorage.getItem("theme") || "light";
-applyTheme(savedTheme);
 
 if (toggleSwitch) {
-    toggleSwitch.addEventListener("change", handleThemeChange);
-}
+    const savedTheme = localStorage.getItem("theme");
+    const isDarkMode = savedTheme === "dark";
 
-if (settingsToggle) {
-    settingsToggle.addEventListener("change", handleThemeChange);
-}
-/* ==========================
-   CUSTOM THEME
-========================== */
+    document.body.classList.toggle("dark-mode", isDarkMode);
+    toggleSwitch.checked = isDarkMode;
 
+    toggleSwitch.addEventListener("change", function () {
+        const darkModeEnabled = this.checked;
+
+        document.body.classList.toggle(
+            "dark-mode",
+            darkModeEnabled
+        );
+
+        localStorage.setItem(
+            "theme",
+            darkModeEnabled ? "dark" : "light"
+        );
+    });
+}
 const colorPicker = document.getElementById("theme-color-picker");
 const opacitySlider = document.getElementById("theme-opacity");
 const opacityValue = document.getElementById("theme-opacity-value");
@@ -337,41 +347,41 @@ function updateTimer() {
 }
 
 function startTimer() {
-;
+    // Stopwatch चल रहा हो तो पहले stop करो
+    if (swInterval) {
+        stopStopwatch();
+    }
+
     if (running) return;
 
     running = true;
 
-
     timer = setInterval(() => {
-
         if (time > 0) {
-
             time--;
             updateTimer();
-
         } else {
-
             clearInterval(timer);
+            timer = null;
             running = false;
 
             pomodoroCount++;
             completedMinutes += currentSessionMinutes;
+
             updateGoal();
             saveStudySession(currentSessionMinutes, "timer");
-
             updateStreak();
             saveDailyStudy(currentSessionMinutes);
+            updateAnalysis();
+
             alert("🎉 Pomodoro Completed! Great Job!");
 
-           time = currentSessionMinutes * 60;
+            time = currentSessionMinutes * 60;
             updateTimer();
-
         }
-
     }, 1000);
-
 }
+
 
 function pauseTimer() {
     clearInterval(timer);
@@ -415,6 +425,11 @@ function updateStopwatch() {
 }
 
 function startStopwatch() {
+    // Pomodoro चल रहा हो तो पहले pause करो
+    if (running) {
+        pauseTimer();
+    }
+
     if (swInterval) return;
 
     swInterval = setInterval(() => {
@@ -422,6 +437,7 @@ function startStopwatch() {
         updateStopwatch();
     }, 1000);
 }
+
 function stopStopwatch() {
     if (!swInterval) return;
 
@@ -476,23 +492,26 @@ function updateGoal() {
         localStorage.setItem("completedMinutes", completedMinutes);
         updateAnalysis();
 }
-function updateAnalysis() {
-    // -----------------------------------------
-    // Load all Timer + Stopwatch study sessions
-    // -----------------------------------------
-    const sessions =
-        JSON.parse(localStorage.getItem("studySessions")) || [];
+async function updateAnalysis() {
+    const userId = await getCurrentUserId();
 
-    const validSessions = sessions.filter(session => {
+    if (!userId) {
+        console.error("Could not identify current user for analysis");
+        return;
+    }
+
+    const sessionsKey = `studySessions_${userId}`;
+
+    const sessions = JSON.parse(
+        localStorage.getItem(sessionsKey) || "[]"
+    );
+    const validSessions = sessions.filter((session) => {
         const minutes = Number(session.minutes);
         const date = new Date(session.date);
 
         return minutes > 0 && !Number.isNaN(date.getTime());
     });
 
-    // -----------------------------------------
-    // Helper: Local date key YYYY-MM-DD
-    // -----------------------------------------
     function getLocalDateKey(dateValue) {
         const date = new Date(dateValue);
 
@@ -505,68 +524,102 @@ function updateAnalysis() {
         );
     }
 
-    // -----------------------------------------
-    // Total Study Time
-    // -----------------------------------------
-    const totalMinutes = validSessions.reduce((total, session) => {
-        return total + Number(session.minutes);
-    }, 0);
+    function formatStudyTime(minutesValue) {
+        const totalSeconds = Math.max(
+            0,
+            Math.round(Number(minutesValue || 0) * 60)
+        );
 
-    // Keep old progress variable synchronized
-    completedMinutes = totalMinutes;
+        const hours = Math.floor(totalSeconds / 3600);
+        const minutes = Math.floor((totalSeconds % 3600) / 60);
+        const seconds = totalSeconds % 60;
 
-    const totalSeconds = Math.round(totalMinutes * 60);
+        if (hours > 0) {
+            return `${hours}h ${minutes}m`;
+        }
 
-    const totalHours = Math.floor(totalSeconds / 3600);
-    const remainingMinutes = Math.floor(
-        (totalSeconds % 3600) / 60
-    );
-    const remainingSeconds = totalSeconds % 60;
+        if (minutes > 0) {
+            return seconds > 0
+                ? `${minutes}m ${seconds}s`
+                : `${minutes}m`;
+        }
 
-    let totalStudyText = "0s";
-
-    if (totalHours > 0) {
-        totalStudyText =
-            `${totalHours}h ${remainingMinutes}m`;
-    } else if (remainingMinutes > 0) {
-        totalStudyText =
-            `${remainingMinutes}m ${remainingSeconds}s`;
-    } else {
-        totalStudyText = `${remainingSeconds}s`;
+        return `${seconds}s`;
     }
 
-    const totalStudyElement =
-        document.getElementById("total-study");
-
-    if (totalStudyElement) {
-        totalStudyElement.textContent = totalStudyText;
-    }
-
-    // -----------------------------------------
-    // Today's Study Time
-    // -----------------------------------------
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
     const todayKey = getLocalDateKey(today);
 
-    const todayMinutes = validSessions.reduce(
-        (total, session) => {
-            if (getLocalDateKey(session.date) === todayKey) {
-                return total + Number(session.minutes);
-            }
+    const todaySessions = validSessions.filter((session) => {
+        return getLocalDateKey(session.date) === todayKey;
+    });
 
-            return total;
-        },
-        0
-    );
+    const todayMinutes = todaySessions.reduce((total, session) => {
+        return total + Number(session.minutes);
+    }, 0);
 
-    // -----------------------------------------
-    // Productivity Score
-    // Today's study / Daily goal
-    // -----------------------------------------
+    /*
+     * Progress Report के existing goal logic को
+     * आज के study time के साथ synchronized रखता है।
+     */
+    completedMinutes = todayMinutes;
+
+    const todayStudyText = formatStudyTime(todayMinutes);
+
+    const totalStudyElement =
+        document.getElementById("total-study");
+
+    if (totalStudyElement) {
+        totalStudyElement.textContent = todayStudyText;
+    }
+
+    const focusedTimeMetric =
+        document.getElementById("focusedTimeMetric");
+
+    if (focusedTimeMetric) {
+        focusedTimeMetric.textContent = todayStudyText;
+    }
+
+    const studyTimeStatus =
+        document.getElementById("studyTimeStatus");
+
+    if (studyTimeStatus) {
+        studyTimeStatus.textContent =
+            todayMinutes > 0
+                ? `${todaySessions.length} session${
+                      todaySessions.length === 1 ? "" : "s"
+                  } recorded today`
+                : "Pomodoro + Stopwatch";
+    }
+
+    /*
+     * Focus Sessions
+     */
+    const sessionCount = todaySessions.length;
+
+    const analysisSessions =
+        document.getElementById("analysisSessions");
+
+    const sessionMetric =
+        document.getElementById("sessionMetric");
+
+    if (analysisSessions) {
+        analysisSessions.textContent = sessionCount;
+    }
+
+    if (sessionMetric) {
+        sessionMetric.textContent = sessionCount;
+    }
+
+    /*
+     * Productivity Score
+     */
     const safeGoalMinutes =
-        Number(goalMinutes) > 0 ? Number(goalMinutes) : 60;
+        Number(goalMinutes) > 0
+            ? Number(goalMinutes)
+            : 60;
 
     let productivity = Math.round(
         (todayMinutes / safeGoalMinutes) * 100
@@ -580,17 +633,68 @@ function updateAnalysis() {
     const productivityElement =
         document.getElementById("productivity");
 
+    const productivityGaugeValue =
+        document.getElementById("productivityGaugeValue");
+
+    const goalProgressMetric =
+        document.getElementById("goalProgressMetric");
+
     if (productivityElement) {
-        productivityElement.textContent =
-            `${productivity}%`;
+        productivityElement.textContent = `${productivity}%`;
     }
 
-    // -----------------------------------------
-    // Study Streak
-    // -----------------------------------------
+    if (productivityGaugeValue) {
+        productivityGaugeValue.textContent = `${productivity}%`;
+    }
+
+    if (goalProgressMetric) {
+        goalProgressMetric.textContent = `${productivity}%`;
+    }
+
+    const productivityStatus =
+        document.getElementById("productivityStatus");
+
+    const productivityGaugeLabel =
+        document.getElementById("productivityGaugeLabel");
+
+    let productivityMessage = "No activity recorded yet";
+
+    if (productivity >= 100) {
+        productivityMessage = "Daily goal completed";
+    } else if (productivity >= 75) {
+        productivityMessage = "Excellent progress";
+    } else if (productivity >= 50) {
+        productivityMessage = "Good momentum";
+    } else if (productivity > 0) {
+        productivityMessage = "Keep building momentum";
+    }
+
+    if (productivityStatus) {
+        productivityStatus.textContent = productivityMessage;
+    }
+
+    if (productivityGaugeLabel) {
+        productivityGaugeLabel.textContent =
+            productivityMessage;
+    }
+
+    const productivityRing =
+        document.getElementById("productivityRing");
+
+    if (productivityRing) {
+        const circumference = 590.62;
+
+        productivityRing.style.strokeDashoffset =
+            circumference -
+            (circumference * productivity) / 100;
+    }
+
+    /*
+     * Study Streak
+     */
     const studiedDateKeys = [
         ...new Set(
-            validSessions.map(session =>
+            validSessions.map((session) =>
                 getLocalDateKey(session.date)
             )
         )
@@ -602,11 +706,11 @@ function updateAnalysis() {
     expectedDate.setHours(0, 0, 0, 0);
 
     for (const studiedDateKey of studiedDateKeys) {
-        const expectedKey =
-            getLocalDateKey(expectedDate);
+        const expectedKey = getLocalDateKey(expectedDate);
 
         if (studiedDateKey === expectedKey) {
             streak++;
+
             expectedDate.setDate(
                 expectedDate.getDate() - 1
             );
@@ -615,80 +719,97 @@ function updateAnalysis() {
         }
     }
 
+    const streakText =
+        `${streak} ${streak === 1 ? "Day" : "Days"}`;
+
     const streakElement =
         document.getElementById("streak");
 
+    const currentStreakValue =
+        document.getElementById("currentStreakValue");
+
     if (streakElement) {
-        streakElement.textContent =
-            `${streak} ${streak === 1 ? "Day" : "Days"}`;
+        streakElement.textContent = streakText;
     }
 
-    // -----------------------------------------
-    // Weekly Study Report: Monday to Sunday
-    // -----------------------------------------
+    if (currentStreakValue) {
+        currentStreakValue.textContent = streakText;
+    }
+
+    const streakStatus =
+        document.getElementById("streakStatus");
+
+    const streakMessage =
+        document.getElementById("streakMessage");
+
+    let streakMessageText =
+        "Study today to begin your streak";
+
+    if (streak > 0) {
+        streakMessageText =
+            streak === 1
+                ? "Great start — return tomorrow to continue."
+                : `Strong consistency — ${streak} study days in a row.`;
+    }
+
+    if (streakStatus) {
+        streakStatus.textContent = streakMessageText;
+    }
+
+    if (streakMessage) {
+        streakMessage.textContent = streakMessageText;
+    }
+
+    /*
+     * Weekly Report: Monday to Sunday
+     */
+    const dayNames = [
+        "Mon",
+        "Tue",
+        "Wed",
+        "Thu",
+        "Fri",
+        "Sat",
+        "Sun"
+    ];
+
+    const weeklyMinutes = [0, 0, 0, 0, 0, 0, 0];
+
+    const monday = new Date(today);
+
+    const currentDay = today.getDay();
+
+    const mondayOffset =
+        currentDay === 0
+            ? -6
+            : 1 - currentDay;
+
+    monday.setDate(today.getDate() + mondayOffset);
+    monday.setHours(0, 0, 0, 0);
+
+    validSessions.forEach((session) => {
+        const sessionDate = new Date(session.date);
+        sessionDate.setHours(0, 0, 0, 0);
+
+        const differenceInDays = Math.floor(
+            (sessionDate - monday) /
+            (1000 * 60 * 60 * 24)
+        );
+
+        if (
+            differenceInDays >= 0 &&
+            differenceInDays < 7
+        ) {
+            weeklyMinutes[differenceInDays] +=
+                Number(session.minutes);
+        }
+    });
+
     const weeklyChart =
         document.getElementById("weeklyChart");
 
     if (weeklyChart) {
-        const dayNames = [
-            "Mon",
-            "Tue",
-            "Wed",
-            "Thu",
-            "Fri",
-            "Sat",
-            "Sun"
-        ];
-
-        const weeklyMinutes = [
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0
-        ];
-
-        const monday = new Date(today);
-
-        const currentDay = today.getDay();
-
-        const mondayOffset =
-            currentDay === 0
-                ? -6
-                : 1 - currentDay;
-
-        monday.setDate(
-            today.getDate() + mondayOffset
-        );
-
-        monday.setHours(0, 0, 0, 0);
-
-        validSessions.forEach(session => {
-            const sessionDate =
-                new Date(session.date);
-
-            sessionDate.setHours(0, 0, 0, 0);
-
-            const differenceInDays = Math.floor(
-                (sessionDate - monday) /
-                (1000 * 60 * 60 * 24)
-            );
-
-            if (
-                differenceInDays >= 0 &&
-                differenceInDays < 7
-            ) {
-                weeklyMinutes[differenceInDays] +=
-                    Number(session.minutes);
-            }
-        });
-
-        const maxMinutes = Math.max(
-            ...weeklyMinutes,
-            1
-        );
+        const maxMinutes = Math.max(...weeklyMinutes, 1);
 
         weeklyChart.innerHTML = weeklyMinutes
             .map((minutes, index) => {
@@ -700,42 +821,10 @@ function updateAnalysis() {
                           )
                         : 2;
 
-                const totalDaySeconds =
-                    Math.round(minutes * 60);
-
-                let timeLabel = "0s";
-
-                if (totalDaySeconds >= 3600) {
-                    const hours = Math.floor(
-                        totalDaySeconds / 3600
-                    );
-
-                    const mins = Math.floor(
-                        (totalDaySeconds % 3600) / 60
-                    );
-
-                    timeLabel = `${hours}h ${mins}m`;
-                } else if (totalDaySeconds >= 60) {
-                    const mins = Math.floor(
-                        totalDaySeconds / 60
-                    );
-
-                    const secs =
-                        totalDaySeconds % 60;
-
-                    timeLabel =
-                        secs > 0
-                            ? `${mins}m ${secs}s`
-                            : `${mins}m`;
-                } else {
-                    timeLabel =
-                        `${totalDaySeconds}s`;
-                }
-
                 return `
                     <div class="weekly-bar-item">
                         <div class="weekly-minutes">
-                            ${timeLabel}
+                            ${formatStudyTime(minutes)}
                         </div>
 
                         <div class="weekly-bar-track">
@@ -753,21 +842,90 @@ function updateAnalysis() {
             })
             .join("");
     }
+
+    /*
+     * Weekly Summary
+     */
+    const weeklyTotalMinutes = weeklyMinutes.reduce(
+        (total, minutes) => total + minutes,
+        0
+    );
+
+    const activeStudyDays =
+        weeklyMinutes.filter((minutes) => minutes > 0).length;
+
+    const averageMinutes =
+        activeStudyDays > 0
+            ? weeklyTotalMinutes / activeStudyDays
+            : 0;
+
+    const bestDayMinutes = Math.max(...weeklyMinutes);
+
+    const bestDayIndex =
+        bestDayMinutes > 0
+            ? weeklyMinutes.indexOf(bestDayMinutes)
+            : -1;
+
+    const weeklyTotal =
+        document.getElementById("weeklyTotal");
+
+    const dailyAverage =
+        document.getElementById("dailyAverage");
+
+    const bestStudyDay =
+        document.getElementById("bestStudyDay");
+
+    if (weeklyTotal) {
+        weeklyTotal.textContent =
+            formatStudyTime(weeklyTotalMinutes);
+    }
+if (dailyAverage) {
+    dailyAverage.textContent =
+        formatStudyTime(averageMinutes);
 }
 
-let hrs = Math.floor(completedMinutes / 60);
-    // let mins = completedMinutes % 60;
-    let mins = Math.floor(completedMinutes % 60);
+if (bestStudyDay) {
+    bestStudyDay.textContent =
+        bestDayIndex >= 0
+            ? dayNames[bestDayIndex]
+            : "--";
+}
+    if (dailyAverage) {
+        dailyAverage.textContent =
+            formatStudyTime(averageMinutes);
+    }
 
-    // Total Study Time
-    document.getElementById("total-study").innerHTML =
-        hrs + "h " + mins + "m";
+    if (bestStudyDay) {
+        bestStudyDay.textContent =
+            bestDayIndex >= 0
+                ? dayNames[bestDayIndex]
+                : "—";
+    }
 
+    /*
+     * Weekly Streak Indicators
+     */
+    document
+        .querySelectorAll(".streak-day")
+        .forEach((element, index) => {
+            element.classList.toggle(
+                "completed",
+                weeklyMinutes[index] > 0
+            );
 
-    // Productivity Score
-    let productivity = Math.round(
-        (completedMinutes / goalMinutes) * 100
-    );
+            element.classList.toggle(
+                "active",
+                index === differenceFromMonday(today, monday)
+            );
+        });
+
+    function differenceFromMonday(date, mondayDate) {
+        return Math.floor(
+            (date - mondayDate) /
+            (1000 * 60 * 60 * 24)
+        );
+    }
+}
 
     if(productivity > 100){
         productivity = 100;
@@ -777,63 +935,36 @@ let hrs = Math.floor(completedMinutes / 60);
         productivity + "%";
 
 // Study Streak from actual Timer + Stopwatch sessions
-const studySessions =
-    JSON.parse(localStorage.getItem("studySessions")) || [];
 
-const studiedDates = [
-    ...new Set(
-        studySessions
-            .filter(session => Number(session.minutes) > 0)
-            .map(session => {
-                const date = new Date(session.date);
+async function saveGoal() {
+    const userId = await getCurrentUserId();
 
-                return (
-                    date.getFullYear() +
-                    "-" +
-                    String(date.getMonth() + 1).padStart(2, "0") +
-                    "-" +
-                    String(date.getDate()).padStart(2, "0")
-                );
-            })
-    )
-].sort().reverse();
-
-let streak = 0;
-const checkDate = new Date();
-checkDate.setHours(0, 0, 0, 0);
-
-for (const studiedDate of studiedDates) {
-    const expectedDate =
-        checkDate.getFullYear() +
-        "-" +
-        String(checkDate.getMonth() + 1).padStart(2, "0") +
-        "-" +
-        String(checkDate.getDate()).padStart(2, "0");
-
-    if (studiedDate === expectedDate) {
-        streak++;
-        checkDate.setDate(checkDate.getDate() - 1);
-    } else {
-        break;
+    if (!userId) {
+        alert("Could not identify current account.");
+        return;
     }
-}
 
-const streakElement = document.getElementById("streak");
+    const input = document.getElementById("goalInput");
+    const newGoalHours = Number(input?.value);
 
-if (streakElement) {
-    streakElement.innerHTML =
-        streak + (streak === 1 ? " Day" : " Days");
-}
+    if (
+        !Number.isFinite(newGoalHours) ||
+        newGoalHours <= 0
+    ) {
+        alert("Please enter a valid daily goal.");
+        return;
+    }
 
-function saveGoal() {
-
-    goalHours = Number(document.getElementById("goalInput").value);
-
+    goalHours = newGoalHours;
     goalMinutes = goalHours * 60;
 
-    localStorage.setItem("goalHours", goalHours);
+    localStorage.setItem(
+        `goalHours_${userId}`,
+        String(goalHours)
+    );
 
     updateGoal();
+    await updateAnalysis();
 }
 
 document.getElementById("goalInput").value = goalHours;
@@ -1116,65 +1247,83 @@ let attendanceData = [];
 //         return;
 //     }
 async function addAttendance() {
-    const subject = document.getElementById("subjectName").value.trim();
-    const total = Number(document.getElementById("totalClasses").value);
-    const attended = Number(document.getElementById("attendedClasses").value);
+    const studentEmail = document
+        .getElementById("studentEmail")
+        .value
+        .trim();
 
-  if (subject === "" || total <= 0 || attended < 0 || attended > total) {
-      alert("Attended classes cannot be more than total classes.");
+    const subject = document
+        .getElementById("subjectName")
+        .value
+        .trim();
+
+    const total = Number(
+        document.getElementById("totalClasses").value
+    );
+
+    const attended = Number(
+        document.getElementById("attendedClasses").value
+    );
+
+    if (!studentEmail) {
+        alert("Please select a student.");
         return;
     }
 
- 
-    const percentage = Math.round((attended / total) * 100);
-try {
-    const response = await fetch("/api/attendance", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-            student_email: "user@polyportal.com",
-            subject: subject,
-            total_classes: total,
-            attended_classes: attended
-        })
-    });
-
-    const data = await response.json();
-    alert(JSON.stringify(data));
-
-    if (!data.success) {
-        alert(data.message);
+    if (!subject) {
+        alert("Please enter subject name.");
         return;
     }
-} catch (error) {
-    alert("API Error: " + error.message);
-    return;
+
+    if (
+        !Number.isFinite(total) ||
+        !Number.isFinite(attended) ||
+        total <= 0 ||
+        attended < 0 ||
+        attended > total
+    ) {
+        alert(
+            "Please enter valid attendance. Attended classes cannot be more than total classes."
+        );
+        return;
+    }
+
+    try {
+        const response = await fetch("/api/attendance", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                student_email: studentEmail,
+                subject: subject,
+                total_classes: total,
+                attended_classes: attended
+            })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+            alert(data.message || "Unable to save attendance.");
+            return;
+        }
+
+        alert("Attendance saved successfully.");
+
+        document.getElementById("subjectName").value = "";
+        document.getElementById("totalClasses").value = "";
+        document.getElementById("attendedClasses").value = "";
+
+        if (typeof loadAttendance === "function") {
+            await loadAttendance();
+        }
+    } catch (error) {
+        console.error("Attendance API error:", error);
+        alert("API Error: " + error.message);
+    }
 }
 
-    const table = document.getElementById("attendanceTable");
-
-
-    table.innerHTML += `
-        <tr>
-            <td>${subject}</td>
-            <td>${total}</td>
-            <td>${attended}</td>
-            <td>${percentage}%</td>
-            <td>
-                <button onclick="this.parentElement.parentElement.remove()">
-                    Delete
-                </button>
-            </td>
-        </tr>
-    `;
-
-
-    document.getElementById("subjectName").value = "";
-    document.getElementById("totalClasses").value = "";
-    document.getElementById("attendedClasses").value = "";
-}
 
 async function loadAttendance() {
     try {
@@ -1239,79 +1388,95 @@ function saveTimetable() {
     alert("Timetable Saved Successfully!");
 
 }
+async function updateStreak() {
+    try {
+        const response = await fetch("/api/me");
+        const result = await response.json();
 
+        if (!response.ok || !result.success) {
+            console.error("Could not load current user for streak");
+            return;
+        }
 
+        const userId =
+            result.userId ||
+            result.id ||
+            result.user?.id;
 
+        if (!userId) return;
 
-function updateStreak(){
+        const streakKey = `studyStreak_${userId}`;
+        const lastDateKey = `lastStudyDate_${userId}`;
 
-    let today = new Date().toDateString();
+        const today = new Date().toDateString();
 
-    let lastStudyDate = localStorage.getItem("lastStudyDate");
+        const lastStudyDate =
+            localStorage.getItem(lastDateKey);
 
-    let streak = Number(localStorage.getItem("studyStreak")) || 0;
+        let streak =
+            Number(localStorage.getItem(streakKey)) || 0;
 
+        if (lastStudyDate !== today) {
+            streak++;
 
-    if(lastStudyDate !== today){
+            localStorage.setItem(
+                streakKey,
+                String(streak)
+            );
 
-        streak++;
+            localStorage.setItem(
+                lastDateKey,
+                today
+            );
+        }
 
-        localStorage.setItem("studyStreak", streak);
-        localStorage.setItem("lastStudyDate", today);
+        const streakElement =
+            document.getElementById("streak");
 
+        if (streakElement) {
+            streakElement.textContent =
+                `${streak} Days`;
+        }
+    } catch (error) {
+        console.error("Streak update error:", error);
     }
+}
+async function saveDailyStudy(minutes) {
+    try {
+        const response = await fetch("/api/me");
+        const result = await response.json();
 
+        if (!response.ok || !result.success) {
+            console.error("Could not load current user for study history");
+            return;
+        }
 
-    document.getElementById("streak").innerHTML =
-        streak + " Days";
+        const userId =
+            result.userId ||
+            result.id ||
+            result.user?.id;
 
+        if (!userId) return;
+
+        const today = new Date().toDateString();
+        const historyKey = `studyHistory_${userId}`;
+
+        const studyHistory = JSON.parse(
+            localStorage.getItem(historyKey) || "{}"
+        );
+
+        studyHistory[today] =
+            Number(studyHistory[today] || 0) + Number(minutes || 0);
+
+        localStorage.setItem(
+            historyKey,
+            JSON.stringify(studyHistory)
+        );
+    } catch (error) {
+        console.error("Daily study save error:", error);
+    }
 }
 
-function saveDailyStudy(minutes){
-
-    let today = new Date().toDateString();
-
-    let studyHistory = JSON.parse(
-        localStorage.getItem("studyHistory")
-    ) || {};
-
-    if(studyHistory[today]){
-        studyHistory[today] += minutes;
-    }
-    else{
-        studyHistory[today] = minutes;
-    }
-
-
-    localStorage.setItem(
-        "studyHistory",
-        JSON.stringify(studyHistory)
-    );
-
-}function saveDailyStudy(minutes){
-
-    let today = new Date().toDateString();
-
-    let studyHistory = JSON.parse(
-        localStorage.getItem("studyHistory")
-    ) || {};
-
-    if(studyHistory[today]){
-
-        studyHistory[today] += minutes;
-
-    } else {
-
-        studyHistory[today] = minutes;
-
-    }
-
-
-    localStorage.setItem(
-        "studyHistory",
-        JSON.stringify(studyHistory)
-    );
-}
 function updateWeeklyChart(){
 
     let history = getStudyHistory();
@@ -1338,89 +1503,198 @@ function updateWeeklyChart(){
 //updateWeeklyChart();
 
 
-function getStudyHistory(){
+async function getCurrentUserId() {
+    try {
+        const response = await fetch("/api/me");
+        const result = await response.json();
 
-    let studyHistory = JSON.parse(
-        localStorage.getItem("studyHistory")
-    ) || {};
+        if (!response.ok || !result.success) {
+            return null;
+        }
 
-    console.log(studyHistory);
-
-    return studyHistory;
+        return (
+            result.userId ||
+            result.id ||
+            result.user?.id ||
+            null
+        );
+    } catch (error) {
+        console.error("Current user fetch error:", error);
+        return null;
+    }
 }
-function updateWeeklyChart(){
 
+async function getStudyHistory() {
+    const userId = await getCurrentUserId();
+
+    if (!userId) {
+        return {};
+    }
+
+    const historyKey = `studyHistory_${userId}`;
+
+    try {
+        return JSON.parse(
+            localStorage.getItem(historyKey) || "{}"
+        );
+    } catch (error) {
+        console.error("Study history parse error:", error);
+        return {};
+    }
+}
+
+async function updateWeeklyChart() {
     const chart = document.getElementById("weeklyChart");
 
-    if(!chart){
+    if (!chart) {
         console.log("Weekly chart not found");
         return;
     }
 
-    let history = JSON.parse(localStorage.getItem("studyHistory")) || {};
+    const history = await getStudyHistory();
 
     chart.innerHTML = "";
 
-    for(let date in history){
+    const lastSevenDays = [];
 
-        let minutes = history[date];
+    for (let i = 6; i >= 0; i--) {
+        const date = new Date();
+        date.setDate(date.getDate() - i);
+
+        lastSevenDays.push(date);
+    }
+
+    lastSevenDays.forEach((date) => {
+        const dateKey = date.toDateString();
+        const minutes = Number(history[dateKey] || 0);
+
+        const safeHeight = Math.min(
+            Math.max(minutes * 5, 4),
+            220
+        );
 
         chart.innerHTML += `
-        <div>
-            <div class="study-bar" style="height:${minutes*5}px"></div>
-            <span>${date.substring(0,3)}</span>
-        </div>
+            <div>
+                <div
+                    class="study-bar"
+                    style="height:${safeHeight}px"
+                    title="${minutes} minutes"
+                ></div>
+
+                <span>
+                    ${date.toLocaleDateString("en-US", {
+                        weekday: "short"
+                    })}
+                </span>
+            </div>
         `;
-    }
+    });
 }
 async function loadDashboardProfile() {
-const response = await fetch("/api/me");
-const data = await response.json();
+    try {
+        const response = await fetch("/api/me");
+        const data = await response.json();
 
-if (!data.success) {
-    return;
+        if (!response.ok || !data.success) {
+            console.error(
+                "Could not load dashboard profile:",
+                data.message || "Unknown error"
+            );
+            return;
+        }
+
+       const user = data.user || data.account || data;
+       
+       const dashboardProfileImage =
+    document.getElementById("dashboardProfileImage");
+
+if (dashboardProfileImage) {
+  dashboardProfileImage.src =
+    user.profile_image || "/uploads/default-profile.png";
+}
+        document.body.classList.remove(
+    "theme-owner",
+    "theme-super-admin",
+    "theme-admin",
+    "theme-user",
+    "theme-individual"
+);
+
+if (String(user.role || "").trim().toLowerCase() === "owner") {
+    document.body.classList.add("theme-owner");
+}
+        applyRoleTheme(
+            user.role,
+            user.account_type || user.accountType
+        );
+document.body.classList.toggle(
+    "dark-mode",
+    localStorage.getItem("theme") === "dark"
+);
+        applyRoleVisibility(
+            user.role,
+            user.account_type || user.accountType
+        );
+
+        const setDashboardText = (id, label, value) => {
+            const element = document.getElementById(id);
+
+            if (element) {
+                element.textContent =
+                    `${label}: ${value || "Not Set"}`;
+            }
+        };
+
+        setDashboardText(
+            "dashboardName",
+            "Name",
+            user.name
+        );
+
+        setDashboardText(
+            "dashboardBranch",
+            "Branch",
+            user.branch
+        );
+
+        setDashboardText(
+            "dashboardSemester",
+            "Semester",
+            user.semester
+        );
+
+        setDashboardText(
+            "dashboardEnrollment",
+            "Enrollment",
+            user.enrollment
+        );
+
+        setDashboardText(
+            "dashboardEmail",
+            "Email",
+            user.email
+        );
+
+        setDashboardText(
+            "dashboardMobile",
+            "Mobile",
+            user.mobile
+        );
+
+        setDashboardText(
+            "dashboardProfession",
+            "Profession",
+            user.profession
+        );
+    } catch (error) {
+        console.error(
+            "Dashboard profile loading error:",
+            error
+        );
+    }
 }
 
-applyRoleTheme(
-    data.user?.role || data.role,
-    data.user?.account_type || data.account_type
-);
-applyRoleVisibility(
-    data.user?.role || data.role,
-    data.user?.accountType || data.accountType
-);
-document.getElementById("dashboardBranch").textContent =
-    "Branch: " + (data.branch || "Not Set");
-
-document.getElementById("dashboardSemester").textContent =
-    "Semester: " + (data.semester || "Not Set");
-
-document.getElementById("dashboardEnrollment").textContent =
-    "Enrollment: " + (data.enrollment || "Not Set");
-document.getElementById("dashboardEmail").textContent =
-    "Email: " + (data.email || "Not Set");
-}
-
-//     const name = localStorage.getItem("displayName") || "Aditya sir";
-
-//     const branch = localStorage.getItem("branch") || "Not Set";
-
-//     const semester = localStorage.getItem("semester") || "Not Set";
-
-//     const enrollment = localStorage.getItem("enrollmentNumber") || "Not Set";
-
-//     const email = localStorage.getItem("studentEmail") || "Not Set";
-
-//     // const image = localStorage.getItem("profileImage");
-// const image = localStorage.getItem("profileImage_" + localStorage.getItem("userEmail"));
-
-
-    
 loadDashboardProfile();
-
-// let focusTasks = JSON.parse(localStorage.getItem("focusTasks")) || [];
-
-
 
 function displayTasks(){
 
@@ -1674,6 +1948,44 @@ if (myRole === "owner") {
 document.addEventListener("DOMContentLoaded", async function () {
     await loadMyPermissions();
 });
+async function uploadProfilePhoto() {
+   const fileInput = document.getElementById("profileImageInput");
+
+    if (!fileInput || !fileInput.files || !fileInput.files[0]) {
+        alert("Please select a photo first.");
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append("profile_image", fileInput.files[0]);
+
+    try {
+        const response = await fetch("/api/profile/photo", {
+            method: "POST",
+            body: formData
+        });
+
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+            alert(data.message || "Could not update profile photo.");
+            return;
+        }
+const profileImage =
+    document.getElementById("profileImagePreview");
+    
+
+        if (profileImage) {
+            profileImage.src =
+                data.profile_image + "?t=" + Date.now();
+        }
+
+        alert("Profile photo updated successfully.");
+    } catch (error) {
+        console.error("Profile photo upload error:", error);
+        alert("Could not upload profile photo.");
+    }
+}
 
 // ================================
 // ACCOUNT MANAGEMENT
@@ -1681,14 +1993,16 @@ document.addEventListener("DOMContentLoaded", async function () {
 // ================================
 
 async function loadManagedUsers() {
-    const managerCard = document.getElementById("accountManagementCard");
-    const usersList = document.getElementById("managedUsersBody");
+    const managerCard =
+        document.getElementById("accountManagementCard");
 
-    // Agar HTML elements abhi page par nahi hain to quietly stop
+    const usersList =
+        document.getElementById("managedUsersBody");
+
     if (!managerCard || !usersList) return;
 
     try {
-        // Current logged-in user ki role check karo
+        // Current logged-in account
         const meResponse = await fetch("/api/me");
         const meData = await meResponse.json();
 
@@ -1697,119 +2011,196 @@ async function loadManagedUsers() {
             return;
         }
 
-        const currentRole = meData.role;
-    const isIndividual = String(accountType || "").toLowerCase() === "individual";
+        const currentRole = String(
+            meData.role || meData.user?.role || ""
+        )
+            .trim()
+            .toLowerCase()
+            .replace(/\s+/g, "_");
 
-const userManagementMenu =
-    document.getElementById("menu-users");
+        const accountType = String(
+            meData.accountType ||
+            meData.account_type ||
+            meData.user?.accountType ||
+            ""
+        )
+            .trim()
+            .toLowerCase();
 
-const accountManagementCard =
-    document.getElementById("accountManagementCard");
+        const isIndividual =
+            accountType === "individual";
 
-if (isIndividual) {
+        const userManagementMenu =
+            document.getElementById("menu-users");
+
+        const roleBadge =
+            document.getElementById("roleBadge");
+
+        if (roleBadge) {
+            roleBadge.textContent =
+                currentRole
+                    .replaceAll("_", " ")
+                    .toUpperCase();
+        }
+
+        // Individual accounts में management hide
+     if (isIndividual && currentRole !== "owner") {
     if (userManagementMenu) {
         userManagementMenu.style.display = "none";
     }
 
-    if (accountManagementCard) {
-        accountManagementCard.style.display = "none";
-    }
-}
-
-        const roleBadge = document.getElementById("roleBadge");
-
-if (roleBadge) {
-    roleBadge.textContent = currentRole
-        .replace("_", " ")
-        .toUpperCase();
-}
-        console.log("Current Role:", currentRole);
-            console.log(meData);
-   const roleSelect = document.getElementById("newUserRole");
-
-if (roleSelect) {
-    roleSelect.innerHTML = "";
-
-    if (currentRole === "owner") {
-        roleSelect.innerHTML = `
-            <option value="user">User / Student</option>
-            <option value="admin">Administrator</option>
-            <option value="super_admin">Super Admin</option>
-        `;
-    } else if (currentRole === "super_admin") {
-        roleSelect.innerHTML = `
-            <option value="user">User / Student</option>
-            <option value="admin">Administrator</option>
-        `;
-    } else if (currentRole === "admin") {
-        roleSelect.innerHTML = `
-            <option value="user">User / Student</option>
-        `;
-    }
-
-    toggleStudentFields();
-}
-
-        // Sirf owner/admin ko management panel dikhe
-if (
-    currentRole !== "owner" &&
-    currentRole !== "super_admin" &&
-    currentRole !== "admin"
-) {
     managerCard.style.display = "none";
     return;
 }
 
+        // User role के लिए management hide
+        if (
+            !["owner", "super_admin", "admin"].includes(
+                currentRole
+            )
+        ) {
+            managerCard.style.display = "none";
+            return;
+        }
+
         managerCard.style.display = "block";
 
-        // Users load karo
+        // Role dropdown restrictions
+        const roleSelect =
+            document.getElementById("newUserRole");
+
+        if (roleSelect) {
+            if (currentRole === "owner") {
+                roleSelect.innerHTML = `
+                    <option value="user">
+                        User / Student
+                    </option>
+                    <option value="admin">
+                        Administrator
+                    </option>
+                    <option value="super_admin">
+                        Super Admin
+                    </option>
+                `;
+            } else if (currentRole === "super_admin") {
+                roleSelect.innerHTML = `
+                    <option value="user">
+                        User / Student
+                    </option>
+                    <option value="admin">
+                        Administrator
+                    </option>
+                `;
+            } else if (currentRole === "admin") {
+                roleSelect.innerHTML = `
+                    <option value="user">
+                        User / Student
+                    </option>
+                `;
+            }
+
+            if (typeof toggleStudentFields === "function") {
+                toggleStudentFields();
+            }
+        }
+
+        // Users load
         const response = await fetch("/api/users");
         const data = await response.json();
 
         if (!response.ok || !data.success) {
-            usersList.innerHTML = `<p>${data.message || "Could not load users"}</p>`;
+            usersList.innerHTML = `
+                <tr>
+                    <td colspan="5">
+                        ${data.message || "Could not load users"}
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        const users = Array.isArray(data.users)
+            ? data.users
+            : [];
+
+        if (users.length === 0) {
+            usersList.innerHTML = `
+                <tr>
+                    <td colspan="5">
+                        No users found.
+                    </td>
+                </tr>
+            `;
             return;
         }
 
         usersList.innerHTML = "";
 
-        if (!data.users || data.users.length === 0) {
-            usersList.innerHTML = "<p>No users found.</p>";
-            return;
-        }
+        const visibleUsers = users.slice(0, 5);
 
-     const visibleUsers = data.users.slice(0, 5);
+        visibleUsers.forEach((user) => {
+            const userRole = String(user.role || "")
+                .trim()
+                .toLowerCase()
+                .replace(/\s+/g, "_");
 
-visibleUsers.forEach(user => {
+            const isRestricted =
+                currentRole === "admin" &&
+                userRole === "super_admin";
 
             const row = document.createElement("tr");
+
             row.className = "managed-user-row";
-row.innerHTML = `
-    <td>${user.name || "No Name"}</td>
-    <td>${user.email || ""}</td>
-    <td>${user.role || "user"}</td>
-    <td>${user.status || "pending"}</td>
-    <td>
-        <button
-            type="button"
-            class="manage-account-btn"
-            onclick="openUserManager(${user.id})">
-            Manage Account
-        </button>
-    </td>
-`;
+
+            row.innerHTML = `
+                <td>${user.name || "No Name"}</td>
+                <td>${user.email || "-"}</td>
+                <td>${user.role || "user"}</td>
+                <td>${user.status || "pending"}</td>
+
+                <td>
+                    ${
+                        isRestricted
+                            ? `
+                                <span class="restricted-text">
+                                    Restricted
+                                </span>
+                            `
+                            : `
+                                <button
+                                    type="button"
+                                    class="manage-account-btn"
+                                    onclick="openUserManager(${user.id})"
+                                >
+                                    Manage Account
+                                </button>
+                            `
+                    }
+                </td>
+            `;
 
             usersList.appendChild(row);
         });
-
     } catch (error) {
-        console.error("Load managed users error:", error);
+        console.error(
+            "Load managed users error:",
+            error
+        );
+
+        usersList.innerHTML = `
+            <tr>
+                <td colspan="5">
+                    Could not load users.
+                </td>
+            </tr>
+        `;
     }
 }
+
 const showAllManagedUsersBtn = document.getElementById("showAllManagedUsersBtn");
 
 if (showAllManagedUsersBtn) {
-  showAllManagedUsersBtn.addEventListener("click", () => {
+ showAllManagedUsersBtn.addEventListener("click", async () => {
     const usersList = document.getElementById("managedUsersBody");
 
     usersList.innerHTML = "";
@@ -1820,15 +2211,23 @@ if (showAllManagedUsersBtn) {
           <td>${user.name || "-"}</td>
           <td>${user.email || "-"}</td>
           <td>${user.role || "-"}</td>
-          <td>
-            <button
-              type="button"
-              class="primary-btn"
-              onclick="openUserManager(${user.id})"
-            >
-              Manage
-            </button>
-          </td>
+    <td>
+    ${
+        currentLoggedInRole === "admin" &&
+        String(user.role || "").trim().toLowerCase() === "super_admin"
+            ? `<span>Restricted</span>`
+            : `
+                <button
+                    type="button"
+                    class="primary-btn"
+                    onclick="openUserManager(${user.id})"
+                >
+                    Manage
+                </button>
+            `
+    }
+</td>
+
         </tr>
       `;
     });
@@ -1836,10 +2235,17 @@ if (showAllManagedUsersBtn) {
     showAllManagedUsersBtn.style.display = "none";
   });
 }
+async function changeManagedUserPassword(userId = managedUserId) {
+    const numericUserId = Number(userId);
 
-async function changeManagedUserPassword(userId) {
+    if (!Number.isInteger(numericUserId) || numericUserId <= 0) {
+        alert("Please select a valid user first.");
+        return;
+    }
 
-    const newPassword = prompt("Enter new password (minimum 6 characters):");
+    const newPassword = prompt(
+        "Enter new password (minimum 6 characters):"
+    );
 
     if (!newPassword) return;
 
@@ -1849,28 +2255,32 @@ async function changeManagedUserPassword(userId) {
     }
 
     try {
-
-        const response = await fetch(`/api/users/${userId}/password`, {
-            method: "PATCH",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                password: newPassword
-            })
-        });
+        const response = await fetch(
+            `/api/users/${numericUserId}/password`,
+            {
+                method: "PATCH",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    password: newPassword
+                })
+            }
+        );
 
         const data = await response.json();
 
-        alert(data.message || "Done");
+        if (!response.ok || !data.success) {
+            alert(data.message || "Could not change password.");
+            return;
+        }
 
+        alert(data.message || "Password changed successfully.");
     } catch (error) {
-
-        console.error(error);
+        console.error("Managed password change error:", error);
         alert("Could not change password.");
     }
 }
-
 
 async function deleteManagedUser(userId) {
 
@@ -2137,10 +2547,15 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 document.addEventListener("DOMContentLoaded", function () {
     const bellButton = document.getElementById("notificationBellBtn");
+  
     const notificationBoard = document.getElementById("notificationBoard");
     const closeButton = document.getElementById("notificationCloseBtn");
-
+  console.log(bellButton, notificationBoard, closeButton);
     if (!bellButton || !notificationBoard || !closeButton) return;
+    bellButton.onclick = function () {
+    notificationBoard.classList.toggle("active");
+    document.body.classList.toggle("notification-open");
+};
 bellButton.addEventListener("click", function () {
     notificationBoard.classList.add("active");
     document.body.classList.add("notification-open");
@@ -2614,6 +3029,37 @@ async function deleteNotification(notificationId) {
         alert("Something went wrong while deleting notification.");
     }
 }
+async function loadSavedGoal() {
+    const userId = await getCurrentUserId();
+
+    if (!userId) {
+        return;
+    }
+
+    const savedGoal = Number(
+        localStorage.getItem(`goalHours_${userId}`)
+    );
+
+    goalHours =
+        Number.isFinite(savedGoal) && savedGoal > 0
+            ? savedGoal
+            : 1;
+
+    goalMinutes = goalHours * 60;
+
+    const goalInput =
+        document.getElementById("goalInput");
+
+    if (goalInput) {
+        goalInput.value = goalHours;
+    }
+
+    updateGoal();
+    await updateAnalysis();
+}
+document.addEventListener("DOMContentLoaded", () => {
+    loadSavedGoal();
+});
 
 document.addEventListener("DOMContentLoaded", function () {
     loadNotifications();
@@ -2681,19 +3127,162 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 });
-function saveStudySession(minutes, type) {
-    const sessions = JSON.parse(localStorage.getItem("studySessions")) || [];
+async function saveStudySession(minutes, type) {
+    try {
+        const userId = await getCurrentUserId();
 
-    sessions.push({
-        minutes: Number(minutes) || 0,
-        type: type,
-        date: new Date().toISOString()
-    });
+        if (!userId) {
+            console.error("Could not identify current user");
+            return;
+        }
 
-    localStorage.setItem("studySessions", JSON.stringify(sessions));
+        const sessionsKey = `studySessions_${userId}`;
 
-    console.log("Study session saved:", {
-        minutes,
-        type
-    });
+        const sessions = JSON.parse(
+            localStorage.getItem(sessionsKey) || "[]"
+        );
+
+        sessions.push({
+            minutes: Number(minutes) || 0,
+            type: String(type || "study"),
+            date: new Date().toISOString()
+        });
+
+        localStorage.setItem(
+            sessionsKey,
+            JSON.stringify(sessions)
+        );
+
+        console.log("Study session saved:", {
+            userId,
+            minutes,
+            type
+        });
+    } catch (error) {
+        console.error("Study session save error:", error);
+    }
 }
+
+document.body.classList.add("theme-owner");
+async function loadAboutSection() {
+    try {
+        const response = await fetch("/api/about");
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+            throw new Error(data.message || "Could not load About details.");
+        }
+
+        console.log("About data:", data.about);
+        const about = data.about;
+
+document.getElementById("aboutFounderName").textContent =
+    about.display_name || "Aditya Chourasia";
+
+document.getElementById("aboutFounderRole").textContent =
+    about.role || "Owner • Developer";
+
+const bio = document.getElementById("aboutFounderBio");
+if (bio) {
+    bio.textContent = about.bio || "";
+}
+
+document.getElementById("aboutFounderImage").src =
+    about.profile_image || "/uploads/about/owner-profile.jpg";
+    console.log("Image:", about.profile_image);
+
+const img = document.getElementById("aboutFounderImage");
+console.log(img);
+
+img.src = about.profile_image || "/uploads/about/owner-profile.jpg";
+
+    } catch (error) {
+        console.error("Load About section error:", error);
+    }
+}
+document.addEventListener("DOMContentLoaded", () => {
+    loadAboutSection();
+});
+async function loadAttendanceStudents() {
+    const studentSelect =
+        document.getElementById("studentEmail");
+
+    if (!studentSelect) return;
+
+    studentSelect.innerHTML =
+        `<option value="">Loading students...</option>`;
+
+    try {
+        const response = await fetch("/api/attendance/students");
+        const result = await response.json();
+
+        if (!response.ok || !result.success) {
+            studentSelect.innerHTML =
+                `<option value="">Unable to load students</option>`;
+            return;
+        }
+
+        const users =
+            result.users ||
+            result.accounts ||
+            result.data ||
+            [];
+
+        const students = users.filter((user) => {
+            return String(user.role || "")
+                .trim()
+                .toLowerCase() === "user";
+        });
+
+        studentSelect.innerHTML =
+            `<option value="">Select Student</option>`;
+
+        students.forEach((student) => {
+            const option = document.createElement("option");
+
+            option.value = student.email;
+
+            option.textContent =
+                `${student.name || "Unnamed User"} — ${student.email}`;
+
+            studentSelect.appendChild(option);
+        });
+
+        if (students.length === 0) {
+            studentSelect.innerHTML =
+                `<option value="">No users found</option>`;
+        }
+    } catch (error) {
+        console.error("Student dropdown error:", error);
+
+        studentSelect.innerHTML =
+            `<option value="">Unable to load students</option>`;
+    }
+}
+document.addEventListener("DOMContentLoaded", () => {
+    loadAttendanceStudents();
+});
+
+async function updateRoleBadge() {
+    const roleBadge = document.getElementById("roleBadge");
+
+    if (!roleBadge) return;
+
+    try {
+        const response = await fetch("/api/me");
+        const data = await response.json();
+
+        if (!response.ok || !data.success || !data.role) {
+            roleBadge.textContent = "UNKNOWN";
+            return;
+        }
+
+        roleBadge.textContent = String(data.role)
+            .replaceAll("_", " ")
+            .toUpperCase();
+    } catch (error) {
+        console.error("Role badge update error:", error);
+        roleBadge.textContent = "OFFLINE";
+    }
+}
+document.addEventListener("DOMContentLoaded", updateRoleBadge);

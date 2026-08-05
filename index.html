@@ -10,7 +10,7 @@
     <link rel = "stylesheet" href="style.css">
     
 </head>
-<body>
+<body class="theme-owner">
 
     <div class="container">
         <nav class="sidebar">
@@ -56,10 +56,7 @@
             </ul>
            
             
-            <div class="theme-toggle-container">
-                <span>Dark Mode</span>
-                <input type="checkbox" id="theme-toggle">
-            </div>
+
         </nav>
         <main class="main-content">
 
@@ -70,7 +67,7 @@
     <p id="welcomeOrganizationName">Organization Name</p>
     </div>
 <div id="roleBadge" class="role-badge">
-    OWNER
+    LOADING...
 </div>
     <button
         type="button"
@@ -106,14 +103,6 @@
     <i class="fa-solid fa-xmark"></i>
 </button>
 
-        <button
-            type="button"
-            class="notification-close-btn"
-            id="notificationCloseBtn"
-            aria-label="Close notifications"
-        >
-            <i class="fa-solid fa-xmark"></i>
-        </button>
     </div>
 
     <div class="notification-search-wrap">
@@ -213,21 +202,26 @@
 </section>
     <section class="dashboard-grid">
 
-        <div class="card profile-dashboard-card">
-            <div class="dashboard-profile">
+    <div class="card profile-dashboard-card">
+    <div class="dashboard-profile">
 
-                <img id="dashboardProfileImage" src="" alt="Profile">
+        <img
+            id="dashboardProfileImage"
+            src="/uploads/default-profile.png"
+            alt="Profile Picture"
+        >
 
-                <div class="profile-info">
-                    <h2 id="dashboardName">Aditya sir</h2>
-                    <p id="dashboardBranch">Branch: Not Set</p>
-                    <p id="dashboardSemester">Semester: Not Set</p>
-                    <p id="dashboardEnrollment">Enrollment: Not Set</p>
-                    <p id="dashboardEmail">Email: Not Set</p>
-                </div>
-
-            </div>
+        <div class="profile-info">
+            <h2 id="dashboardName">Name: Not Set</h2>
+            <p id="dashboardBranch">Branch: Not Set</p>
+            <p id="dashboardSemester">Semester: Not Set</p>
+            <p id="dashboardEnrollment">Enrollment: Not Set</p>
+            <p id="dashboardEmail">Email: Not Set</p>
         </div>
+
+    </div>
+</div>
+
 
         <div class="card">
             <h3>📊 Overall Attendance</h3>
@@ -289,40 +283,53 @@
     </section>
 
 </div>
-
 <div id="timetable-tab" class="tab-content">
+    <section class="tt-panel">
 
-    <div class="card">
-
-        <div class="timetable-header">
-            <div>
-                <h2>
+        <header class="tt-header">
+            <div class="tt-title-area">
+                <div class="tt-title-icon">
                     <i class="fa-solid fa-calendar-days"></i>
-                    Timetable Management
-                </h2>
-                <p>Manage weekly lectures and class schedule.</p>
+                </div>
+
+                <div>
+                    <span class="tt-eyebrow">ACADEMIC SCHEDULE</span>
+                    <h2>Timetable Management</h2>
+                    <p>Manage weekly lectures and class schedules.</p>
+                </div>
             </div>
 
             <button
                 type="button"
                 id="addLectureBtn"
-                class="primary-btn"
+                class="tt-add-btn"
                 onclick="showLectureForm()"
             >
                 <i class="fa-solid fa-plus"></i>
-                Add Lecture
+                <span>Add Lecture</span>
             </button>
-        </div>
+        </header>
 
-        <div id="lectureForm" style="display:none;">
+        <div id="lectureForm" class="tt-form" style="display: none;">
+            <div class="tt-form-header">
+                <div>
+                    <span class="tt-eyebrow">LECTURE DETAILS</span>
+                    <h3>Add / Edit Lecture</h3>
+                </div>
 
-            <h3>Add / Edit Lecture</h3>
+                <button
+                    type="button"
+                    class="tt-close-btn"
+                    onclick="hideLectureForm()"
+                    aria-label="Close lecture form"
+                >
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
 
-            <div class="form-row">
-
-                <div class="form-group">
-                    <label>Day</label>
-
+            <div class="tt-form-grid">
+                <div class="tt-field">
+                    <label for="lectureDay">Day</label>
                     <select id="lectureDay">
                         <option value="">Select Day</option>
                         <option value="Monday">Monday</option>
@@ -334,20 +341,13 @@
                     </select>
                 </div>
 
-                <div class="form-group">
-                    <label>Time</label>
-                    <input
-                        type="time"
-                        id="lectureTime"
-                    >
+                <div class="tt-field">
+                    <label for="lectureTime">Time</label>
+                    <input type="time" id="lectureTime">
                 </div>
 
-            </div>
-
-            <div class="form-row">
-
-                <div class="form-group">
-                    <label>Subject</label>
+                <div class="tt-field">
+                    <label for="lectureSubject">Subject</label>
                     <input
                         type="text"
                         id="lectureSubject"
@@ -355,8 +355,8 @@
                     >
                 </div>
 
-                <div class="form-group">
-                    <label>Faculty</label>
+                <div class="tt-field">
+                    <label for="lectureFaculty">Faculty</label>
                     <input
                         type="text"
                         id="lectureFaculty"
@@ -364,12 +364,8 @@
                     >
                 </div>
 
-            </div>
-
-            <div class="form-row">
-
-                <div class="form-group">
-                    <label>Room</label>
+                <div class="tt-field">
+                    <label for="lectureRoom">Room</label>
                     <input
                         type="text"
                         id="lectureRoom"
@@ -377,9 +373,8 @@
                     >
                 </div>
 
-                <div class="form-group">
-                    <label>Lecture Type</label>
-
+                <div class="tt-field">
+                    <label for="lectureType">Lecture Type</label>
                     <select id="lectureType">
                         <option value="Theory">Theory</option>
                         <option value="Practical">Practical</option>
@@ -387,60 +382,63 @@
                         <option value="Project">Project</option>
                     </select>
                 </div>
-
             </div>
 
-            <button
-                type="button"
-                class="primary-btn"
-                onclick="saveLecture()"
-            >
-                Save Lecture
-            </button>
+            <div class="tt-form-actions">
+                <button
+                    type="button"
+                    class="tt-save-btn"
+                    onclick="saveLecture()"
+                >
+                    <i class="fa-solid fa-check"></i>
+                    Save Lecture
+                </button>
 
-            <button
-                type="button"
-                onclick="hideLectureForm()"
-            >
-                Cancel
-            </button>
-
+                <button
+                    type="button"
+                    class="tt-cancel-btn"
+                    onclick="hideLectureForm()"
+                >
+                    Cancel
+                </button>
+            </div>
         </div>
 
-        <hr>
+        <div class="tt-table-section">
+            <div class="tt-table-heading">
+                <div>
+                    <span class="tt-eyebrow">WEEKLY PLAN</span>
+                    <h3>Lecture Schedule</h3>
+                </div>
+            </div>
 
-        <div class="table-responsive">
+            <div class="tt-table-wrapper">
+                <table class="tt-table">
+                    <thead>
+                        <tr>
+                            <th>Day</th>
+                            <th>Time</th>
+                            <th>Subject</th>
+                            <th>Faculty</th>
+                            <th>Room</th>
+                            <th>Type</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
 
-            <table class="custom-table">
-
-                <thead>
-                    <tr>
-                        <th>Day</th>
-                        <th>Time</th>
-                        <th>Subject</th>
-                        <th>Faculty</th>
-                        <th>Room</th>
-                        <th>Type</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-
-                <tbody id="timetableBody">
-
-                    <tr>
-                        <td colspan="7">
-                            No lectures added yet.
-                        </td>
-                    </tr>
-
-                </tbody>
-
-            </table>
-
+                    <tbody id="timetableBody">
+                        <tr>
+                            <td colspan="7" class="tt-empty">
+                                <i class="fa-regular fa-calendar-xmark"></i>
+                                <span>No lectures added yet.</span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
 
-    </div>
-
+    </section>
 </div>
 
 <div id="attendance-tab" class="tab-content">
@@ -450,13 +448,31 @@
 
         <div class="attendance-form">
 
-            <input type="text" id="subjectName" placeholder="Enter Subject Name">
+            <select id="studentEmail" required>
+                <option value="">Select Student</option>
+            </select>
 
-            <input type="number" id="totalClasses" placeholder="Total Classes">
+            <input
+                type="text"
+                id="subjectName"
+                placeholder="Enter Subject Name"
+            >
 
-            <input type="number" id="attendedClasses" placeholder="Attended Classes">
+            <input
+                type="number"
+                id="totalClasses"
+                placeholder="Total Classes"
+                min="0"
+            >
 
-            <button onclick="addAttendance()">
+            <input
+                type="number"
+                id="attendedClasses"
+                placeholder="Attended Classes"
+                min="0"
+            >
+
+            <button type="button" onclick="addAttendance()">
                 Add Subject
             </button>
 
@@ -465,6 +481,7 @@
         <table class="custom-table">
             <thead>
                 <tr>
+                    <th>Student</th>
                     <th>Subject</th>
                     <th>Total Classes</th>
                     <th>Present</th>
@@ -482,189 +499,316 @@
 </div>
 <div id="progress-tab" class="tab-content">
 
-    <section class="progress-dashboard">
+    <section class="progress-report-page">
 
-        <!-- Pomodoro -->
-       <!-- Pomodoro -->
-<div class="progress-card pomodoro-card">
-
-    <div class="progress-card-header">
-        <div>
-            <span class="progress-card-kicker">Focus Session</span>
-            <h3>🍅 Pomodoro Timer</h3>
-        </div>
-
-        <span class="pomodoro-status" id="pomodoroStatus">
-            Ready
-        </span>
-    </div>
-
-    <div class="pomodoro-mode-switch">
-        <button
-            type="button"
-            class="pomodoro-mode active"
-            onclick="setPomodoroMode(25, this)"
-        >
-            Focus
-        </button>
-
-        <button
-            type="button"
-            class="pomodoro-mode"
-            onclick="setPomodoroMode(5, this)"
-        >
-            Short Break
-        </button>
-
-        <button
-            type="button"
-            class="pomodoro-mode"
-            onclick="setPomodoroMode(15, this)"
-        >
-            Long Break
-        </button>
-    </div>
-
-    <div class="pomodoro-timer-area">
-
-        <div class="pomodoro-ring">
-            <svg viewBox="0 0 220 220">
-                <circle
-                    class="pomodoro-ring-track"
-                    cx="110"
-                    cy="110"
-                    r="96"
-                ></circle>
-
-                <circle
-                    class="pomodoro-ring-progress"
-                    id="pomodoroRing"
-                    cx="110"
-                    cy="110"
-                    r="96"
-                ></circle>
-            </svg>
-
-            <div class="pomodoro-ring-content">
-                <span class="pomodoro-session-label">
-                    Focus Time
-                </span>
-
-                <div class="timer-display" id="timer">
-                    25:00
-                </div>
-
-                <span class="pomodoro-session-count">
-                    Session 1 of 4
-                </span>
+        <header class="progress-page-header">
+            <div>
+                <span class="progress-page-kicker">Productivity Dashboard</span>
+                <h2>Progress Report</h2>
+                <p>
+                    Track your focus sessions, study time and daily goals
+                    from one organized workspace.
+                </p>
             </div>
-        </div>
 
-    </div>
-
-    <div class="progress-control-group">
-        <label for="timerInput">
-            Custom Timer
-        </label>
-
-        <div class="progress-input-row">
-            <input
-                type="number"
-                id="timerInput"
-                value="25"
-                min="1"
-                max="180"
-                placeholder="Minutes"
-            >
-
-            <button
-                type="button"
-                class="pomodoro-set-button"
-                onclick="setTimer()"
-            >
-                Set Timer
-            </button>
-        </div>
-    </div>
-
-    <div class="progress-action-grid pomodoro-actions">
-
-        <button
-            type="button"
-            class="progress-action-button start-action"
-            onclick="startTimer()"
-        >
-            <span>▶</span>
-            Start
-        </button>
-
-        <button
-            type="button"
-            class="progress-action-button pause-action"
-            onclick="pauseTimer()"
-        >
-            <span>Ⅱ</span>
-            Pause
-        </button>
-
-        <button
-            type="button"
-            class="progress-action-button reset-action"
-            onclick="resetTimer()"
-        >
-            <span>↻</span>
-            Reset
-        </button>
-
-    </div>
-
-    <div class="pomodoro-session-dots">
-        <span class="completed"></span>
-        <span></span>
-        <span></span>
-        <span></span>
-    </div>
-
-</div>
+            <div class="progress-today-badge">
+                <span class="progress-today-dot"></span>
+                Today
+            </div>
+        </header>
 
 
-        <!-- Stopwatch -->
-        <div class="progress-card stopwatch-card">
+        <section class="progress-summary-grid">
 
-            <div class="progress-card-header">
+            <article class="progress-summary-card">
+                <div class="progress-summary-icon">⏳</div>
+
                 <div>
-                    <span class="progress-card-kicker">Time Tracking</span>
-                    <h3>⏱ Stopwatch</h3>
+                    <span>Today’s Study Time</span>
+                    <strong id="summaryStudyTime">0m</strong>
+                    <small>Pomodoro + Stopwatch</small>
                 </div>
-            </div>
+            </article>
 
-            <div class="timer-display stopwatch-display" id="stopwatch">
-                00:00:00
-            </div>
+            <article class="progress-summary-card">
+                <div class="progress-summary-icon">🍅</div>
 
-            <div class="progress-action-grid stopwatch-actions">
-                <button type="button" onclick="startStopwatch()">Start</button>
-                <button type="button" onclick="stopStopwatch()">Stop</button>
-                <button type="button" onclick="resetStopwatch()">Reset</button>
-            </div>
-
-        </div>
-
-
-        <!-- Daily Goal -->
-        <div class="progress-card goal-card">
-
-            <div class="progress-card-header">
                 <div>
-                    <span class="progress-card-kicker">Daily Target</span>
-                    <h3>🎯 Daily Goal Tracker</h3>
+                    <span>Focus Sessions</span>
+                    <strong id="summarySessions">0</strong>
+                    <small>Completed today</small>
                 </div>
+            </article>
+
+            <article class="progress-summary-card">
+                <div class="progress-summary-icon">🎯</div>
+
+                <div>
+                    <span>Daily Goal</span>
+                    <strong id="summaryGoal">6h</strong>
+                    <small id="summaryGoalStatus">0% completed</small>
+                </div>
+            </article>
+
+            <article class="progress-summary-card">
+                <div class="progress-summary-icon">🔥</div>
+
+                <div>
+                    <span>Current Streak</span>
+                    <strong id="summaryStreak">1 day</strong>
+                    <small>Keep the momentum</small>
+                </div>
+            </article>
+
+        </section>
+
+
+        <section class="progress-productivity-grid">
+
+            <article class="progress-panel pomodoro-panel">
+
+                <div class="progress-panel-header">
+                    <div>
+                        <span class="progress-panel-kicker">Focus Session</span>
+                        <h3>Pomodoro Timer</h3>
+                    </div>
+
+                    <span class="pomodoro-status" id="pomodoroStatus">
+                        Ready
+                    </span>
+                </div>
+
+                <div class="pomodoro-mode-switch">
+                    <button
+                        type="button"
+                        class="pomodoro-mode active"
+                        onclick="setPomodoroMode(25, this)"
+                    >
+                        Focus
+                    </button>
+
+                    <button
+                        type="button"
+                        class="pomodoro-mode"
+                        onclick="setPomodoroMode(5, this)"
+                    >
+                        Short Break
+                    </button>
+
+                    <button
+                        type="button"
+                        class="pomodoro-mode"
+                        onclick="setPomodoroMode(15, this)"
+                    >
+                        Long Break
+                    </button>
+                </div>
+
+                <div class="pomodoro-timer-area">
+
+                    <div class="pomodoro-ring">
+                        <svg viewBox="0 0 220 220">
+                            <circle
+                                class="pomodoro-ring-track"
+                                cx="110"
+                                cy="110"
+                                r="96"
+                            ></circle>
+
+                            <circle
+                                class="pomodoro-ring-progress"
+                                id="pomodoroRing"
+                                cx="110"
+                                cy="110"
+                                r="96"
+                            ></circle>
+                        </svg>
+
+                        <div class="pomodoro-ring-content">
+                            <span class="pomodoro-session-label">
+                                Focus Time
+                            </span>
+
+                            <div class="timer-display" id="timer">
+                                25:00
+                            </div>
+
+                            <span
+                                class="pomodoro-session-count"
+                                id="pomodoroSessionCount"
+                            >
+                                Session 1 of 4
+                            </span>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="progress-control-group">
+                    <label for="timerInput">
+                        Custom Timer
+                    </label>
+
+                    <div class="progress-input-row">
+                        <input
+                            type="number"
+                            id="timerInput"
+                            value="25"
+                            min="1"
+                            max="180"
+                            placeholder="Minutes"
+                        >
+
+                        <button
+                            type="button"
+                            class="secondary-progress-button"
+                            onclick="setTimer()"
+                        >
+                            Set Timer
+                        </button>
+                    </div>
+                </div>
+
+                <div class="progress-action-grid">
+
+                    <button
+                        type="button"
+                        class="progress-action-button primary-action"
+                        onclick="startTimer()"
+                    >
+                        <span>▶</span>
+                        Start
+                    </button>
+
+                    <button
+                        type="button"
+                        class="progress-action-button"
+                        onclick="pauseTimer()"
+                    >
+                        <span>Ⅱ</span>
+                        Pause
+                    </button>
+
+                    <button
+                        type="button"
+                        class="progress-action-button"
+                        onclick="resetTimer()"
+                    >
+                        <span>↻</span>
+                        Reset
+                    </button>
+
+                </div>
+
+                <div class="pomodoro-session-dots">
+                    <span class="completed"></span>
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+
+            </article>
+
+
+            <article class="progress-panel stopwatch-panel">
+
+                <div class="progress-panel-header">
+                    <div>
+                        <span class="progress-panel-kicker">
+                            Time Tracking
+                        </span>
+
+                        <h3>Stopwatch</h3>
+                    </div>
+
+                    <span class="stopwatch-status">
+                        Manual Tracking
+                    </span>
+                </div>
+
+                <div class="stopwatch-visual">
+
+                    <div class="stopwatch-icon-wrap">
+                        ⏱
+                    </div>
+
+                    <div
+                        class="timer-display stopwatch-display"
+                        id="stopwatch"
+                    >
+                        00:00:00
+                    </div>
+
+                    <p>
+                        Track study time outside Pomodoro sessions.
+                    </p>
+
+                </div>
+
+                <div class="stopwatch-today-summary">
+                    <span>Tracked Today</span>
+                    <strong id="stopwatchTodayTime">0m</strong>
+                </div>
+
+                <div class="progress-action-grid">
+
+                    <button
+                        type="button"
+                        class="progress-action-button primary-action"
+                        onclick="startStopwatch()"
+                    >
+                        <span>▶</span>
+                        Start
+                    </button>
+
+                    <button
+                        type="button"
+                        class="progress-action-button"
+                        onclick="stopStopwatch()"
+                    >
+                        <span>Ⅱ</span>
+                        Stop
+                    </button>
+
+                    <button
+                        type="button"
+                        class="progress-action-button"
+                        onclick="resetStopwatch()"
+                    >
+                        <span>↻</span>
+                        Reset
+                    </button>
+
+                </div>
+
+            </article>
+
+        </section>
+
+
+        <section class="progress-panel goal-panel">
+
+            <div class="progress-panel-header">
+                <div>
+                    <span class="progress-panel-kicker">
+                        Daily Target
+                    </span>
+
+                    <h3>Daily Goal Tracker</h3>
+                </div>
+
+                <span class="goal-status-badge" id="goalStatusBadge">
+                    In Progress
+                </span>
             </div>
 
-            <div class="goal-layout">
+            <div class="goal-content-grid">
 
-                <div class="goal-settings">
-                    <label for="goalInput">Set Daily Goal (Hours)</label>
+                <div class="goal-setting-panel">
+
+                    <label for="goalInput">
+                        Daily Goal
+                    </label>
 
                     <div class="progress-input-row">
                         <input
@@ -675,69 +819,378 @@
                             max="24"
                         >
 
-                        <button type="button" onclick="saveGoal()">
+                        <span class="goal-input-unit">
+                            hours
+                        </span>
+
+                        <button
+                            type="button"
+                            class="secondary-progress-button"
+                            onclick="saveGoal()"
+                        >
                             Save Goal
                         </button>
                     </div>
+
+                    <p>
+                        Set a realistic target for your total focused
+                        study time today.
+                    </p>
+
                 </div>
 
-                <div class="goal-summary">
-                    <h2 id="goal-hours">
+
+                <div class="goal-progress-panel">
+
+                    <div class="goal-metric-grid">
+
+                        <div class="goal-metric">
+                            <span>Completed</span>
+                            <strong id="goalCompletedTime">
+                                0m
+                            </strong>
+                        </div>
+
+                        <div class="goal-metric">
+                            <span>Remaining</span>
+                            <strong id="goalRemainingTime">
+                                6h
+                            </strong>
+                        </div>
+
+                        <div class="goal-metric">
+                            <span>Progress</span>
+                            <strong id="goal-percent">
+                                0%
+                            </strong>
+                        </div>
+
+                    </div>
+
+                    <div class="goal-progress-track">
+                        <div
+                            class="goal-progress-fill"
+                            id="goal-progress"
+                        ></div>
+                    </div>
+
+                    <div class="goal-progress-footer">
+                        <span id="goalProgressMessage">
+                            Start a focus session to begin today’s progress.
+                        </span>
+
+                        <strong id="goalTargetLabel">
+                            Goal: 6h
+                        </strong>
+                    </div>
+
+                    <h2 id="goal-hours" hidden>
                         Completed : 0h 0m / 6h
                     </h2>
 
-                    <div class="progress-container">
-                        <div
-                            class="progress-bar"
-                            id="goal-progress">
-                        </div>
-                    </div>
-
-                    <div class="goal-percent-row">
-                        <span>Today's Progress</span>
-                        <strong id="goal-percent">0%</strong>
-                    </div>
                 </div>
 
             </div>
 
-        </div>
+        </section>
 
     </section>
 
 </div>
-
 <div id="analysis-tab" class="tab-content">
 
-    <section class="dashboard-grid">
+    <section class="analysis-page">
 
-        <div class="card">
-            <h3>📚 Total Study Time</h3>
-            <h1 id="total-study">0h 0m</h1>
-        </div>
+        <header class="analysis-header">
+            <div>
+                <span class="analysis-kicker">Performance Overview</span>
+                <h2>Study Analysis</h2>
+                <p>
+                    Review today’s study time, productivity,
+                    consistency and weekly progress.
+                </p>
+            </div>
 
-        <div class="card">
-            <h3>🔥 Study Streak</h3>
-            <h1 id="streak">1 Day</h1>
-        </div>
+            <div class="analysis-date-badge">
+                Today
+            </div>
+        </header>
 
-        <div class="card">
-            <h3>🎯 Productivity Score</h3>
-            <h1 id="productivity">0%</h1>
-        </div>
-        <div class="card">
 
-    <h3>📊 Weekly Study Report</h3>
+        <section class="analysis-summary-grid">
 
-    <div id="weeklyChart" class="weekly-chart">
+            <article class="analysis-summary-card">
+                <div class="analysis-summary-icon">📚</div>
 
-    </div>
+                <div>
+                    <span>Today’s Study Time</span>
+                    <strong id="total-study">0h 0m</strong>
+                    <small id="studyTimeStatus">
+                        Pomodoro + Stopwatch
+                    </small>
+                </div>
+            </article>
 
-</div>
+
+            <article class="analysis-summary-card">
+                <div class="analysis-summary-icon">🔥</div>
+
+                <div>
+                    <span>Study Streak</span>
+                    <strong id="streak">0 Days</strong>
+                    <small id="streakStatus">
+                        Study today to begin your streak
+                    </small>
+                </div>
+            </article>
+
+
+            <article class="analysis-summary-card">
+                <div class="analysis-summary-icon">🎯</div>
+
+                <div>
+                    <span>Productivity Score</span>
+                    <strong id="productivity">0%</strong>
+                    <small id="productivityStatus">
+                        No activity recorded yet
+                    </small>
+                </div>
+            </article>
+
+
+            <article class="analysis-summary-card">
+                <div class="analysis-summary-icon">🍅</div>
+
+                <div>
+                    <span>Focus Sessions</span>
+                    <strong id="analysisSessions">0</strong>
+                    <small>
+                        Completed today
+                    </small>
+                </div>
+            </article>
+
+        </section>
+
+
+        <section class="analysis-main-grid">
+
+            <article class="analysis-panel productivity-panel">
+
+                <div class="analysis-panel-header">
+                    <div>
+                        <span class="analysis-panel-kicker">
+                            Productivity
+                        </span>
+
+                        <h3>Today’s Performance</h3>
+                    </div>
+
+                    <span class="analysis-status-badge">
+                        Live
+                    </span>
+                </div>
+
+
+                <div class="productivity-gauge">
+
+                    <div class="productivity-ring">
+                        <svg viewBox="0 0 220 220">
+
+                            <circle
+                                class="productivity-ring-track"
+                                cx="110"
+                                cy="110"
+                                r="94"
+                            ></circle>
+
+                            <circle
+                                class="productivity-ring-progress"
+                                id="productivityRing"
+                                cx="110"
+                                cy="110"
+                                r="94"
+                            ></circle>
+
+                        </svg>
+
+                        <div class="productivity-ring-content">
+                            <span>Productivity</span>
+                            <strong id="productivityGaugeValue">
+                                0%
+                            </strong>
+                            <small id="productivityGaugeLabel">
+                                No data yet
+                            </small>
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="productivity-detail-grid">
+
+                    <div class="productivity-detail">
+                        <span>Focused Time</span>
+                        <strong id="focusedTimeMetric">
+                            0m
+                        </strong>
+                    </div>
+
+                    <div class="productivity-detail">
+                        <span>Sessions</span>
+                        <strong id="sessionMetric">
+                            0
+                        </strong>
+                    </div>
+
+                    <div class="productivity-detail">
+                        <span>Goal Progress</span>
+                        <strong id="goalProgressMetric">
+                            0%
+                        </strong>
+                    </div>
+
+                </div>
+
+            </article>
+
+
+            <article class="analysis-panel weekly-report-panel">
+
+                <div class="analysis-panel-header">
+                    <div>
+                        <span class="analysis-panel-kicker">
+                            Weekly Overview
+                        </span>
+
+                        <h3>Weekly Study Report</h3>
+                    </div>
+
+                    <span class="analysis-status-badge">
+                        Last 7 Days
+                    </span>
+                </div>
+
+
+                <div
+                    id="weeklyChart"
+                    class="weekly-chart"
+                ></div>
+
+
+                <div class="weekly-summary-row">
+
+                    <div>
+                        <span>Best Day</span>
+                        <strong id="bestStudyDay">
+                            —
+                        </strong>
+                    </div>
+
+                    <div>
+                        <span>Weekly Total</span>
+                        <strong id="weeklyTotal">
+                            0m
+                        </strong>
+                    </div>
+
+                    <div>
+                        <span>Daily Average</span>
+                        <strong id="dailyAverage">
+                            0m
+                        </strong>
+                    </div>
+
+                </div>
+
+            </article>
+
+        </section>
+
+
+        <section class="analysis-panel streak-panel">
+
+            <div class="analysis-panel-header">
+                <div>
+                    <span class="analysis-panel-kicker">
+                        Consistency
+                    </span>
+
+                    <h3>Study Streak Progress</h3>
+                </div>
+            </div>
+
+
+            <div class="streak-progress-layout">
+
+                <div class="streak-main-stat">
+                    <div class="streak-fire-icon">
+                        🔥
+                    </div>
+
+                    <div>
+                        <span>Current Streak</span>
+                        <strong id="currentStreakValue">
+                            0 Days
+                        </strong>
+
+                        <p id="streakMessage">
+                            Complete a study session today to start
+                            building your streak.
+                        </p>
+                    </div>
+                </div>
+
+
+                <div class="streak-week-grid">
+
+                    <div class="streak-day" data-day="Mon">
+                        <span>M</span>
+                        <small>Mon</small>
+                    </div>
+
+                    <div class="streak-day" data-day="Tue">
+                        <span>T</span>
+                        <small>Tue</small>
+                    </div>
+
+                    <div class="streak-day" data-day="Wed">
+                        <span>W</span>
+                        <small>Wed</small>
+                    </div>
+
+                    <div class="streak-day" data-day="Thu">
+                        <span>T</span>
+                        <small>Thu</small>
+                    </div>
+
+                    <div class="streak-day" data-day="Fri">
+                        <span>F</span>
+                        <small>Fri</small>
+                    </div>
+
+                    <div class="streak-day" data-day="Sat">
+                        <span>S</span>
+                        <small>Sat</small>
+                    </div>
+
+                    <div class="streak-day" data-day="Sun">
+                        <span>S</span>
+                        <small>Sun</small>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
 
     </section>
 
 </div>
+
  <div id="notices-tab" class="tab-content">
 
     <div class="card">
@@ -1017,7 +1470,7 @@ class="table-responsive">
 
     <div class="profile-section">
 
-        <img id="profileImagePreview" src="" alt="Profile">
+        <img id="profileImagePreview" src="/uploads/about/owner-profile.jpg" alt="Profile">
 
         <br><br>
 
@@ -1025,6 +1478,7 @@ class="table-responsive">
     type="file"
     id="profileImageInput"
     accept="image/*"
+    onchange="uploadProfilePhoto()"
     hidden
 >
 
@@ -1218,273 +1672,474 @@ class="table-responsive">
     </button>
    </div>
 <div id="about-tab" class="tab-content">
-    <section class="about-page">
+    <section class="about-page about-page-redesigned">
 
-        <div class="about-hero">
-            <div class="about-hero-icon">
-                <i class="fa-solid fa-graduation-cap"></i>
+        <!-- ================= HERO ================= -->
+        <section class="about-hero about-hero-compact">
+
+            <div class="about-hero-copy">
+                <span class="about-label">
+                    ABOUT GLOBAL STUDY PORTAL
+                </span>
+
+                <h2>
+                    Smarter College Management
+                </h2>
+
+                <p>
+                    A unified digital workspace for students, administrators,
+                    individuals and educational institutions to manage
+                    academics, attendance, communication, progress and
+                    everyday productivity.
+                </p>
+
+                <div class="about-hero-meta">
+                    <span class="about-version">
+                        Version 1.0
+                    </span>
+
+                    <span class="about-platform-status">
+                        <i class="fa-solid fa-circle-check"></i>
+                        Active Platform
+                    </span>
+                </div>
             </div>
 
-            <div class="about-hero-content">
-                <span class="about-label">ABOUT THE PLATFORM</span>
+            <div class="about-hero-profile">
 
-                <h2>Smarter College Management, Simplified</h2>
+                <div class="about-profile-photo-wrap">
+                    <img
+                        src="/uploads/about/owner-profile.jpg"
+                        alt="Founder profile"
+                        id="aboutFounderImage"
+                        class="about-profile-photo"
+                    >
 
-                <p>
-                    A unified digital platform designed to help students,
-                    administrators and institutions manage academics,
-                    attendance, progress, notices and daily productivity.
-                </p>
+                    <span class="about-profile-role-badge">
+                        Founder
+                    </span>
+                </div>
+
+                <div class="about-profile-mini">
+                    <strong>Aditya Chourasia</strong>
+                    <span>Founder & Developer</span>
+                </div>
+
             </div>
 
-            <span class="about-version">Version 1.0</span>
-             <button
-    type="button"
-    id="editAboutBtn"
-    class="edit-about-btn"
-    onclick="openAboutEditor()"
->
-    <i class="fa-solid fa-pen-to-square"></i>
-    Edit About
-</button>   
-        </div>
+            <button
+                type="button"
+                id="editAboutBtn"
+                class="edit-about-btn"
+                onclick="openAboutEditor()"
+            >
+                <i class="fa-solid fa-pen-to-square"></i>
+                Edit About
+            </button>
 
-        <div class="about-grid">
+        </section>
 
-            <article class="about-card">
-                <div class="about-card-icon">
-                    <i class="fa-solid fa-bullseye"></i>
+
+        <!-- ================= OVERVIEW ================= -->
+        <section class="about-overview-panel">
+
+            <div class="about-section-heading">
+                <span>PLATFORM OVERVIEW</span>
+                <h3>Built to organize the complete academic experience</h3>
+            </div>
+
+            <p>
+                Global Study Portal brings essential educational tools into
+                one responsive and secure platform. It helps users manage
+                daily academic work, institutional communication, student
+                progress and role-based responsibilities without switching
+                between multiple disconnected systems.
+            </p>
+
+        </section>
+
+
+        <!-- ================= CORE CAPABILITIES ================= -->
+        <section class="about-capabilities-section">
+
+            <div class="about-section-heading">
+                <span>CORE CAPABILITIES</span>
+                <h3>Everything important, connected in one place</h3>
+            </div>
+
+            <div class="about-capabilities-grid">
+
+                <article class="about-capability-card">
+                    <div class="about-capability-icon">
+                        <i class="fa-solid fa-user-check"></i>
+                    </div>
+
+                    <div>
+                        <h4>Attendance Management</h4>
+                        <p>
+                            Record and review subject-wise attendance data
+                            with organized access.
+                        </p>
+                    </div>
+                </article>
+
+                <article class="about-capability-card">
+                    <div class="about-capability-icon">
+                        <i class="fa-solid fa-calendar-days"></i>
+                    </div>
+
+                    <div>
+                        <h4>Timetable Management</h4>
+                        <p>
+                            Maintain lectures, faculty, rooms and academic
+                            schedules in one place.
+                        </p>
+                    </div>
+                </article>
+
+                <article class="about-capability-card">
+                    <div class="about-capability-icon">
+                        <i class="fa-solid fa-chart-line"></i>
+                    </div>
+
+                    <div>
+                        <h4>Progress & Study Analysis</h4>
+                        <p>
+                            Track focused study time, goals, consistency and
+                            weekly performance.
+                        </p>
+                    </div>
+                </article>
+
+                <article class="about-capability-card">
+                    <div class="about-capability-icon">
+                        <i class="fa-solid fa-bullhorn"></i>
+                    </div>
+
+                    <div>
+                        <h4>Notice Management</h4>
+                        <p>
+                            Share important institutional announcements with
+                            the correct users.
+                        </p>
+                    </div>
+                </article>
+
+                <article class="about-capability-card">
+                    <div class="about-capability-icon">
+                        <i class="fa-solid fa-shield-halved"></i>
+                    </div>
+
+                    <div>
+                        <h4>Role-Based Access</h4>
+                        <p>
+                            Different permissions and experiences for Owner,
+                            Super Admin, Admin, User and Individual accounts.
+                        </p>
+                    </div>
+                </article>
+
+                <article class="about-capability-card">
+                    <div class="about-capability-icon">
+                        <i class="fa-solid fa-building-columns"></i>
+                    </div>
+
+                    <div>
+                        <h4>Organization Management</h4>
+                        <p>
+                            Support institutions, branches, groups and
+                            individual account workflows.
+                        </p>
+                    </div>
+                </article>
+
+            </div>
+
+        </section>
+
+
+        <!-- ================= FOUNDER ================= -->
+        <section class="about-founder-section">
+
+            <div class="about-founder-profile">
+
+                <div class="about-founder-photo-card">
+                    <img
+                        src="/uploads/about/owner-profile.jpg"
+                        alt="Aditya Chourasia"
+                        id="aboutFounderImage"
+                        class="about-founder-photo"
+                    >
                 </div>
 
-                <h3>Our Purpose</h3>
+                <div class="about-founder-identity">
+                    <span class="about-founder-label">
+                        FOUNDER PROFILE
+                    </span>
 
-                <p>
-                    To provide a simple, responsive and reliable platform
-                    that improves communication, academic tracking and
-                    institutional management.
-                </p>
-            </article>
+                    <h3 id="aboutFounderName">Aditya Chourasia</h3>
 
-            <article class="about-card">
-                <div class="about-card-icon">
-                    <i class="fa-solid fa-layer-group"></i>
+
+                 <p class="about-founder-role" id="aboutFounderRole">
+    Founder & Full-Stack Developer
+</p>
+
+                    <div class="about-founder-tags">
+                        <span>Student Developer</span>
+                        <span>Computer Science</span>
+                        <span>AI-Focused Learning</span>
+                    </div>
                 </div>
 
-                <h3>Core Features</h3>
+            </div>
+
+            <div class="about-founder-content">
+
+                <h4>Building practical technology for education</h4>
 
                 <p>
-                    Attendance, timetable, progress reports, study analysis,
-                    notice management, role-based accounts and organization
-                    management in one secure portal.
+                    Aditya Chourasia is a student developer and the founder
+                    of Global Study Portal. After completing a Polytechnic
+                    diploma in Computer Science, he is continuing his
+                    academic and technical journey with a strong interest in
+                    software development, AI and real-world problem solving.
                 </p>
-            </article>
 
- <article class="about-card founder-card">
-    <div class="about-card-icon">
-        <i class="fa-solid fa-user-astronaut"></i>
-    </div>
+                <p>
+                    The platform reflects a hands-on approach to learning:
+                    designing, coding, debugging and improving a complete
+                    system that can make educational management simpler,
+                    more accessible and more organized.
+                </p>
 
-    <h3>About Owner</h3>
+                <div class="about-founder-vision">
+                    <i class="fa-solid fa-lightbulb"></i>
 
-    <p class="founder-name">
-        Respected Aditya 
-    </p>
+                    <div>
+                        <span>Founder Vision</span>
+                        <strong>
+                            Build useful digital products that solve genuine
+                            educational problems.
+                        </strong>
+                    </div>
+                </div>
 
-    <p>
-        I am Aditya Chaurasiya, a student developer and founder
-        driven by the belief that technology should solve real
-        problems and create meaningful impact. After completing
-        my Polytechnic in Computer Science, I am now preparing
-        to continue my journey in B.Tech with a focus on AI/ML.
-        I am passionate about building practical digital
-        platforms, learning through real projects, and turning
-        ideas into useful solutions that can make education and
-        student management smarter, simpler, and more accessible.
-    </p>
-</article>
-<article class="about-card project-journey-card">
-    <div class="about-card-icon">
-        <i class="fa-solid fa-road"></i>
-    </div>
+            </div>
 
-    <h3>Project Journey</h3>
+        </section>
 
-    <div class="journey-entry">
-        <div class="journey-entry-header">
-            <h4>The Beginning of PolyPortal</h4>
-            <span class="journey-status">In Progress</span>
-        </div>
 
-        <p class="journey-duration">
-            Around 35–40 days of continuous development
-        </p>
+        <!-- ================= PROJECT JOURNEY ================= -->
+        <section class="about-journey-section">
 
-        <p>
-            PolyPortal began with a simple but meaningful idea:
-            to build a digital platform that could make academic
-            and institutional management easier, smarter, and
-            more organized.
-        </p>
+            <div class="about-section-heading">
+                <span>PROJECT JOURNEY</span>
+                <h3>From an idea to a working educational platform</h3>
+            </div>
 
-        <p>
-            The initial vision was to bring essential features
-            such as dashboards, attendance tracking, timetable
-            management, progress reports, notices, user
-            management, and personalized student tools into one
-            connected system.
-        </p>
+            <div class="about-journey-timeline">
 
-        <p>
-            Over the past 35–40 days, the project has been
-            developed through consistent effort, often involving
-            nearly eight hours of coding each day.
-        </p>
+                <article class="about-journey-step">
+                    <div class="about-journey-marker">
+                        01
+                    </div>
 
-        <p>
-            A major part of this journey has gone into debugging,
-            testing, restructuring features, fixing interface
-            issues, handling database problems, improving
-            role-based access, and making sure different users
-            receive the correct experience.
-        </p>
+                    <div>
+                        <h4>Idea & Planning</h4>
+                        <p>
+                            The project began with the goal of combining
+                            academic management and student productivity in
+                            one connected platform.
+                        </p>
+                    </div>
+                </article>
 
-        <p>
-            More than half of the development time was spent
-            identifying problems, fixing broken logic, and
-            improving features that did not work correctly on
-            the first attempt.
-        </p>
+                <article class="about-journey-step">
+                    <div class="about-journey-marker">
+                        02
+                    </div>
 
-        <p>
-            Despite these challenges, every issue became part of
-            the learning process. PolyPortal has gradually grown
-            from a basic idea into a working educational
-            management platform, and the project continues to
-            improve with every feature, fix, and real-world test.
-        </p>
-    </div>
-</article>
-        </div>
+                    <div>
+                        <h4>Development</h4>
+                        <p>
+                            Core modules such as accounts, attendance,
+                            timetable, notices, progress and organization
+                            management were implemented.
+                        </p>
+                    </div>
+                </article>
 
-        <div class="about-footer">
-            <span>
+                <article class="about-journey-step">
+                    <div class="about-journey-marker">
+                        03
+                    </div>
+
+                    <div>
+                        <h4>Debugging & Restructuring</h4>
+                        <p>
+                            Significant time was invested in fixing broken
+                            logic, improving role access, database behavior
+                            and user experience.
+                        </p>
+                    </div>
+                </article>
+
+                <article class="about-journey-step">
+                    <div class="about-journey-marker">
+                        04
+                    </div>
+
+                    <div>
+                        <h4>Testing & Deployment</h4>
+                        <p>
+                            The platform is being refined through responsive
+                            testing, feature verification and real-world
+                            deployment preparation.
+                        </p>
+                    </div>
+                </article>
+
+            </div>
+
+        </section>
+
+
+        <!-- ================= TRUST STRIP ================= -->
+        <section class="about-trust-strip">
+
+            <div>
                 <i class="fa-solid fa-shield-halved"></i>
-                Secure role-based platform
-            </span>
+                <span>Secure Role-Based Access</span>
+            </div>
 
-            <span>
+            <div>
                 <i class="fa-solid fa-mobile-screen-button"></i>
-                Built for every screen
-            </span>
-        </div>
-<!-- ================= CONTACT US SECTION ================= -->
-<div class="about-contact-section">
-
-    <div class="about-contact-heading">
-        <span class="about-contact-label">CONTACT & SOCIALS</span>
-        <h2>Connect With the Founder</h2>
-        <p>
-            For platform support, feedback, collaboration or professional
-            communication, connect through the options below.
-        </p>
-    </div>
-
-    <div class="about-contact-grid">
-
-        <a
-            href="tel:+919243645322"
-            class="about-contact-card"
-            aria-label="Call primary phone number"
-        >
-            <div class="about-contact-icon">
-                <i class="fa-solid fa-phone"></i>
+                <span>Responsive on Every Screen</span>
             </div>
 
-            <div class="about-contact-details">
-                <span>Primary Contact</span>
-                <strong>+91 92436 45322</strong>
-            </div>
-        </a>
-
-        <a
-            href="tel:+917509808031"
-            class="about-contact-card"
-            aria-label="Call alternate phone number"
-        >
-            <div class="about-contact-icon">
-                <i class="fa-solid fa-phone-volume"></i>
+            <div>
+                <i class="fa-solid fa-chart-simple"></i>
+                <span>Data-Driven Study Tracking</span>
             </div>
 
-            <div class="about-contact-details">
-                <span>Alternate Contact</span>
-                <strong>+91 75098 08031</strong>
-            </div>
-        </a>
-
-        <a
-            href="https://wa.me/919243645322"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="about-contact-card"
-            aria-label="Contact on WhatsApp"
-        >
-            <div class="about-contact-icon">
-                <i class="fa-brands fa-whatsapp"></i>
+            <div>
+                <i class="fa-solid fa-users"></i>
+                <span>For Institutions & Individuals</span>
             </div>
 
-            <div class="about-contact-details">
-                <span>WhatsApp</span>
-                <strong>Start a Conversation</strong>
-            </div>
-        </a>
+        </section>
 
-        <a
-            href="https://www.linkedin.com/in/aditya-chourasia-920a03353"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="about-contact-card"
-            aria-label="Open LinkedIn profile"
-        >
-            <div class="about-contact-icon">
-                <i class="fa-brands fa-linkedin-in"></i>
-            </div>
 
-            <div class="about-contact-details">
-                <span>Professional Profile</span>
-                <strong>LinkedIn</strong>
-            </div>
-        </a>
+        <!-- ================= CONTACT & SOCIALS ================= -->
+        <section class="about-contact-section">
 
-        <a
-            href="https://www.instagram.com/arjittt_1985/"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="about-contact-card about-contact-card-wide"
-            aria-label="Open Instagram profile"
-        >
-            <div class="about-contact-icon">
-                <i class="fa-brands fa-instagram"></i>
+            <div class="about-contact-heading">
+                <span class="about-contact-label">
+                    CONTACT & SOCIALS
+                </span>
+
+                <h2>Contact the Founder</h2>
+
+                <p>
+                    For platform support, feedback, collaboration or
+                    professional communication, use the options below.
+                </p>
             </div>
 
-            <div class="about-contact-details">
-                <span>Social Profile</span>
-                <strong>Instagram — @arjittt_1985</strong>
+            <div class="about-contact-grid">
+
+                <a
+                    href="tel:+919243645322"
+                    class="about-contact-card"
+                    aria-label="Call primary phone number"
+                >
+                    <div class="about-contact-icon">
+                        <i class="fa-solid fa-phone"></i>
+                    </div>
+
+                    <div class="about-contact-details">
+                        <span>Primary Contact</span>
+                        <strong>+91 92436 45322</strong>
+                    </div>
+                </a>
+
+                <a
+                    href="tel:+917509808031"
+                    class="about-contact-card"
+                    aria-label="Call alternate phone number"
+                >
+                    <div class="about-contact-icon">
+                        <i class="fa-solid fa-phone-volume"></i>
+                    </div>
+
+                    <div class="about-contact-details">
+                        <span>Alternate Contact</span>
+                        <strong>+91 75098 08031</strong>
+                    </div>
+                </a>
+
+                <a
+                    href="https://wa.me/919243645322"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="about-contact-card"
+                    aria-label="Contact on WhatsApp"
+                >
+                    <div class="about-contact-icon">
+                        <i class="fa-brands fa-whatsapp"></i>
+                    </div>
+
+                    <div class="about-contact-details">
+                        <span>WhatsApp</span>
+                        <strong>Start a Conversation</strong>
+                    </div>
+                </a>
+
+                <a
+                    href="https://www.linkedin.com/in/aditya-chourasia-920a03353"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="about-contact-card"
+                    aria-label="Open LinkedIn profile"
+                >
+                    <div class="about-contact-icon">
+                        <i class="fa-brands fa-linkedin-in"></i>
+                    </div>
+
+                    <div class="about-contact-details">
+                        <span>Professional Profile</span>
+                        <strong>LinkedIn</strong>
+                    </div>
+                </a>
+
+                <a
+                    href="https://www.instagram.com/arjittt_1985/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="about-contact-card about-contact-card-wide"
+                    aria-label="Open Instagram profile"
+                >
+                    <div class="about-contact-icon">
+                        <i class="fa-brands fa-instagram"></i>
+                    </div>
+
+                    <div class="about-contact-details">
+                        <span>Social Profile</span>
+                        <strong>Instagram — @arjittt_1985</strong>
+                    </div>
+                </a>
+
             </div>
-        </a>
 
-    </div>
+            <p class="about-contact-note">
+                Contact details are provided for genuine platform-related
+                enquiries, feedback and professional collaboration.
+            </p>
 
-    <p class="about-contact-note">
-        Contact details are provided for genuine platform-related enquiries,
-        feedback and professional collaboration.
-    </p>
-
-</div>
-<!-- ================= CONTACT US SECTION END ================= -->
+        </section>
 
     </section>
 </div>
-
 <!-- Account Management - Owner/Admin Only -->
 <div id="accountManagementCard" class="account-management-card">
 
@@ -1519,10 +2174,7 @@ class="table-responsive">
         <button type="button" id="showAllManagedUsersBtn" class="primary-btn">
   See All Users
 </button>
-   <button id="logoutBtn" class="danger-btn">
-        <i class="fa-solid fa-right-from-bracket"></i>
-        Logout
-    </button>
+   
     </div>
 </div>
  
@@ -1626,42 +2278,6 @@ async function editNotice(id, title, message) {
         alert(data.error || "Failed to update notice");
     }
 }
-function applyRoleTheme(data) {
-    const body = document.body;
-
-    // Remove any previous role theme
-    body.classList.remove(
-        "theme-owner",
-        "theme-super-admin",
-        "theme-admin",
-        "theme-user",
-        "theme-individual"
-    );
-if (data.role === "owner") {
-    body.classList.add("theme-owner");
-    return;
-}
-    // Individual account
-
-
-    // Organization accounts
-    switch (data.role) {
-        case "owner":
-            body.classList.add("theme-owner");
-            break;
-
-        case "super_admin":
-            body.classList.add("theme-super-admin");
-            break;
-
-        case "admin":
-            body.classList.add("theme-admin");
-            break;
-
-        default:
-            body.classList.add("theme-user");
-    }
-}
 
 async function loadCurrentUser() {
     try {
@@ -1670,7 +2286,10 @@ async function loadCurrentUser() {
 
         if (data.success) {
             document.body.setAttribute("data-role", data.role);
-            applyRoleTheme(data);
+            applyRoleTheme(
+    data.role,
+    data.account_type || data.accountType
+);
             const aboutOwnerControls = document.getElementById("aboutOwnerControls");
 
 if (aboutOwnerControls) {
@@ -1715,7 +2334,18 @@ if (dashboardEmail) {
             const userMenu = document.getElementById("menu-users");
 const adminRoleOption = document.getElementById("adminRoleOption");
 
-if (userMenu && (data.role === "owner" || data.role === "admin")) {
+if (
+    userMenu &&
+    (
+        data.role === "owner" ||
+        data.role === "super_admin" ||
+        data.role === "admin"
+    )
+) {
+    userMenu.style.display = "block";
+} else {
+    userMenu.style.display = "none";
+} {
     userMenu.style.display = "block";
 }
 if (
@@ -1813,7 +2443,7 @@ if (createUserBtn) {
                 headers: {
                     "Content-Type": "application/json"
                 },
-             body: JSON.stringify({
+        body: JSON.stringify({
     name,
     email,
     password,
@@ -1822,8 +2452,7 @@ if (createUserBtn) {
     enrollment,
     branch,
     semester,
-    admission_year,
-    organization_code: document.getElementById("newUserOrganizationCode")?.value.trim() || ""
+    admission_year
 })
             });
 
@@ -1864,6 +2493,24 @@ function toggleStudentFields() {
 }
 
 toggleStudentFields();
+let currentLoggedInRole = "";
+
+async function loadCurrentLoggedInRole() {
+    try {
+        const response = await fetch("/api/me");
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+            currentLoggedInRole = String(
+                data.role || data.user?.role || ""
+            )
+                .trim()
+                .toLowerCase();
+        }
+    } catch (error) {
+        console.error("Current role load error:", error);
+    }
+}
 let registeredUsers = [];
 
 async function loadUsers() {
@@ -1872,22 +2519,44 @@ async function loadUsers() {
     if (!tableBody) return;
 
     try {
+        // Current logged-in role load करो
+        const meResponse = await fetch("/api/me");
+        const meData = await meResponse.json();
+
+        const currentLoggedInRole = String(
+            meData.role || meData.user?.role || ""
+        )
+            .trim()
+            .toLowerCase();
+
+        // Users load करो
         const response = await fetch("/api/users");
         const data = await response.json();
 
         if (!data.success) {
             tableBody.innerHTML = `
                 <tr>
-                    <td colspan="7">${data.message || "Could not load users"}</td>
+                    <td colspan="7">
+                        ${data.message || "Could not load users"}
+                    </td>
                 </tr>
             `;
             return;
         }
-        registeredUsers = data.users;
-       const visibleUsers = registeredUsers.slice(0, 5);
+
+        registeredUsers = data.users || [];
+
+        const visibleUsers = registeredUsers.slice(0, 5);
+
         tableBody.innerHTML = "";
 
-   visibleUsers.forEach(user => {
+        visibleUsers.forEach((user) => {
+            const isRestricted =
+                currentLoggedInRole === "admin" &&
+                String(user.role || "")
+                    .trim()
+                    .toLowerCase() === "super_admin";
+
             tableBody.innerHTML += `
                 <tr>
                     <td>${user.name || "-"}</td>
@@ -1896,72 +2565,109 @@ async function loadUsers() {
                     <td>${user.branch || "-"}</td>
                     <td>${user.semester || "-"}</td>
                     <td>${user.enrollment || "-"}</td>
-               <td>
-    <button
-        type="button"
-        class="primary-btn"
-        onclick="openUserManager(${user.id})"
-    >
-        Manage
-    </button>
-</td>
 
+                    <td>
+                        ${
+                            isRestricted
+                                ? `<span>Restricted</span>`
+                                : `
+                                    <button
+                                        type="button"
+                                        class="primary-btn"
+                                        onclick="openUserManager(${user.id})"
+                                    >
+                                        Manage
+                                    </button>
+                                `
+                        }
+                    </td>
                 </tr>
             `;
-          });
+        });
 
-        if (data.users.length === 0) {
+        if (registeredUsers.length === 0) {
             tableBody.innerHTML = `
                 <tr>
-                    <td colspan="7">No registered users found.</td>
+                    <td colspan="7">
+                        No registered users found.
+                    </td>
                 </tr>
             `;
         }
-
     } catch (error) {
         console.error("Users load error:", error);
 
         tableBody.innerHTML = `
             <tr>
-                <td colspan="7">Could not load users.</td>
+                <td colspan="7">
+                    Could not load users.
+                </td>
             </tr>
         `;
     }
 }
-
-
 const showAllUsersBtn = document.getElementById("showAllUsersBtn");
-
 if (showAllUsersBtn) {
-  showAllUsersBtn.addEventListener("click", () => {
-    const tableBody = document.getElementById("usersTableBody");
+    showAllUsersBtn.addEventListener("click", async () => {
+        const tableBody =
+            document.getElementById("usersTableBody");
 
-    tableBody.innerHTML = "";
+        if (!tableBody) return;
 
-    registeredUsers.forEach(user => {
-      tableBody.innerHTML += `
+        try {
+            const meResponse = await fetch("/api/me");
+            const meData = await meResponse.json();
+
+            const currentLoggedInRole = String(
+                meData.role || meData.user?.role || ""
+            )
+                .trim()
+                .toLowerCase();
+
+            tableBody.innerHTML = "";
+registeredUsers.forEach((user) => {
+    const userRole = String(user.role || "")
+        .trim()
+        .toLowerCase()
+        .replace(/\s+/g, "_");
+
+    const isRestricted =
+        currentLoggedInRole === "admin" &&
+        userRole === "super_admin";
+
+    usersList.innerHTML += `
         <tr>
-          <td>${user.name || "-"}</td>
-          <td>${user.email || "-"}</td>
-          <td>${user.role || "-"}</td>
-          <td>${user.branch || "-"}</td>
-          <td>${user.semester || "-"}</td>
-          <td>${user.enrollment || "-"}</td>
-          <td>
-            <button
-              type="button"
-              class="primary-btn"
-              onclick="openUserManager(${user.id})"
-            >
-              Manage
-            </button>
-          </td>
-        </tr>
-      `;
-    });
+            <td>${user.name || "-"}</td>
+            <td>${user.email || "-"}</td>
+            <td>${user.role || "-"}</td>
 
-    showAllUsersBtn.style.display = "none";
-  });
+            <td>
+                ${
+                    isRestricted
+                        ? `<span>Restricted</span>`
+                        : `
+                            <button
+                                type="button"
+                                class="primary-btn"
+                                onclick="openUserManager(${user.id})"
+                            >
+                                Manage
+                            </button>
+                        `
+                }
+            </td>
+        </tr>
+    `;
+});
+
+            showAllUsersBtn.style.display = "none";
+        } catch (error) {
+            console.error(
+                "Show all users error:",
+                error
+            );
+        }
+    });
 }
 let managedUserId = null;
 let managedUserRole = null;
@@ -1991,6 +2697,7 @@ function openUserManager(userId) {
 
     document.getElementById("userManagerModal").style.display = "flex";
 }
+
 async function approveCurrentManagedUser() {
     if (!managedUserId) {
         alert("No user selected.");
@@ -2655,6 +3362,10 @@ async function openAboutEditor() {
 }
 
 document.addEventListener("DOMContentLoaded", loadAboutContent);
+document.addEventListener("DOMContentLoaded", async () => {
+    await loadCurrentLoggedInRole();
+    await loadUsers();
+});
 
 </script>
  <!-- Permissions Modal -->

@@ -408,19 +408,28 @@ function updateRegistrationFields() {
     const isOrganization =
         accountType.value === "organization";
 
-    // Academic fields दोनों account types में दिखेंगे
+    const isJoinMode =
+        window.groupRegistrationMode === "join";
+
+    const isCreateMode =
+        window.groupRegistrationMode === "create";
+
+    // Academic fields दोनों account types में visible रहेंगे
     organizationFields.style.display = "grid";
 
     const enrollmentGroup =
-        document.getElementById("enrollment")?.closest(".form-group");
+        document.getElementById("enrollment")
+            ?.closest(".form-group");
 
     const branchCodeGroup =
-        document.getElementById("branchCode")?.closest(".form-group");
+        document.getElementById("branchCode")
+            ?.closest(".form-group");
 
     const admissionYearGroup =
-        document.getElementById("admissionYear")?.closest(".form-group");
+        document.getElementById("admissionYear")
+            ?.closest(".form-group");
 
-    // Individual में ये fields नहीं दिखेंगी
+    // Individual account में ये fields hide रहेंगी
     if (enrollmentGroup) {
         enrollmentGroup.style.display =
             isOrganization ? "" : "none";
@@ -436,17 +445,49 @@ function updateRegistrationFields() {
             isOrganization ? "" : "none";
     }
 
-    // Organization code user से manually नहीं लेना
+    // Join Group mode:
+    // Organization code user manually enter करेगा
+    if (isJoinMode) {
+        if (organizationCodeGroup) {
+            organizationCodeGroup.style.display = "";
+        }
+
+        if (organizationCodeInput) {
+            organizationCodeInput.required = true;
+        }
+
+        return;
+    }
+
+    // Create Group mode:
+    // Organization code backend generate करेगा
+    if (isCreateMode) {
+        if (organizationCodeGroup) {
+            organizationCodeGroup.style.display = "none";
+        }
+
+        if (organizationCodeInput) {
+            organizationCodeInput.required = false;
+            organizationCodeInput.value = "";
+        }
+
+        return;
+    }
+
+    // Normal registration mode
     if (organizationCodeGroup) {
-        organizationCodeGroup.style.display = "none";
+        organizationCodeGroup.style.display =
+            isOrganization ? "" : "none";
     }
 
     if (organizationCodeInput) {
-        organizationCodeInput.required = false;
-        organizationCodeInput.value = "";
+        organizationCodeInput.required = isOrganization;
+
+        if (!isOrganization) {
+            organizationCodeInput.value = "";
+        }
     }
 }
-
 accountType.addEventListener(
     "change",
     updateRegistrationFields
@@ -461,7 +502,7 @@ registerForm.addEventListener("submit", async function (e) {
     e.preventDefault();
 
     const type = document.getElementById("accountType").value;
-
+    
     const data = {
         name: document.getElementById("name").value.trim(),
         email: document.getElementById("email").value.trim(),
@@ -474,7 +515,10 @@ registerForm.addEventListener("submit", async function (e) {
      
 
         accountType: type,
-
+        organizationAction:
+    window.groupRegistrationMode === "join"
+        ? "join"
+        : "create",
         enrollment: type === "organization"
             ? document.getElementById("enrollment").value.trim()
             : "",

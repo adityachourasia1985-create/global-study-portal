@@ -1484,10 +1484,10 @@ transition:
                                 </div>
 
                                 <button
-                                    type="submit"
+                                      type="submit"
                                     class="reset-button"
                                 >
-                                    Continue securely
+                                     Continue securely
                                 </button>
 
                                 <div
@@ -1866,9 +1866,9 @@ loginButton.addEventListener("pointerenter", (event) => {
             }
         );
 
-        forgotPasswordForm.addEventListener(
-            "submit",
-            (event) => {
+       forgotPasswordForm.addEventListener(
+    "submit",
+    async (event) => {
                 event.preventDefault();
 
                 const email =
@@ -1883,12 +1883,29 @@ loginButton.addEventListener("pointerenter", (event) => {
 
                     return;
                 }
+try {
+    const response = await fetch("/forgot-password", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ email })
+    });
 
-                resetMessage.textContent =
-                    "Forgot Password UI is ready. OTP backend will be connected next.";
+    const data = await response.json();
 
-                resetMessage.className =
-                    "message success";
+    resetMessage.textContent = data.message;
+    resetMessage.className =
+        "message " + (data.success ? "success" : "error");
+
+    if (data.resetToken) {
+        console.log("Reset Token:", data.resetToken);
+    }
+} catch (err) {
+    resetMessage.textContent =
+        "Something went wrong.";
+    resetMessage.className = "message error";
+}
             }
         );
 

@@ -196,25 +196,6 @@ function updateGoal() {
         localStorage.setItem("completedMinutes", completedMinutes);
         updateAnalysis();
 }
-function updateAnalysis(){
-
-    let hrs = Math.floor(completedMinutes / 60);
-    let mins = completedMinutes % 60;
-
-    document.getElementById("total-study").innerHTML =
-    hrs + "h " + mins + "m";
-
-
-    let score = Math.min(
-        Math.round((completedMinutes / (goalMinutes)) * 100),
-        100
-    );
-
-
-    document.getElementById("productivity").innerHTML =
-    score + "%";
-
-}
     let hrs = Math.floor(completedMinutes / 60);
     // let mins = completedMinutes % 60;
     let mins = Math.floor(completedMinutes % 60);
@@ -390,51 +371,6 @@ document.getElementById("changePasswordBtn").addEventListener("click", function 
     document.getElementById("passwordSection").style.display = "block";
 });
 
-async function changePassword() {
-    const currentPassword =
-        document.getElementById("currentPassword").value;
-
-    const newPassword =
-        document.getElementById("newPassword").value;
-
-    const confirmPassword =
-        document.getElementById("confirmPassword").value;
-
-    if (!currentPassword || !newPassword || !confirmPassword) {
-        alert("Please fill all fields.");
-        return;
-    }
-
-    if (newPassword !== confirmPassword) {
-        alert("New passwords do not match.");
-        return;
-    }
-
-    try {
-        const response = await fetch("/change-password", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                currentPassword,
-                newPassword
-            })
-        });
-
-        const data = await response.json();
-
-        alert(data.message);
-
-        if (data.success) {
-            document.getElementById("currentPassword").value = "";
-            document.getElementById("newPassword").value = "";
-            document.getElementById("confirmPassword").value = "";
-        }
-    } catch (error) {
-        alert("Server connection failed.");
-    }
-}
 function saveStudentProfile() {
     const enrollmentNumber =
         document.getElementById("enrollmentNumber").value;
