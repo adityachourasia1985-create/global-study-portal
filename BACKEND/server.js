@@ -329,6 +329,9 @@ app.use(
         saveUninitialized: false
     })
 );
+app.get("/", (req, res) => {
+    res.redirect("/login.html");
+});
 app.use(express.static(__dirname));
 app.use("/uploads", express.static(path.join(__dirname, "public", "uploads")));
 // ===== Password Reset Helper =====
