@@ -2068,24 +2068,47 @@ app.patch(
     }
 );
 
-db.run(
-    `INSERT OR IGNORE INTO users (name, email, password, role)
-     VALUES (?, ?, ?, ?)`,
-    ["Aditya", "aditya@polyportal.com", "admin123", "owner"]
-);
-
 const PORT = process.env.PORT || 3001;
 const FRONTEND_FOLDER = path.resolve(__dirname, "..");
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+const OWNER_EMAIL =
+    process.env.OWNER_EMAIL || "adityachourasia1985@gmail.com";
 
+const OWNER_PASSWORD = process.env.OWNER_PASSWORD;
 
+if (!OWNER_PASSWORD) {
+    console.error("OWNER_PASSWORD environment variable is missing");
+} else {
+    const ownerPasswordHash = bcrypt.hashSync(OWNER_PASSWORD, 10);
 
-let user = {
-    email: "adityachourasia1985@gmail.com",
-    password: "aditya1985"
-};
+    db.run(
+        `INSERT INTO users (
+            name,
+            email,
+            password,
+            role
+        )
+        VALUES (?, ?, ?, ?)
+        ON CONFLICT(email) DO UPDATE SET
+            password = excluded.password,
+            role = 'owner'`,
+        [
+            "Aditya",
+            OWNER_EMAIL,
+            ownerPasswordHash,
+            "owner"
+        ],
+        (error) => {
+            if (error) {
+                console.error("Owner account setup error:", error);
+            } else {
+                console.log("Owner account ready");
+            }
+        }
+    );
+}
 
 // Login page
 app.get("/", (req, res) => {
