@@ -4543,6 +4543,3 @@ server.on("close", () => {
 server.on("error", (err) => {
     console.error("!!! SERVER ERROR !!!", err);
 });
-app.listen(PORT, "0.0.0.0", () => {
-    console.log(`Server running on port ${PORT}`);
-});
