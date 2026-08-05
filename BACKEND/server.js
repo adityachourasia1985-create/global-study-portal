@@ -2086,9 +2086,7 @@ let user = {
 
 // Login page
 app.get("/", (req, res) => {
-    res.sendFile("login.html", {
-        root: path.join(__dirname, "..")
-    });
+    res.sendFile(path.join(__dirname, "login.html"));
 });
 // CSS aur JavaScript
 app.get("/style.css", (req, res) => {

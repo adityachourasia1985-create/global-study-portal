@@ -1,0 +1,1949 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Portal Login</title>
+
+    <style>
+        :root {
+            --bg-dark: #050816;
+            --bg-middle: #0b1228;
+            --panel: rgba(11, 18, 40, 0.82);
+            --panel-border: rgba(255, 255, 255, 0.12);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --cyan: #22d3ee;
+            --blue: #3b82f6;
+            --violet: #8b5cf6;
+            --yellow: #facc15;
+            --danger: #fb7185;
+            --success: #4ade80;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            min-height: 100vh;
+            overflow-x: hidden;
+            font-family:
+                Inter,
+                system-ui,
+                -apple-system,
+                BlinkMacSystemFont,
+                "Segoe UI",
+                sans-serif;
+            color: var(--text-main);
+            background:
+                radial-gradient(
+                    circle at 20% 20%,
+                    rgba(59, 130, 246, 0.16),
+                    transparent 32%
+                ),
+                radial-gradient(
+                    circle at 80% 70%,
+                    rgba(139, 92, 246, 0.14),
+                    transparent 35%
+                ),
+                linear-gradient(
+                    145deg,
+                    var(--bg-dark),
+                    var(--bg-middle)
+                );
+        }
+
+        button,
+        input {
+            font: inherit;
+        }
+
+        button {
+            border: none;
+        }
+
+        .page-shell {
+            position: relative;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 0 20px 60px;
+            isolation: isolate;
+        }
+
+        .background-grid {
+            position: fixed;
+            inset: 0;
+            z-index: -5;
+            opacity: 0.2;
+            pointer-events: none;
+            background-image:
+                linear-gradient(
+                    rgba(255, 255, 255, 0.035) 1px,
+                    transparent 1px
+                ),
+                linear-gradient(
+                    90deg,
+                    rgba(255, 255, 255, 0.035) 1px,
+                    transparent 1px
+                );
+            background-size: 42px 42px;
+            mask-image:
+                linear-gradient(
+                    to bottom,
+                    black,
+                    transparent 92%
+                );
+        }
+
+        .orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(5px);
+            opacity: 0.5;
+            pointer-events: none;
+            animation: floatOrb 9s ease-in-out infinite;
+            z-index: -4;
+        }
+
+        .orb-one {
+            width: 180px;
+            height: 180px;
+            top: 18%;
+            left: -70px;
+            background: rgba(34, 211, 238, 0.18);
+        }
+
+        .orb-two {
+            width: 220px;
+            height: 220px;
+            right: -90px;
+            bottom: 8%;
+            background: rgba(139, 92, 246, 0.16);
+            animation-delay: -3s;
+        }
+
+        .portal-stage {
+            width: min(100%, 1080px);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* Hanging Lamp */
+
+        .lamp-area {
+            position: relative;
+            width: 100%;
+            min-height: 285px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .lamp-button {
+            position: relative;
+            width: 170px;
+            height: 250px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            background: transparent;
+            color: white;
+            touch-action: manipulation;
+            animation: lampSwing 4.5s ease-in-out infinite;
+            transform-origin: top center;
+            z-index: 5;
+        }
+
+        .lamp-button:focus-visible {
+            outline: 3px solid rgba(34, 211, 238, 0.8);
+            outline-offset: 6px;
+            border-radius: 20px;
+        }
+
+        .lamp-wire {
+            width: 4px;
+            height: 125px;
+            border-radius: 999px;
+            background:
+                linear-gradient(
+                    to bottom,
+                    #64748b,
+                    #1e293b
+                );
+            box-shadow: 0 0 8px rgba(148, 163, 184, 0.25);
+        }
+
+        .lamp-holder {
+            width: 36px;
+            height: 27px;
+            border-radius: 8px 8px 4px 4px;
+            background:
+                linear-gradient(
+                    135deg,
+                    #64748b,
+                    #1e293b
+                );
+            box-shadow:
+                inset 0 2px 3px rgba(255, 255, 255, 0.2),
+                0 8px 16px rgba(0, 0, 0, 0.35);
+        }
+
+        .lamp-shade {
+            position: relative;
+            width: 132px;
+            height: 70px;
+            margin-top: -2px;
+            border-radius: 50% 50% 18px 18px;
+            clip-path:
+                polygon(
+                    24% 0,
+                    76% 0,
+                    100% 100%,
+                    0 100%
+                );
+            background:
+                linear-gradient(
+                    145deg,
+                    #334155,
+                    #0f172a
+                );
+            box-shadow:
+                inset 0 4px 7px rgba(255, 255, 255, 0.14),
+                0 10px 24px rgba(0, 0, 0, 0.38);
+            transition:
+                background 0.4s ease,
+                filter 0.4s ease;
+        }
+
+        .lamp-bulb {
+            position: absolute;
+            left: 50%;
+            bottom: 22px;
+            width: 38px;
+            height: 38px;
+            transform: translateX(-50%);
+            border-radius: 50%;
+            background: #475569;
+            transition:
+                background 0.35s ease,
+                box-shadow 0.35s ease,
+                transform 0.35s ease;
+        }
+
+        .lamp-pull {
+            position: absolute;
+            right: 5px;
+            top: 165px;
+            width: 2px;
+            height: 67px;
+            background: #94a3b8;
+        }
+
+        .lamp-pull::after {
+            content: "";
+            position: absolute;
+            left: 50%;
+            bottom: -10px;
+            width: 13px;
+            height: 13px;
+            transform: translateX(-50%);
+            border-radius: 50%;
+            background: #cbd5e1;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.35);
+        }
+
+        .lamp-hint {
+            position: absolute;
+            top: 245px;
+            font-size: 14px;
+            letter-spacing: 0.4px;
+            color: var(--text-muted);
+            animation: hintPulse 2s ease-in-out infinite;
+            white-space: nowrap;
+        }
+
+        .light-beam {
+            position: absolute;
+            top: 207px;
+            width: min(780px, 92vw);
+            height: 620px;
+            opacity: 0;
+            pointer-events: none;
+            clip-path:
+                polygon(
+                    43% 0,
+                    57% 0,
+                    100% 100%,
+                    0 100%
+                );
+            background:
+                linear-gradient(
+                    to bottom,
+                    rgba(250, 204, 21, 0.28),
+                    rgba(34, 211, 238, 0.07) 46%,
+                    transparent 90%
+                );
+            filter: blur(2px);
+            transform: scaleY(0.2);
+            transform-origin: top;
+            transition:
+                opacity 0.6s ease,
+                transform 0.65s cubic-bezier(.2, .9, .2, 1);
+            z-index: -1;
+        }
+
+        body.portal-open .light-beam {
+            opacity: 1;
+            transform: scaleY(1);
+        }
+
+        body.portal-open .lamp-shade {
+            background:
+                linear-gradient(
+                    145deg,
+                    #475569,
+                    #172033
+                );
+            filter:
+                drop-shadow(
+                    0 0 12px rgba(250, 204, 21, 0.45)
+                );
+        }
+
+        body.portal-open .lamp-bulb {
+            background: #fef08a;
+            transform: translateX(-50%) scale(1.08);
+            box-shadow:
+                0 0 16px rgba(250, 204, 21, 0.95),
+                0 0 42px rgba(250, 204, 21, 0.7),
+                0 0 90px rgba(34, 211, 238, 0.28);
+        }
+
+        body.portal-open .lamp-button {
+            animation:
+                lampClick 0.55s ease,
+                lampSwing 5s ease-in-out 0.55s infinite;
+        }
+
+        /* Portal Panel */
+
+        .portal-panel {
+            position: relative;
+            width: min(100%, 900px);
+            margin-top: -12px;
+            padding: 30px;
+            border: 1px solid var(--panel-border);
+            border-radius: 28px;
+            background:
+                linear-gradient(
+                    145deg,
+                    rgba(15, 23, 42, 0.88),
+                    rgba(7, 12, 29, 0.93)
+                );
+            backdrop-filter: blur(22px);
+            box-shadow:
+                0 30px 80px rgba(0, 0, 0, 0.5),
+                inset 0 1px 0 rgba(255, 255, 255, 0.08);
+            opacity: 0;
+            visibility: hidden;
+            transform:
+                translateY(-45px)
+                scale(0.88);
+            transform-origin: top center;
+            transition:
+                opacity 0.5s ease,
+                visibility 0.5s ease,
+                transform 0.65s cubic-bezier(.2, .9, .2, 1);
+        }
+
+        body.portal-open .portal-panel {
+            opacity: 1;
+            visibility: visible;
+            transform:
+                translateY(0)
+                scale(1);
+        }
+
+        .portal-panel::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            pointer-events: none;
+            background:
+                linear-gradient(
+                    110deg,
+                    transparent,
+                    rgba(255, 255, 255, 0.035),
+                    transparent
+                );
+        }
+
+        .panel-layout {
+            display: grid;
+            grid-template-columns:
+                minmax(0, 1fr)
+                minmax(280px, 0.82fr);
+            gap: 25px;
+        }
+
+        .login-side,
+        .group-side {
+            min-width: 0;
+        }
+.brand-badge {
+            width: fit-content;
+            margin-bottom: 16px;
+            padding: 8px 13px;
+            border: 1px solid rgba(34, 211, 238, 0.25);
+            border-radius: 999px;
+            color: #a5f3fc;
+            background: rgba(34, 211, 238, 0.09);
+            font-size: 12px;
+            font-weight: 750;
+            letter-spacing: 0.8px;
+            text-transform: uppercase;
+        }
+
+        .login-heading {
+            font-size: clamp(29px, 5vw, 45px);
+            line-height: 1.06;
+            margin-bottom: 12px;
+            letter-spacing: -1.4px;
+        }
+
+        .gradient-text {
+            color: transparent;
+            background: linear-gradient(
+                90deg,
+                #67e8f9,
+                #60a5fa,
+                #c084fc
+            );
+            background-clip: text;
+            -webkit-background-clip: text;
+        }
+
+        .login-description {
+            max-width: 540px;
+            margin-bottom: 26px;
+            color: var(--text-muted);
+            line-height: 1.65;
+        }
+
+        .form-view {
+            display: none;
+            animation: formIn 0.42s ease;
+        }
+
+        .form-view.active {
+            display: block;
+        }
+
+        .input-group {
+            margin-bottom: 17px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #dbeafe;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .input-shell {
+            position: relative;
+        }
+
+        .input-shell input {
+            width: 100%;
+            min-height: 52px;
+            padding: 14px 48px 14px 15px;
+            border: 1px solid rgba(148, 163, 184, 0.24);
+            border-radius: 14px;
+            outline: none;
+            color: white;
+            background: rgba(2, 6, 23, 0.63);
+            transition:
+                border-color 0.22s ease,
+                box-shadow 0.22s ease,
+                transform 0.22s ease;
+        }
+
+        .input-shell input::placeholder {
+            color: #64748b;
+        }
+
+        .input-shell input:focus {
+            border-color: rgba(34, 211, 238, 0.85);
+            box-shadow:
+                0 0 0 4px rgba(34, 211, 238, 0.11),
+                0 8px 24px rgba(0, 0, 0, 0.16);
+            transform: translateY(-1px);
+        }
+
+        .input-icon {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #64748b;
+            pointer-events: none;
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            width: 38px;
+            height: 38px;
+            display: grid;
+            place-items: center;
+            transform: translateY(-50%);
+            border-radius: 10px;
+            cursor: pointer;
+            color: white;
+            background: transparent;
+        }
+
+        .password-toggle:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .form-options {
+            display: flex;
+            justify-content: flex-end;
+            margin: -4px 0 18px;
+        }
+
+        .text-button {
+            padding: 2px;
+            cursor: pointer;
+            color: #67e8f9;
+            background: transparent;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .text-button:hover {
+            text-decoration: underline;
+        }
+
+        .login-button-zone {
+            position: relative;
+            min-height: 54px;
+        }
+
+        .login-button {
+            position: relative;
+            width: 100%;
+            min-height: 52px;
+            padding: 13px 18px;
+            border-radius: 14px;
+            cursor: pointer;
+            overflow: hidden;
+            color: #05131d;
+            font-size: 15px;
+            font-weight: 850;
+            background: linear-gradient(
+                135deg,
+                #67e8f9,
+                #38bdf8
+            );
+            box-shadow: 0 13px 30px rgba(34, 211, 238, 0.23);
+            transition:
+                transform 0.23s ease,
+                filter 0.23s ease,
+                left 0.24s ease;
+        }
+
+        .login-button:hover {
+            transform: translateY(-2px);
+            filter: brightness(1.06);
+        }
+
+        .login-button.loading {
+            cursor: wait;
+            color: transparent;
+        }
+
+        .login-button.loading::after {
+            content: "";
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: 20px;
+            height: 20px;
+            margin: -10px 0 0 -10px;
+            border: 3px solid rgba(5, 19, 29, 0.25);
+            border-top-color: #05131d;
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+        }
+
+        .message {
+            min-height: 22px;
+            margin-top: 13px;
+            text-align: center;
+            font-size: 13px;
+        }
+
+        .message.error {
+            color: #fda4af;
+        }
+
+        .message.success {
+            color: #86efac;
+        }
+
+        .register-text {
+            margin-top: 19px;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        .register-text a {
+            color: #67e8f9;
+            font-weight: 750;
+            text-decoration: none;
+        }
+
+        .group-card {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 25px;
+            border: 1px solid rgba(139, 92, 246, 0.2);
+            border-radius: 22px;
+            background:
+                radial-gradient(
+                    circle at 100% 0,
+                    rgba(139, 92, 246, 0.22),
+                    transparent 40%
+                ),
+                linear-gradient(
+                    145deg,
+                    rgba(30, 41, 59, 0.68),
+                    rgba(15, 23, 42, 0.48)
+                );
+        }
+
+        .group-icon {
+            width: 55px;
+            height: 55px;
+            display: grid;
+            place-items: center;
+            margin-bottom: 18px;
+            border-radius: 17px;
+            font-size: 25px;
+            background: linear-gradient(
+                135deg,
+                rgba(34, 211, 238, 0.18),
+                rgba(139, 92, 246, 0.22)
+            );
+        }
+
+        .group-card h2 {
+            margin-bottom: 9px;
+            font-size: 23px;
+        }
+
+        .group-card p {
+            margin-bottom: 21px;
+            color: var(--text-muted);
+            line-height: 1.6;
+            font-size: 14px;
+        }
+
+        .group-actions {
+            display: grid;
+            gap: 12px;
+        }
+
+        .group-button {
+            width: 100%;
+            min-height: 49px;
+            padding: 12px 16px;
+            border-radius: 14px;
+            cursor: pointer;
+            font-weight: 800;
+            transition:
+                transform 0.22s ease,
+                filter 0.22s ease;
+        }
+
+        .group-button:hover {
+            transform: translateY(-2px);
+            filter: brightness(1.06);
+        }
+
+        .create-group {
+            color: #082f49;
+            background: linear-gradient(
+                135deg,
+                #67e8f9,
+                #38bdf8
+            );
+        }
+
+        .join-group {
+            color: #ede9fe;
+            border: 1px solid rgba(196, 181, 253, 0.26);
+            background: rgba(139, 92, 246, 0.14);
+        }
+
+        .group-note {
+            margin-top: 16px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            color: #64748b;
+            font-size: 12px;
+            text-align: center;
+        }
+
+        .back-button {
+            margin-bottom: 17px;
+            cursor: pointer;
+            color: #94a3b8;
+            background: transparent;
+            font-size: 13px;
+            font-weight: 750;
+        }
+
+        .reset-title {
+            margin-bottom: 8px;
+            font-size: 27px;
+        }
+
+        .reset-description {
+            margin-bottom: 22px;
+            color: var(--text-muted);
+            line-height: 1.55;
+            font-size: 14px;
+        }
+
+        .reset-button {
+            width: 100%;
+            min-height: 52px;
+            padding: 13px;
+            border-radius: 14px;
+            cursor: pointer;
+            color: white;
+            font-weight: 800;
+            background: linear-gradient(
+                135deg,
+                #7c3aed,
+                #3b82f6
+            );
+        }
+
+        .shake {
+            animation: shake 0.45s ease;
+        }
+
+        @keyframes lampSwing {
+            0%, 100% {
+                transform: rotate(-2deg);
+            }
+
+            50% {
+                transform: rotate(2deg);
+            }
+        }
+
+        @keyframes lampClick {
+            0% {
+                transform: rotate(0);
+            }
+
+            35% {
+                transform: rotate(5deg);
+            }
+
+            70% {
+                transform: rotate(-4deg);
+            }
+
+            100% {
+                transform: rotate(0);
+            }
+        }
+
+        @keyframes floatOrb {
+            0%, 100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-25px);
+            }
+        }
+
+        @keyframes hintPulse {
+            0%, 100% {
+                opacity: 0.55;
+            }
+
+            50% {
+                opacity: 1;
+            }
+        }
+
+        @keyframes formIn {
+            from {
+                opacity: 0;
+                transform: translateX(18px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        @keyframes shake {
+            0%, 100% {
+                transform: translateX(0);
+            }
+
+            25% {
+                transform: translateX(-8px);
+            }
+
+            50% {
+                transform: translateX(8px);
+            }
+
+            75% {
+                transform: translateX(-5px);
+            }
+        }
+
+        @media (max-width: 760px) {
+            .page-shell {
+                padding: 0 13px 35px;
+            }
+
+            .lamp-area {
+                min-height: 245px;
+            }
+
+            .lamp-button {
+                transform: scale(0.9);
+                transform-origin: top center;
+            }
+
+            .panel-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .portal-panel {
+                padding: 20px;
+                border-radius: 22px;
+            }
+        }
+
+        @media (max-width: 430px) {
+            .portal-panel {
+                padding: 17px;
+            }
+
+            .login-heading {
+                font-size: 31px;
+            }
+        }
+        /* ================================
+   ULTRA RESPONSIVE LOGIN PAGE
+================================ */
+
+html,
+body {
+    width: 100%;
+    min-height: 100%;
+}
+
+body {
+    overflow-x: hidden;
+}
+
+img,
+svg,
+video,
+canvas {
+    max-width: 100%;
+}
+
+.page-shell {
+    width: 100%;
+    padding-inline:
+        clamp(10px, 3vw, 28px);
+    padding-bottom:
+        clamp(28px, 6vw, 70px);
+}
+
+.portal-stage {
+    width: min(100%, 1080px);
+}
+
+.portal-panel {
+    width: min(100%, 900px);
+}
+
+.panel-layout {
+    align-items: stretch;
+}
+
+.login-side,
+.group-side,
+.group-card,
+.input-shell,
+.login-button-zone {
+    width: 100%;
+    min-width: 0;
+}
+
+.input-shell input {
+    max-width: 100%;
+}
+
+.lamp-button {
+    flex-shrink: 0;
+}
+
+@media (max-width: 900px) {
+    .portal-panel {
+        width: min(100%, 760px);
+    }
+
+    .panel-layout {
+        grid-template-columns:
+            minmax(0, 1.1fr)
+            minmax(250px, 0.9fr);
+        gap: 18px;
+    }
+
+    .portal-panel {
+        padding: 24px;
+    }
+
+    .login-heading {
+        font-size:
+            clamp(30px, 5vw, 40px);
+    }
+}
+
+@media (max-width: 760px) {
+    body {
+        align-items: flex-start;
+    }
+
+    .page-shell {
+        padding-inline: 12px;
+        padding-bottom: 35px;
+    }
+
+    .lamp-area {
+        min-height: 225px;
+    }
+
+    .lamp-button {
+        width: 145px;
+        height: 215px;
+    }
+
+    .lamp-wire {
+        height: 95px;
+    }
+
+    .lamp-holder {
+        width: 32px;
+        height: 24px;
+    }
+
+    .lamp-shade {
+        width: 112px;
+        height: 61px;
+    }
+
+    .lamp-bulb {
+        width: 32px;
+        height: 32px;
+        bottom: 20px;
+    }
+
+    .lamp-pull {
+        top: 138px;
+        height: 54px;
+        right: 10px;
+    }
+
+    .lamp-hint {
+        top: 205px;
+        font-size: 13px;
+    }
+
+    .light-beam {
+        top: 172px;
+        width: 96vw;
+        height: 850px;
+    }
+
+    .portal-panel {
+        width: 100%;
+        margin-top: 0;
+        padding: 20px;
+        border-radius: 22px;
+    }
+
+    .panel-layout {
+        grid-template-columns: 1fr;
+        gap: 18px;
+    }
+
+    .group-card {
+        min-height: auto;
+        padding: 21px;
+    }
+
+    .group-actions {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+@media (max-width: 520px) {
+    .page-shell {
+        padding-inline: 9px;
+    }
+
+    .portal-panel {
+        padding: 17px 14px;
+        border-radius: 19px;
+    }
+
+    .brand-badge {
+        margin-inline: auto;
+        text-align: center;
+        font-size: 10px;
+    }
+
+    .login-heading,
+    .login-description {
+        text-align: center;
+    }
+
+    .login-heading {
+        font-size:
+            clamp(28px, 9vw, 35px);
+        letter-spacing: -0.8px;
+    }
+
+    .login-description {
+        margin-bottom: 22px;
+        font-size: 13px;
+        line-height: 1.55;
+    }
+
+    .input-group {
+        margin-bottom: 14px;
+    }
+
+    .input-shell input {
+        min-height: 49px;
+        padding:
+            12px 45px 12px 13px;
+        font-size: 16px;
+        border-radius: 12px;
+    }
+
+    .password-toggle {
+        right: 6px;
+        width: 37px;
+        height: 37px;
+    }
+
+    .login-button,
+    .reset-button,
+    .group-button {
+        min-height: 49px;
+        border-radius: 12px;
+    }
+
+    .group-card {
+        padding: 18px 15px;
+        text-align: center;
+    }
+
+    .group-icon {
+        margin-inline: auto;
+    }
+
+    .group-actions {
+        grid-template-columns: 1fr;
+    }
+
+    .group-card h2 {
+        font-size: 21px;
+    }
+
+    .group-card p {
+        font-size: 13px;
+    }
+
+    .form-options {
+        margin-bottom: 15px;
+    }
+
+    .register-text {
+        font-size: 13px;
+    }
+}
+
+@media (max-width: 360px) {
+    .page-shell {
+        padding-inline: 6px;
+    }
+
+    .portal-panel {
+        padding: 14px 10px;
+        border-radius: 16px;
+    }
+
+    .lamp-area {
+        min-height: 205px;
+    }
+
+    .lamp-button {
+        transform: scale(0.84);
+        transform-origin: top center;
+    }
+
+    .lamp-hint {
+        top: 190px;
+        font-size: 12px;
+    }
+
+    .login-heading {
+        font-size: 27px;
+    }
+
+    .brand-badge {
+        padding: 7px 10px;
+    }
+
+    .input-group label {
+        font-size: 12px;
+    }
+
+    .input-shell input {
+        font-size: 16px;
+    }
+
+    .group-card {
+        padding: 16px 12px;
+    }
+}
+
+/* Landscape mobile */
+
+@media (
+    max-height: 520px
+) and (
+    orientation: landscape
+) {
+    .page-shell {
+        padding-bottom: 24px;
+    }
+
+    .lamp-area {
+        min-height: 150px;
+    }
+
+    .lamp-button {
+        height: 145px;
+        transform: scale(0.67);
+        transform-origin: top center;
+    }
+
+    .lamp-hint {
+        top: 138px;
+    }
+
+    .light-beam {
+        top: 120px;
+        height: 600px;
+    }
+
+    .portal-panel {
+        margin-top: 5px;
+    }
+}
+
+/* Large desktop */
+
+@media (min-width: 1400px) {
+    .portal-stage {
+        width: min(100%, 1180px);
+    }
+
+    .portal-panel {
+        width: min(100%, 980px);
+        padding: 36px;
+    }
+
+    .panel-layout {
+        gap: 32px;
+    }
+}
+
+/* Prevent hover movement problems on touch devices */
+
+@media (hover: none) {
+    .login-button:hover,
+    .group-button:hover {
+        transform: none;
+    }
+}
+
+/* Safe spacing on phones with notches */
+
+@supports (
+    padding: env(safe-area-inset-bottom)
+) {
+    .page-shell {
+        padding-left:
+            max(10px, env(safe-area-inset-left));
+        padding-right:
+            max(10px, env(safe-area-inset-right));
+        padding-bottom:
+            max(35px, env(safe-area-inset-bottom));
+    }
+}
+.play-login-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 11px;
+}
+
+.play-icon {
+    width: 32px;
+    height: 32px;
+    display: grid;
+    place-items: center;
+    padding-left: 2px;
+    border-radius: 50%;
+    background: rgba(5, 19, 29, 0.14);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.4),
+        0 5px 14px rgba(5, 19, 29, 0.2);
+    font-size: 13px;
+    transition:
+        transform 0.25s ease,
+        background 0.25s ease;
+}
+
+.play-login-button:hover .play-icon {
+    transform: scale(1.13) rotate(4deg);
+    background: rgba(5, 19, 29, 0.22);
+}
+
+.play-login-button:active .play-icon {
+    transform: scale(0.94);
+}
+.login-button-zone {
+    position: relative;
+    min-height: 110px;
+    overflow: hidden;
+}
+.login-button-zone {
+    position: relative;
+    min-height: 170px;
+    overflow: visible;
+    border-radius: 16px;
+}
+.login-button {
+    position: absolute;
+    left: 50%;
+    top: 10px;
+    width: auto;
+    min-width: 138px;
+    min-height: 42px;
+    padding: 10px 20px;
+    margin: 0;
+    border-radius: 12px;
+    transform: translateX(-50%);
+    z-index: 20;
+
+transition:
+    left 0.12s cubic-bezier(.22, .8, .25, 1),
+    top 0.12s cubic-bezier(.22, .8, .25, 1),
+    transform 0.12s ease,
+    filter 0.12s ease;
+    
+
+    will-change: left, top;
+}
+    </style>
+</head>
+
+<body>
+    <div class="background-grid"></div>
+    <div class="orb orb-one"></div>
+    <div class="orb orb-two"></div>
+
+    <main class="page-shell">
+        <div class="portal-stage">
+
+            <section class="lamp-area">
+                <button
+                    type="button"
+                    class="lamp-button"
+                    id="lampButton"
+                    aria-label="Open login portal"
+                    aria-expanded="false"
+                >
+                    <span class="lamp-wire"></span>
+                    <span class="lamp-holder"></span>
+                    <span class="lamp-shade"></span>
+                    <span class="lamp-bulb"></span>
+                    <span class="lamp-pull"></span>
+
+                    <span class="lamp-hint" id="lampHint">
+                        Click the lamp to enter
+                    </span>
+                </button>
+
+                <div class="light-beam"></div>
+            </section>
+
+            <section
+                class="portal-panel"
+                id="portalPanel"
+                aria-hidden="true"
+            >
+                <div class="panel-layout">
+
+                    <div class="login-side">
+
+                        <div class="form-view active" id="loginView">
+                            <div class="brand-badge">
+                                One portal • Every role
+                            </div>
+
+                            <h1 class="login-heading">
+                                Welcome to your
+                                <span class="gradient-text">
+                                    digital portal
+                                </span>
+                            </h1>
+
+                            <p class="login-description">
+                                Continue as a student, faculty member,
+                                administrator or individual user.
+                            </p>
+
+                            <form id="loginForm">
+
+                                <div class="input-group">
+                                    <label for="email">
+                                        Email address
+                                    </label>
+
+                                    <div class="input-shell">
+                                        <input
+                                            type="email"
+                                            id="email"
+                                            placeholder="Enter your email"
+                                            autocomplete="email"
+                                            required
+                                        >
+
+                                        <span class="input-icon">✉</span>
+                                    </div>
+                                </div>
+
+                                <div class="input-group">
+                                    <label for="password">
+                                        Password
+                                    </label>
+
+                                    <div class="input-shell">
+                                        <input
+                                            type="password"
+                                            id="password"
+                                            placeholder="Enter your password"
+                                            autocomplete="current-password"
+                                            required
+                                        >
+
+                                        <button
+                                            type="button"
+                                            class="password-toggle"
+                                            id="passwordToggle"
+                                        >
+                                            👁️
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="form-options">
+                                    <button
+                                        type="button"
+                                        class="text-button"
+                                        id="forgotPasswordBtn"
+                                    >
+                                        Forgot password?
+                                    </button>
+                                </div>
+
+                                <div class="login-button-zone">
+<button
+    type="submit"
+    class="login-button"
+    id="loginButton"
+>
+    Enter Portal
+</button>
+                                </div>
+
+                                <div
+                                    class="message"
+                                    id="message"
+                                ></div>
+                            </form>
+
+                            <p class="register-text">
+                                Don't have an account?
+                                <a href="/register">
+                                    Register
+                                </a>
+                            </p>
+                        </div>
+                        <div
+                            class="form-view"
+                            id="forgotPasswordView"
+                        >
+                            <button
+                                type="button"
+                                class="back-button"
+                                id="backToLoginBtn"
+                            >
+                                ← Back to login
+                            </button>
+
+                            <h2 class="reset-title">
+                                Reset your password
+                            </h2>
+
+                            <p class="reset-description">
+                                Enter your registered email address.
+                                OTP or reset-link backend will be connected next.
+                            </p>
+
+                            <form id="forgotPasswordForm">
+                                <div class="input-group">
+                                    <label for="resetEmail">
+                                        Registered email
+                                    </label>
+
+                                    <div class="input-shell">
+                                        <input
+                                            type="email"
+                                            id="resetEmail"
+                                            placeholder="Enter registered email"
+                                            autocomplete="email"
+                                            required
+                                        >
+
+                                        <span class="input-icon">✉</span>
+                                    </div>
+                                </div>
+
+                                <button
+                                      type="submit"
+                                    class="reset-button"
+                                >
+                                     Continue securely
+                                </button>
+
+                                <div
+                                    class="message"
+                                    id="resetMessage"
+                                ></div>
+                            </form>
+                        </div>
+
+                    </div>
+
+                    <aside class="group-side">
+                        <div class="group-card">
+
+                            <div class="group-icon">👥</div>
+
+                            <h2>Group Management</h2>
+
+                            <p>
+                                Create a new organization or join an
+                                existing group through its assigned code.
+                            </p>
+
+                            <div class="group-actions">
+                                <button
+                                    type="button"
+                                    class="group-button create-group"
+                                    id="createGroupBtn"
+                                >
+                                    ＋ Create Group
+                                </button>
+
+                                <button
+                                    type="button"
+                                    class="group-button join-group"
+                                    id="joinGroupBtn"
+                                >
+                                    → Join Group
+                                </button>
+                            </div>
+
+                            <div class="group-note">
+                                Organization codes remain controlled
+                                by the portal owner.
+                            </div>
+
+                        </div>
+                    </aside>
+
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <script>
+        const body = document.body;
+
+        const lampButton =
+            document.getElementById("lampButton");
+
+        const lampHint =
+            document.getElementById("lampHint");
+
+        const portalPanel =
+            document.getElementById("portalPanel");
+
+        const loginForm =
+            document.getElementById("loginForm");
+
+        const emailInput =
+            document.getElementById("email");
+
+        const passwordInput =
+            document.getElementById("password");
+
+        const passwordToggle =
+            document.getElementById("passwordToggle");
+
+        const loginButton =
+            document.getElementById("loginButton");
+
+        const message =
+            document.getElementById("message");
+
+        const forgotPasswordBtn =
+            document.getElementById("forgotPasswordBtn");
+
+        const forgotPasswordView =
+            document.getElementById("forgotPasswordView");
+
+        const loginView =
+            document.getElementById("loginView");
+
+        const backToLoginBtn =
+            document.getElementById("backToLoginBtn");
+
+        const forgotPasswordForm =
+            document.getElementById("forgotPasswordForm");
+
+        const resetEmail =
+            document.getElementById("resetEmail");
+
+        const resetMessage =
+            document.getElementById("resetMessage");
+
+        const createGroupBtn =
+            document.getElementById("createGroupBtn");
+
+        const joinGroupBtn =
+            document.getElementById("joinGroupBtn");
+
+        let failedLoginAttempts = 0;
+        let playfulModeEnabled = false;
+        let dodgeCount = 0;
+
+        function setPortalState(isOpen) {
+            body.classList.toggle(
+                "portal-open",
+                isOpen
+            );
+
+            lampButton.setAttribute(
+                "aria-expanded",
+                String(isOpen)
+            );
+
+            portalPanel.setAttribute(
+                "aria-hidden",
+                String(!isOpen)
+            );
+
+            lampHint.textContent = isOpen
+                ? "Click again to close"
+                : "Click the lamp to enter";
+
+            if (isOpen) {
+                window.setTimeout(() => {
+                    emailInput.focus();
+                }, 650);
+            }
+        }
+
+        lampButton.addEventListener("click", () => {
+            const isOpen =
+                !body.classList.contains("portal-open");
+
+            setPortalState(isOpen);
+        });
+
+        passwordToggle.addEventListener("click", () => {
+            const isHidden =
+                passwordInput.type === "password";
+
+            passwordInput.type = isHidden
+                ? "text"
+                : "password";
+
+            passwordToggle.textContent = isHidden
+                ? "🙈"
+                : "👁️";
+        });
+
+        function showMessage(text, type = "error") {
+            message.textContent = text;
+            message.className = `message ${type}`;
+        }
+function resetPlayfulButton() {
+    playfulModeEnabled = false;
+    dodgeCount = 0;
+
+    loginButton.style.position = "absolute";
+    loginButton.style.left = "50%";
+    loginButton.style.top = "10px";
+    loginButton.style.transform = "translateX(-50%)";
+
+    loginButton.classList.remove("runaway-pop");
+}
+
+
+function moveLoginButton(event) {
+    if (!playfulModeEnabled) return;
+
+    const zone = document.querySelector(".login-button-zone");
+    if (!zone) return;
+
+    const zoneRect = zone.getBoundingClientRect();
+    const buttonRect = loginButton.getBoundingClientRect();
+
+    const pointerX = event.clientX;
+    const pointerY = event.clientY;
+
+    const buttonCenterX =
+        buttonRect.left + buttonRect.width / 2;
+
+    const buttonCenterY =
+        buttonRect.top + buttonRect.height / 2;
+
+    const dx = buttonCenterX - pointerX;
+    const dy = buttonCenterY - pointerY;
+
+    const distance = Math.hypot(dx, dy) || 1;
+    const safeDistance = 260;
+
+    if (distance >= safeDistance) return;
+
+    const force =
+        (safeDistance - distance) / safeDistance;
+
+    const pushAmount =
+        34 + force * 95;
+
+    let nextLeft =
+        loginButton.offsetLeft +
+        (dx / distance) * pushAmount;
+
+    let nextTop =
+        loginButton.offsetTop +
+        (dy / distance) * pushAmount;
+
+    const padding = 18;
+
+    const maxLeft =
+        zone.clientWidth -
+        loginButton.offsetWidth -
+        padding;
+
+    const maxTop =
+        zone.clientHeight -
+        loginButton.offsetHeight -
+        padding;
+
+    nextLeft = Math.max(
+        padding,
+        Math.min(nextLeft, maxLeft)
+    );
+
+    nextTop = Math.max(
+        padding,
+        Math.min(nextTop, maxTop)
+    );
+
+    loginButton.style.position = "absolute";
+    loginButton.style.transform = "none";
+    loginButton.style.left = `${nextLeft}px`;
+    loginButton.style.top = `${nextTop}px`;
+}
+
+loginView.addEventListener(
+    "pointermove",
+    moveLoginButton
+);
+loginButton.addEventListener("pointerenter", (event) => {
+    if (!playfulModeEnabled) return;
+
+    moveLoginButton(event);
+});
+
+        emailInput.addEventListener("input", () => {
+            resetPlayfulButton();
+            showMessage("");
+        });
+
+        passwordInput.addEventListener("input", () => {
+            resetPlayfulButton();
+            showMessage("");
+        });
+
+        loginForm.addEventListener(
+            "submit",
+            async (event) => {
+                event.preventDefault();
+
+                resetPlayfulButton();
+
+                const email =
+                    emailInput.value.trim();
+
+                const password =
+                    passwordInput.value;
+
+                if (!email || !password) {
+                    showMessage(
+                        "Please enter your email and password."
+                    );
+
+                    return;
+                }
+
+                loginButton.disabled = true;
+                loginButton.classList.add("loading");
+
+                try {
+                    const response = await fetch("/login", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify({
+                            email,
+                            password
+                        })
+                    });
+
+                    const data = await response.json();
+
+                    if (response.ok && data.success) {
+                        failedLoginAttempts = 0;
+
+                        showMessage(
+                            "Login successful. Opening dashboard...",
+                            "success"
+                        );
+
+                        window.setTimeout(() => {
+                            window.location.href = "/dashboard";
+                        }, 700);
+
+                        return;
+                    }
+
+                    failedLoginAttempts += 1;
+
+                    showMessage(
+                        data.message ||
+                        "Email or password is incorrect."
+                    );
+
+                    loginView.classList.remove("shake");
+
+                    void loginView.offsetWidth;
+
+                    loginView.classList.add("shake");
+
+                    playfulModeEnabled = true;
+                    dodgeCount = 0;
+
+                } catch (error) {
+                    console.error("Login error:", error);
+
+                    showMessage(
+                        "Server connection error. Please try again."
+                    );
+
+                } finally {
+                    loginButton.disabled = false;
+                    loginButton.classList.remove("loading");
+                }
+            }
+        );
+
+        forgotPasswordBtn.addEventListener(
+            "click",
+            () => {
+                loginView.classList.remove("active");
+
+                forgotPasswordView.classList.add("active");
+
+                resetEmail.value =
+                    emailInput.value.trim();
+
+                window.setTimeout(() => {
+                    resetEmail.focus();
+                }, 100);
+            }
+        );
+
+        backToLoginBtn.addEventListener(
+            "click",
+            () => {
+                forgotPasswordView.classList.remove("active");
+
+                loginView.classList.add("active");
+
+                resetMessage.textContent = "";
+            }
+        );
+
+       forgotPasswordForm.addEventListener(
+    "submit",
+    async (event) => {
+                event.preventDefault();
+
+                const email =
+                    resetEmail.value.trim();
+
+                if (!email) {
+                    resetMessage.textContent =
+                        "Please enter your registered email.";
+
+                    resetMessage.className =
+                        "message error";
+
+                    return;
+                }
+try {
+    const response = await fetch("/forgot-password", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ email })
+    });
+
+    const data = await response.json();
+
+    resetMessage.textContent = data.message;
+    resetMessage.className =
+        "message " + (data.success ? "success" : "error");
+
+    if (data.resetToken) {
+        console.log("Reset Token:", data.resetToken);
+    }
+} catch (err) {
+    resetMessage.textContent =
+        "Something went wrong.";
+    resetMessage.className = "message error";
+}
+            }
+        );
+
+        createGroupBtn.addEventListener(
+            "click",
+            () => {
+                sessionStorage.setItem(
+                    "createGroupMode",
+                    "true"
+                );
+
+                window.location.href =
+                    "/register?mode=create-group";
+            }
+        );
+
+        joinGroupBtn.addEventListener(
+            "click",
+            () => {
+                sessionStorage.setItem(
+                    "joinGroupMode",
+                    "true"
+                );
+
+                window.location.href =
+                    "/register?mode=join-group";
+            }
+        );
+
+        window.addEventListener(
+            "DOMContentLoaded",
+            () => {
+                window.setTimeout(() => {
+                    setPortalState(true);
+                }, 550);
+            }
+        );
+        
+    </script>
+</body>
+</html>
