@@ -331,8 +331,8 @@ const session = require("express-session");
 const transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
-        user: "globalstudyportal1985@gmail.com",
-        pass: "xkdgedtznvidepxh"
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
     }
 });
 const app = express();
@@ -2976,7 +2976,7 @@ app.post("/forgot-password", (req, res) => {
 
 transporter.sendMail(
     {
-        from: '"Global Study Portal" <globalstudyportal1985@gmail.com>',
+        from: `"Global Study Portal" <${process.env.EMAIL_USER}>`,
         to: email,
         subject: "Reset Your Global Study Portal Password",
         html: `
