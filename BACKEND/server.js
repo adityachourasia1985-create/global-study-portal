@@ -358,12 +358,24 @@ return res.sendFile("index.html", { root: __dirname });
 });
 const dashboardPath = path.join(__dirname, "index.html");
 console.log("Dashboard path:", dashboardPath);
-
-app.use(express.static(__dirname));
-
 app.get("/", (req, res) => {
-    res.redirect("/login.html");
+    return res.sendFile(path.join(__dirname, "login.html"));
 });
+
+app.get(["/dashboard", "/index.html"], (req, res) => {
+    if (!req.session || !req.session.userId) {
+        return res.sendFile(path.join(__dirname, "login.html"));
+    }
+
+    return res.sendFile(path.join(__dirname, "index.html"));
+});
+
+app.use(
+    express.static(__dirname, {
+        index: false
+    })
+);
+
 
 app.use("/uploads", express.static(path.join(__dirname, "public", "uploads")));
 function createNotification({
@@ -3119,7 +3131,7 @@ app.post("/forgot-password", (req, res) => {
     const genericResponse = {
         success: true,
         message:
-            "If an account exists for this email, reset instructions have been generated."
+            "If an account exists for this email, reset instructions have been sent."
     };
 
     if (!email) {
@@ -3130,9 +3142,11 @@ app.post("/forgot-password", (req, res) => {
     }
 
     db.get(
-        `SELECT id, email
-         FROM users
-         WHERE LOWER(email) = ?`,
+        `
+        SELECT id, email
+        FROM users
+        WHERE LOWER(email) = ?
+        `,
         [email],
         (findError, user) => {
             if (findError) {
@@ -3147,23 +3161,23 @@ app.post("/forgot-password", (req, res) => {
                 });
             }
 
-            // Registered email है या नहीं, यह reveal नहीं करेंगे
+            // Registered email exists or not, do not reveal it
             if (!user) {
                 return res.json(genericResponse);
             }
 
             const resetToken = generateResetToken();
             const tokenHash = hashResetToken(resetToken);
-            console.log("Generated Hash:", tokenHash);
             const expiresAt = getResetTokenExpiry();
             const currentTime = Math.floor(Date.now() / 1000);
 
-            // पुराने unused tokens invalidate करो
             db.run(
-                `UPDATE password_reset_tokens
-                 SET used_at = ?
-                 WHERE user_id = ?
-                   AND used_at IS NULL`,
+                `
+                UPDATE password_reset_tokens
+                SET used_at = ?
+                WHERE user_id = ?
+                  AND used_at IS NULL
+                `,
                 [currentTime, user.id],
                 (invalidateError) => {
                     if (invalidateError) {
@@ -3179,9 +3193,14 @@ app.post("/forgot-password", (req, res) => {
                     }
 
                     db.run(
-                        `INSERT INTO password_reset_tokens
-                         (user_id, token_hash, expires_at)
-                         VALUES (?, ?, ?)`,
+                        `
+                        INSERT INTO password_reset_tokens (
+                            user_id,
+                            token_hash,
+                            expires_at
+                        )
+                        VALUES (?, ?, ?)
+                        `,
                         [user.id, tokenHash, expiresAt],
                         (insertError) => {
                             if (insertError) {
@@ -3196,72 +3215,88 @@ app.post("/forgot-password", (req, res) => {
                                 });
                             }
 
-                          const resetLink =
-    `http://localhost:3001/reset-password?token=${resetToken}`;
+                            const baseUrl =
+                                process.env.APP_BASE_URL ||
+                                `${req.protocol}://${req.get("host")}`;
 
-transporter.sendMail(
-    {
-        from: `"Global Study Portal" <${process.env.EMAIL_USER}>`,
-        to: email,
-        subject: "Reset Your Global Study Portal Password",
-        html: `
-            <h2>Password Reset Request</h2>
+                            const resetLink =
+                                `${baseUrl}/reset-password?token=${encodeURIComponent(resetToken)}`;
 
-            <p>Hello,</p>
+                            transporter.sendMail(
+                                {
+                                    from:
+                                        `"Global Study Portal" <${process.env.EMAIL_USER}>`,
 
-            <p>
-                We received a request to reset your
-                Global Study Portal password.
-            </p>
+                                    to: user.email,
 
-            <p>
-                <a
-                    href="${resetLink}"
-                    style="
-                        display:inline-block;
-                        padding:12px 22px;
-                        background:#2563eb;
-                        color:#ffffff;
-                        text-decoration:none;
-                        border-radius:8px;
-                        font-weight:bold;
-                    "
-                >
-                    Reset Password
-                </a>
-            </p>
+                                    subject:
+                                        "Reset Your Global Study Portal Password",
 
-            <p>This link will expire in 15 minutes.</p>
+                                    html: `
+                                        <h2>Password Reset Request</h2>
 
-            <p>
-                If you did not request this password reset,
-                you can ignore this email.
-            </p>
+                                        <p>Hello,</p>
 
-            <hr>
+                                        <p>
+                                            We received a request to reset your
+                                            Global Study Portal password.
+                                        </p>
 
-            <p><strong>Global Study Portal</strong></p>
-        `
-    },
-    (mailError) => {
-        if (mailError) {
-            console.error("Reset email error:", mailError);
+                                        <p>
+                                            <a
+                                                href="${resetLink}"
+                                                style="
+                                                    display:inline-block;
+                                                    padding:12px 22px;
+                                                    background:#2563eb;
+                                                    color:#ffffff;
+                                                    text-decoration:none;
+                                                    border-radius:8px;
+                                                    font-weight:bold;
+                                                "
+                                            >
+                                                Reset Password
+                                            </a>
+                                        </p>
 
-            return res.status(500).json({
-                success: false,
-                message: "Could not send reset email."
-            });
-        }
-        console.log("Reset email sent:", info.response);
-        return res.json(genericResponse);
-    }
-);
-                            return res.json({
-                                ...genericResponse,
+                                        <p>
+                                            This link will expire in 15 minutes.
+                                        </p>
 
-                                // अभी सिर्फ local testing के लिए
-                                resetToken
-                            });
+                                        <p>
+                                            If you did not request this password
+                                            reset, you can ignore this email.
+                                        </p>
+
+                                        <hr>
+
+                                        <p>
+                                            <strong>Global Study Portal</strong>
+                                        </p>
+                                    `
+                                },
+                                (mailError, info) => {
+                                    if (mailError) {
+                                        console.error(
+                                            "Reset email error:",
+                                            mailError
+                                        );
+
+                                        return res.status(500).json({
+                                            success: false,
+                                            message:
+                                                "Could not send reset email."
+                                        });
+                                    }
+
+                                    console.log(
+                                        "Reset email sent:",
+                                        info.response
+                                    );
+
+                                    return res.json(genericResponse);
+                                }
+                            );
                         }
                     );
                 }
@@ -3269,6 +3304,7 @@ transporter.sendMail(
         }
     );
 });
+
 app.get("/reset-password", (req, res) => {
     res.sendFile("reset-password.html", {
         root: path.join(__dirname, "..")
