@@ -331,8 +331,8 @@ const session = require("express-session");
 const transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
-        user: "adityachourasia1985@gmail.com",
-        pass: "srztnvutcoczijmr"
+        user: "globalstudyportal1985@gmail.com",
+        pass: "xkdgedtznvidepxh"
     }
 });
 const app = express();
@@ -348,7 +348,7 @@ app.use(
 app.get("/", (req, res) => {
     res.redirect("/login.html");
 });
-app.use(express.static(__dirname));
+
 app.use("/uploads", express.static(path.join(__dirname, "public", "uploads")));
 // ===== Password Reset Helper =====
 function generateResetToken() {
@@ -2976,7 +2976,7 @@ app.post("/forgot-password", (req, res) => {
 
 transporter.sendMail(
     {
-        from: '"Global Study Portal" <adityachourasia1985@gmail.com>',
+        from: '"Global Study Portal" <globalstudyportal1985@gmail.com>',
         to: email,
         subject: "Reset Your Global Study Portal Password",
         html: `
@@ -3027,7 +3027,7 @@ transporter.sendMail(
                 message: "Could not send reset email."
             });
         }
-
+        console.log("Reset email sent:", info.response);
         return res.json(genericResponse);
     }
 );
@@ -4571,7 +4571,15 @@ app.post("/api/ai/chat", async (req, res) => {
         });
     }
 });
+app.get("/index.html", (req, res) => {
+    if (!req.session || !req.session.isLoggedIn) {
+        return res.redirect("/login.html");
+    }
 
+    return res.sendFile(path.join(__dirname, "index.html"));
+});
+
+app.use(express.static(__dirname));
 const server = app.listen(PORT, () => {
     console.log(`Server running at http://localhost:${PORT}`);
 });

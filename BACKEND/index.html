@@ -2512,7 +2512,7 @@ async function loadCurrentLoggedInRole() {
     }
 }
 let registeredUsers = [];
-
+let registeredUsersCurrentRole = "";
 async function loadUsers() {
     const tableBody = document.getElementById("usersTableBody");
 
@@ -2528,6 +2528,7 @@ async function loadUsers() {
         )
             .trim()
             .toLowerCase();
+        registeredUsersCurrentRole = currentLoggedInRole;
 
         // Users load करो
         const response = await fetch("/api/users");
@@ -2606,6 +2607,7 @@ async function loadUsers() {
         `;
     }
 }
+
 const showAllUsersBtn = document.getElementById("showAllUsersBtn");
 if (showAllUsersBtn) {
     showAllUsersBtn.addEventListener("click", async () => {
@@ -2766,26 +2768,64 @@ function closeUserManager() {
     document.getElementById("userManagerModal").style.display = "none";
     managedUserId = null;
 }
-
 function filterUsersTable() {
-    const searchInput = document
+    const search = document
         .getElementById("userSearchInput")
         .value
         .toLowerCase()
         .trim();
 
-    const rows = document.querySelectorAll("#usersTableBody tr");
+    const tableBody = document.getElementById("usersTableBody");
 
-    rows.forEach(row => {
-        const rowText = row.textContent.toLowerCase();
-
-        if (rowText.includes(searchInput)) {
-            row.style.display = "";
-        } else {
-            row.style.display = "none";
-        }
+    const filteredUsers = registeredUsers.filter(user => {
+        return [
+            user.name,
+            user.email,
+            user.role,
+            user.branch,
+            user.semester,
+            user.enrollment
+        ]
+        .join(" ")
+        .toLowerCase()
+        .includes(search);
     });
+
+    tableBody.innerHTML = "";
+
+    filteredUsers.forEach((user) => {
+        const isRestricted =
+            registeredUsersCurrentRole === "admin" &&
+            String(user.role || "").trim().toLowerCase() === "super_admin";
+
+        tableBody.innerHTML += `
+            <tr>
+                <td>${user.name || "-"}</td>
+                <td>${user.email || "-"}</td>
+                <td>${user.role || "-"}</td>
+                <td>${user.branch || "-"}</td>
+                <td>${user.semester || "-"}</td>
+                <td>${user.enrollment || "-"}</td>
+                <td>
+                    ${
+                        isRestricted
+                        ? "<span>Restricted</span>"
+                        : `<button type="button" class="primary-btn" onclick="openUserManager(${user.id})">Manage</button>`
+                    }
+                </td>
+            </tr>
+        `;
+    });
+
+    if (filteredUsers.length === 0) {
+        tableBody.innerHTML = `
+            <tr>
+                <td colspan="7">No matching users found.</td>
+            </tr>
+        `;
+    }
 }
+
 async function updateManagedUserRole(newRole, actionName) {
     if (!managedUserId) {
         alert("No user selected");
