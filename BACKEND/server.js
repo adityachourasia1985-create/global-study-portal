@@ -336,6 +336,7 @@ const transporter = nodemailer.createTransport({
     }
 });
 const app = express();
+app.use(express.static(__dirname));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(
@@ -4579,7 +4580,6 @@ app.get("/index.html", (req, res) => {
     return res.sendFile(path.join(__dirname, "index.html"));
 });
 
-app.use(express.static(__dirname));
 const server = app.listen(PORT, () => {
     console.log(`Server running at http://localhost:${PORT}`);
 });
