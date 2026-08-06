@@ -239,6 +239,10 @@ db.run(`
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
 `);
+db.run(`ALTER TABLE notifications ADD COLUMN recipient_email TEXT`, () => {});
+db.run(`ALTER TABLE notifications ADD COLUMN actor_email TEXT`, () => {});
+db.run(`ALTER TABLE notifications ADD COLUMN module TEXT`, () => {});
+db.run(`ALTER TABLE notifications ADD COLUMN event_key TEXT`, () => {});
 
     console.log("Database tables ready");
 });
@@ -336,7 +340,6 @@ const transporter = nodemailer.createTransport({
     }
 });
 const app = express();
-app.use(express.static(__dirname));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(
@@ -346,11 +349,108 @@ app.use(
         saveUninitialized: false
     })
 );
+app.get(["/index.html", "/dashboard"], (req, res) => {
+    if (!req.session || !req.session.userId) {
+        return res.redirect("/login.html");
+    }
+
+return res.sendFile("index.html", { root: __dirname });
+});
+const dashboardPath = path.join(__dirname, "index.html");
+console.log("Dashboard path:", dashboardPath);
+
+app.use(express.static(__dirname));
+
 app.get("/", (req, res) => {
     res.redirect("/login.html");
 });
 
 app.use("/uploads", express.static(path.join(__dirname, "public", "uploads")));
+function createNotification({
+    title,
+    message,
+    category = "system",
+    priority = "info",
+
+    actorUserId = null,
+    actorEmail = null,
+
+    targetUserId = null,
+
+    recipientRole = null,
+    recipientUserId = null,
+    recipientEmail = null,
+
+    organizationCode = null,
+    branchCode = null,
+
+    module = null,
+    actionUrl = null,
+    eventKey = null
+}) {
+    return new Promise((resolve, reject) => {
+        db.run(
+            `
+            INSERT INTO notifications (
+                title,
+                message,
+                category,
+                priority,
+
+                actor_user_id,
+                actor_email,
+
+                target_user_id,
+
+                recipient_role,
+                recipient_user_id,
+                recipient_email,
+
+                organization_code,
+                branch_code,
+
+                module,
+                action_url,
+                event_key
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            `,
+            [
+                title,
+                message,
+                category,
+                priority,
+
+                actorUserId,
+                actorEmail,
+
+                targetUserId,
+
+                recipientRole,
+                recipientUserId,
+                recipientEmail,
+
+                organizationCode,
+                branchCode,
+
+                module,
+                actionUrl,
+                eventKey
+            ],
+            function (error) {
+                if (error) {
+                    console.error("Notification creation error:", error);
+                    reject(error);
+                    return;
+                }
+
+                resolve({
+                    id: this.lastID
+                });
+            }
+        );
+    });
+}
 // ===== Password Reset Helper =====
 function generateResetToken() {
     return crypto.randomBytes(32).toString("hex");
@@ -540,7 +640,6 @@ const uploadProfileImage = multer({
         cb(null, true);
     }
 });
-
 app.get("/api/notifications", (req, res) => {
     if (!req.session || !req.session.userId) {
         return res.status(401).json({
@@ -549,35 +648,170 @@ app.get("/api/notifications", (req, res) => {
         });
     }
 
-    const userId = req.session.userId;
-    const role = String(req.session.role || "user").toLowerCase();
+    const userId = Number(req.session.userId);
 
-    let sql = `
-        SELECT *
-        FROM notifications
-        WHERE recipient_user_id = ?
-    `;
+    db.get(
+        `
+        SELECT
+            id,
+            email,
+            role,
+            organization_code,
+            branch_code
+        FROM users
+        WHERE id = ?
+        `,
+        [userId],
+        (userErr, user) => {
+            if (userErr) {
+                console.error("Notification user lookup error:", userErr);
 
-    const params = [userId];
-    sql += ` ORDER BY created_at DESC`;
+                return res.status(500).json({
+                    success: false,
+                    message: "Failed to identify user"
+                });
+            }
 
-    db.all(sql, params, (err, rows) => {
-        if (err) {
-            console.error("Fetch notifications error:", err);
+            if (!user) {
+                return res.status(404).json({
+                    success: false,
+                    message: "User not found"
+                });
+            }
 
-            return res.status(500).json({
-                success: false,
-                message: "Failed to load notifications"
+            const role = String(user.role || "user").toLowerCase();
+            const email = String(user.email || "").toLowerCase();
+            const organizationCode = user.organization_code || null;
+            const branchCode = user.branch_code || null;
+
+            let sql;
+            let params;
+
+            // Owner receives every notification across the complete portal
+            if (role === "owner") {
+                sql = `
+                    SELECT *
+                    FROM notifications
+                    ORDER BY datetime(created_at) DESC, id DESC
+                `;
+
+                params = [];
+            }
+
+            // Super Admin receives:
+            // 1. Notifications directly related to their account
+            // 2. Notifications for their complete organization
+            else if (role === "super_admin") {
+                sql = `
+                    SELECT *
+                    FROM notifications
+                    WHERE
+                        recipient_user_id = ?
+                        OR target_user_id = ?
+                        OR LOWER(COALESCE(recipient_email, '')) = ?
+                        OR (
+                            organization_code = ?
+                            AND (
+                                recipient_role IS NULL
+                                OR LOWER(recipient_role) IN (
+                                    'super_admin',
+                                    'organization'
+                                )
+                            )
+                        )
+                    ORDER BY datetime(created_at) DESC, id DESC
+                `;
+
+                params = [
+                    userId,
+                    userId,
+                    email,
+                    organizationCode
+                ];
+            }
+
+            // Admin receives:
+            // 1. Notifications directly related to their account
+            // 2. Relevant organization + branch notifications
+            else if (role === "admin") {
+                sql = `
+                    SELECT *
+                    FROM notifications
+                    WHERE
+                        recipient_user_id = ?
+                        OR target_user_id = ?
+                        OR LOWER(COALESCE(recipient_email, '')) = ?
+                        OR (
+                            organization_code = ?
+                            AND (
+                                branch_code IS NULL
+                                OR branch_code = ?
+                            )
+                            AND (
+                                recipient_role IS NULL
+                                OR LOWER(recipient_role) IN (
+                                    'admin',
+                                    'branch'
+                                )
+                            )
+                        )
+                    ORDER BY datetime(created_at) DESC, id DESC
+                `;
+
+                params = [
+                    userId,
+                    userId,
+                    email,
+                    organizationCode,
+                    branchCode
+                ];
+            }
+
+            // User/Individual receives only notifications related to them
+            else {
+                sql = `
+                    SELECT *
+                    FROM notifications
+                    WHERE
+                        recipient_user_id = ?
+                        OR target_user_id = ?
+                        OR LOWER(COALESCE(recipient_email, '')) = ?
+                    ORDER BY datetime(created_at) DESC, id DESC
+                `;
+
+                params = [
+                    userId,
+                    userId,
+                    email
+                ];
+            }
+
+            db.all(sql, params, (err, rows) => {
+                if (err) {
+                    console.error("Fetch notifications error:", err);
+
+                    return res.status(500).json({
+                        success: false,
+                        message: "Failed to load notifications"
+                    });
+                }
+
+                const notifications = Array.isArray(rows) ? rows : [];
+
+                const unreadCount = notifications.filter(
+                    notification => Number(notification.is_read) === 0
+                ).length;
+
+                return res.json({
+                    success: true,
+                    unreadCount,
+                    notifications
+                });
             });
         }
-
-        res.json({
-            success: true,
-            notifications: rows
-        });
-    });
+    );
 });
-app.post("/api/notifications/test", (req, res) => {
+app.post("/api/notifications/test", async (req, res) => {
     if (!req.session || !req.session.userId) {
         return res.status(401).json({
             success: false,
@@ -585,50 +819,40 @@ app.post("/api/notifications/test", (req, res) => {
         });
     }
 
-    const recipientUserId = req.session.userId;
+    try {
+        const result = await createNotification({
+            title: "Test Notification",
+            message: "Notification system is working successfully.",
+            category: "system",
+            priority: "info",
 
-    const sql = `
-        INSERT INTO notifications (
-            title,
-            message,
-            category,
-            priority,
-            actor_user_id,
-            recipient_user_id,
-            organization_code,
-            branch_code,
-            is_read
-        )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0)
-    `;
+            actorUserId: req.session.userId,
+            actorEmail: req.session.email,
 
-    const params = [
-        "Test Notification",
-        "This is a real notification loaded from the database.",
-        "system",
-        "info",
-        req.session.userId,
-        recipientUserId,
-        null,
-        null
-    ];
+            targetUserId: req.session.userId,
 
-    db.run(sql, params, function (err) {
-        if (err) {
-            console.error("Create test notification error:", err);
+            recipientUserId: req.session.userId,
+            recipientEmail: req.session.email,
 
-            return res.status(500).json({
-                success: false,
-                message: "Failed to create test notification"
-            });
-        }
+            recipientRole: req.session.role,
 
-        res.json({
-            success: true,
-            notificationId: this.lastID
+            module: "notifications"
         });
-    });
+
+        return res.json({
+            success: true,
+            notificationId: result.id
+        });
+    } catch (error) {
+        console.error("Create test notification error:", error);
+
+        return res.status(500).json({
+            success: false,
+            message: "Failed to create notification"
+        });
+    }
 });
+
 app.get("/api/notices", (req, res) => {
     if (!req.session.isLoggedIn) {
         return res.status(401).json({
