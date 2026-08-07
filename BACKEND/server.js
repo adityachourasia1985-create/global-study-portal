@@ -3272,13 +3272,13 @@ app.post("/forgot-password", (req, res) => {
         });
 
         if (error) {
-            console.error("Resend email error:", error);
+    console.error("Resend email error:", error);
 
-            return res.status(500).json({
-                success: false,
-                message: "Could not send reset email."
-            });
-        }
+    return res.status(500).json({
+        success: false,
+        message: JSON.stringify(error)
+    });
+}
 
         console.log("Reset email sent:", data);
 
@@ -3291,7 +3291,7 @@ app.post("/forgot-password", (req, res) => {
 
     return res.status(500).json({
         success: false,
-        message: "Could not send reset email."
+        message: emailError?.message || String(emailError)
     });
 }
 })();
