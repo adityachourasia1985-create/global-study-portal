@@ -3224,12 +3224,11 @@ app.post("/forgot-password", (req, res) => {
 
                             const resetLink =
                                 `${baseUrl}/reset-password?token=${encodeURIComponent(resetToken)}`;
-
-                     (async () => {
+(async () => {
     try {
-        const { data, error } = await resend.emails.send({
-            from: "onboarding@resend.dev",
-            to: [user.email],
+        await transporter.sendMail({
+            from: `"Global Study Portal" <${process.env.EMAIL_USER}>`,
+            to: user.email,
             subject: "Reset Your Global Study Portal Password",
             html: `
                 <h2>Password Reset Request</h2>
@@ -3271,30 +3270,20 @@ app.post("/forgot-password", (req, res) => {
             `
         });
 
-        if (error) {
-    console.error("Resend email error:", error);
-
-    return res.status(500).json({
-        success: false,
-        message: JSON.stringify(error)
-    });
-}
-
-        console.log("Reset email sent:", data);
+        console.log("Reset email sent successfully");
 
         return res.json(genericResponse);
-    } catch (emailError) {
-    console.error("Resend email exception:");
-    console.error(emailError);
-    console.error(emailError?.message);
-    console.error(emailError?.stack);
 
-    return res.status(500).json({
-        success: false,
-        message: emailError?.message || String(emailError)
-    });
-}
+    } catch (emailError) {
+        console.error("Reset email error:", emailError);
+
+        return res.status(500).json({
+            success: false,
+            message: emailError.message
+        });
+    }
 })();
+
 
                         }
                     );
