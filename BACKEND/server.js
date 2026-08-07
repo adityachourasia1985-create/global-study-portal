@@ -1,9 +1,12 @@
 const multer = require("multer");
 const path = require("path");
+require("dotenv").config();
 const fs = require("fs");
 const OpenAI = require("openai");
+const { Resend } = require("resend");
 const crypto = require("crypto");
 const nodemailer = require("nodemailer");
+const resend = new Resend(process.env.RESEND_API_KEY);
 const openai = process.env.OPENAI_API_KEY
     ? new OpenAI({
         apiKey: process.env.OPENAI_API_KEY
@@ -3222,81 +3225,77 @@ app.post("/forgot-password", (req, res) => {
                             const resetLink =
                                 `${baseUrl}/reset-password?token=${encodeURIComponent(resetToken)}`;
 
-                            transporter.sendMail(
-                                {
-                                    from:
-                                        `"Global Study Portal" <${process.env.EMAIL_USER}>`,
+                     (async () => {
+    try {
+        const { data, error } = await resend.emails.send({
+            from: "onboarding@resend.dev",
+            to: [user.email],
+            subject: "Reset Your Global Study Portal Password",
+            html: `
+                <h2>Password Reset Request</h2>
 
-                                    to: user.email,
+                <p>Hello,</p>
 
-                                    subject:
-                                        "Reset Your Global Study Portal Password",
+                <p>
+                    We received a request to reset your
+                    Global Study Portal password.
+                </p>
 
-                                    html: `
-                                        <h2>Password Reset Request</h2>
+                <p>
+                    <a
+                        href="${resetLink}"
+                        style="
+                            display:inline-block;
+                            padding:12px 22px;
+                            background:#2563eb;
+                            color:#ffffff;
+                            text-decoration:none;
+                            border-radius:8px;
+                            font-weight:bold;
+                        "
+                    >
+                        Reset Password
+                    </a>
+                </p>
 
-                                        <p>Hello,</p>
+                <p>This link will expire in 15 minutes.</p>
 
-                                        <p>
-                                            We received a request to reset your
-                                            Global Study Portal password.
-                                        </p>
+                <p>
+                    If you did not request this password reset,
+                    you can ignore this email.
+                </p>
 
-                                        <p>
-                                            <a
-                                                href="${resetLink}"
-                                                style="
-                                                    display:inline-block;
-                                                    padding:12px 22px;
-                                                    background:#2563eb;
-                                                    color:#ffffff;
-                                                    text-decoration:none;
-                                                    border-radius:8px;
-                                                    font-weight:bold;
-                                                "
-                                            >
-                                                Reset Password
-                                            </a>
-                                        </p>
+                <hr>
 
-                                        <p>
-                                            This link will expire in 15 minutes.
-                                        </p>
+                <p><strong>Global Study Portal</strong></p>
+            `
+        });
 
-                                        <p>
-                                            If you did not request this password
-                                            reset, you can ignore this email.
-                                        </p>
+        if (error) {
+            console.error("Resend email error:", error);
 
-                                        <hr>
+            return res.status(500).json({
+                success: false,
+                message: "Could not send reset email."
+            });
+        }
 
-                                        <p>
-                                            <strong>Global Study Portal</strong>
-                                        </p>
-                                    `
-                                },
-                                (mailError, info) => {
-                                    if (mailError) {
-                                        console.error(
-                                            "Reset email error:",
-                                            mailError
-                                        );
+        console.log("Reset email sent:", data);
 
-                                        return res.status(500).json({
-                                            success: false,
-                                            message:
-                                                "Could not send reset email."
-                                        });
-                                    }
+        return res.json(genericResponse);
+    } catch (emailError) {
+    console.error("Resend email exception:");
+    console.error(emailError);
+    console.error(emailError?.message);
+    console.error(emailError?.stack);
 
-                                    console.log(
-                                        "Reset email sent:",
-                                        info.response
-                                    );
+    return res.status(500).json({
+        success: false,
+        message: "Could not send reset email."
+    });
+}
+})();
 
-                                    return res.json(genericResponse);
-                                }
-                            );
                         }
                     );
                 }

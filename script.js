@@ -1,5 +1,5 @@
-
-        
+let allManagedUsers = [];
+let managedUsersCurrentRole = ""; 
 function switchSection(tabId, menuId) {
     const tabs = document.querySelectorAll(".tab-content");
     tabs.forEach((tab) => {
@@ -2122,6 +2122,8 @@ async function loadManagedUsers() {
         const users = Array.isArray(data.users)
             ? data.users
             : [];
+        allManagedUsers = users;
+managedUsersCurrentRole = currentRole;
 
         if (users.length === 0) {
             usersList.innerHTML = `
