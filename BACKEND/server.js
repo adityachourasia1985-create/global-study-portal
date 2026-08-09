@@ -3268,7 +3268,11 @@ app.patch("/api/groups/requests/:id/approve", allowRoles("owner","super_admin","
 app.post("/login", (req, res) => {
     const email = String(req.body.email || "").trim().toLowerCase();
     const password = String(req.body.password || "").trim();
-
+console.log("LOGIN CHECK:", {
+    email: email,
+    passwordReceived: !!password,
+    passwordLength: password.length
+});
     db.get(
         
         "SELECT * FROM users WHERE LOWER(email) = ?",
