@@ -37,7 +37,7 @@ db.serialize(() => {
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT,
-            email TEXT UNIQUE,
+            email TEXT,
             password TEXT,
             role TEXT
 
@@ -362,9 +362,8 @@ return res.sendFile("index.html", { root: __dirname });
 const dashboardPath = path.join(__dirname, "index.html");
 console.log("Dashboard path:", dashboardPath);
 app.get("/", (req, res) => {
-    return res.sendFile(path.join(__dirname, "login.html"));
+    return res.sendFile("login.html", { root: __dirname });
 });
-
 app.get(["/dashboard", "/index.html"], (req, res) => {
     if (!req.session || !req.session.userId) {
         return res.sendFile(path.join(__dirname, "login.html"));
@@ -479,82 +478,44 @@ function getResetTokenExpiry() {
     return Math.floor(Date.now() / 1000) + (15 * 60); // 15 minutes
 }
 
-function createNotification({
-    title,
-    message,
-    category = "system",
-    priority = "info",
-    actorUserId = null,
-    targetUserId = null,
-    organizationCode = null,
-    branchCode = null,
-    recipientRole = null,
-    recipientUserId = null,
-    actionUrl = null
-}) {
-    const sql = `
-        INSERT INTO notifications (
-            title,
-            message,
-            category,
-            priority,
-            actor_user_id,
-            target_user_id,
-            organization_code,
-            branch_code,
-            recipient_role,
-            recipient_user_id,
-            action_url,
-            is_read
-        )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)
-    `;
-
-    const params = [
-        title,
-        message,
-        category,
-        priority,
-        actorUserId,
-        targetUserId,
-        organizationCode,
-        branchCode,
-        recipientRole,
-        recipientUserId,
-        actionUrl
-    ];
-
-    db.run(sql, params, function (err) {
-        if (err) {
-            console.error("Create notification error:", err);
-            return;
-        }
-
-        console.log("Notification created:", this.lastID);
-    });
-}
 function notifyUsers({
     title,
     message,
     category = "system",
     priority = "info",
+
     actorUserId = null,
     targetUserId = null,
+
     organizationCode = null,
     branchCode = null,
+
     recipientRoles = [],
     recipientUserIds = [],
-    actionUrl = null
+
+    module = null,
+    actionUrl = null,
+    eventKey = null
 }) {
-    const roles = Array.isArray(recipientRoles) ? recipientRoles : [];
-    const userIds = Array.isArray(recipientUserIds) ? recipientUserIds : [];
+    const roles = Array.isArray(recipientRoles)
+        ? recipientRoles.map(r => String(r).toLowerCase())
+        : [];
+
+    const userIds = Array.isArray(recipientUserIds)
+        ? recipientUserIds.map(Number)
+        : [];
+
+    if (roles.length === 0 && userIds.length === 0) {
+        console.error("notifyUsers: No recipients provided.");
+        return;
+    }
 
     const conditions = [];
     const params = [];
 
     if (roles.length > 0) {
         conditions.push(
-            `role IN (${roles.map(() => "?").join(", ")})`
+            `LOWER(role) IN (${roles.map(() => "?").join(", ")})`
         );
         params.push(...roles);
     }
@@ -566,40 +527,115 @@ function notifyUsers({
         params.push(...userIds);
     }
 
-    if (conditions.length === 0) {
-        console.error("notifyUsers: No recipients provided.");
-        return;
-    }
-
-    const sql = `
-        SELECT DISTINCT id, role
+    db.all(
+        `
+        SELECT
+            id,
+            email,
+            role,
+            organization_code,
+            branch_code
         FROM users
         WHERE ${conditions.join(" OR ")}
-    `;
+        `,
+        params,
+        (err, users) => {
+            if (err) {
+                console.error("notifyUsers recipient error:", err);
+                return;
+            }
 
-    db.all(sql, params, (err, recipients) => {
-        if (err) {
-            console.error("notifyUsers recipient error:", err);
-            return;
-        }
+            const cleanOrg = String(organizationCode || "")
+                .trim()
+                .toLowerCase();
 
-        recipients.forEach((recipient) => {
-            createNotification({
-                title,
-                message,
-                category,
-                priority,
-                actorUserId,
-                targetUserId,
-                organizationCode,
-                branchCode,
-                recipientRole: recipient.role,
-                recipientUserId: recipient.id,
-                actionUrl
+            const cleanBranch = String(branchCode || "")
+                .trim()
+                .toLowerCase();
+
+            users.forEach(user => {
+                const userRole = String(user.role || "")
+                    .trim()
+                    .toLowerCase();
+
+                const userOrg = String(user.organization_code || "")
+                    .trim()
+                    .toLowerCase();
+
+                const userBranch = String(user.branch_code || "")
+                    .trim()
+                    .toLowerCase();
+
+                const isDirectRecipient =
+                    userIds.includes(Number(user.id));
+
+                /*
+                    DIRECT recipient:
+                    always allowed.
+                */
+                if (!isDirectRecipient) {
+
+                    /*
+                        OWNER:
+                        global audit visibility.
+                    */
+                    if (userRole !== "owner") {
+
+                        /*
+                            Organization restriction
+                        */
+                        if (cleanOrg && userOrg !== cleanOrg) {
+                            return;
+                        }
+
+                        /*
+                            Branch restriction:
+                            Super Admin sees entire organization.
+                            Admin/User stay inside branch.
+                        */
+                        if (
+                            cleanBranch &&
+                            userRole !== "super_admin" &&
+                            userBranch !== cleanBranch
+                        ) {
+                            return;
+                        }
+                    }
+                }
+
+                createNotification({
+                    title,
+                    message,
+                    category,
+                    priority,
+
+                    actorUserId,
+                    targetUserId,
+
+                    recipientRole: user.role,
+                    recipientUserId: user.id,
+                    recipientEmail: user.email,
+
+                    organizationCode:
+                        organizationCode || user.organization_code || null,
+
+                    branchCode:
+                        branchCode || null,
+
+                    module,
+                    actionUrl,
+                    eventKey
+                }).catch(error => {
+                    console.error(
+                        "notifyUsers notification creation error:",
+                        error
+                    );
+                });
             });
-        });
-    });
+        }
+    );
 }
+
 const profileUploadDir = path.join(
     __dirname,
     "public",
@@ -679,7 +715,10 @@ app.get("/api/notifications", (req, res) => {
         [userId],
         (userErr, user) => {
             if (userErr) {
-                console.error("Notification user lookup error:", userErr);
+                console.error(
+                    "Notification user lookup error:",
+                    userErr
+                );
 
                 return res.status(500).json({
                     success: false,
@@ -694,15 +733,18 @@ app.get("/api/notifications", (req, res) => {
                 });
             }
 
-            const role = String(user.role || "user").toLowerCase();
-            const email = String(user.email || "").toLowerCase();
-            const organizationCode = user.organization_code || null;
-            const branchCode = user.branch_code || null;
+            const role = String(user.role || "user")
+                .trim()
+                .toLowerCase();
 
-            let sql;
-            let params;
+            const email = String(user.email || "")
+                .trim()
+                .toLowerCase();
 
-            // Owner receives every notification across the complete portal
+            let sql = "";
+            let params = [];
+
+            // OWNER → complete portal audit feed
             if (role === "owner") {
                 sql = `
                     SELECT *
@@ -713,119 +755,69 @@ app.get("/api/notifications", (req, res) => {
                 params = [];
             }
 
-            // Super Admin receives:
-            // 1. Notifications directly related to their account
-            // 2. Notifications for their complete organization
-            else if (role === "super_admin") {
-                sql = `
-                    SELECT *
-                    FROM notifications
-                    WHERE
-                        recipient_user_id = ?
-                        OR target_user_id = ?
-                        OR LOWER(COALESCE(recipient_email, '')) = ?
-                        OR (
-                            organization_code = ?
-                            AND (
-                                recipient_role IS NULL
-                                OR LOWER(recipient_role) IN (
-                                    'super_admin',
-                                    'organization'
-                                )
-                            )
-                        )
-                    ORDER BY datetime(created_at) DESC, id DESC
-                `;
-
-                params = [
-                    userId,
-                    userId,
-                    email,
-                    organizationCode
-                ];
-            }
-
-            // Admin receives:
-            // 1. Notifications directly related to their account
-            // 2. Relevant organization + branch notifications
-            else if (role === "admin") {
-                sql = `
-                    SELECT *
-                    FROM notifications
-                    WHERE
-                        recipient_user_id = ?
-                        OR target_user_id = ?
-                        OR LOWER(COALESCE(recipient_email, '')) = ?
-                        OR (
-                            organization_code = ?
-                            AND (
-                                branch_code IS NULL
-                                OR branch_code = ?
-                            )
-                            AND (
-                                recipient_role IS NULL
-                                OR LOWER(recipient_role) IN (
-                                    'admin',
-                                    'branch'
-                                )
-                            )
-                        )
-                    ORDER BY datetime(created_at) DESC, id DESC
-                `;
-
-                params = [
-                    userId,
-                    userId,
-                    email,
-                    organizationCode,
-                    branchCode
-                ];
-            }
-
-            // User/Individual receives only notifications related to them
+            // EVERYONE ELSE → only notifications
+            // explicitly assigned to their account
             else {
                 sql = `
                     SELECT *
                     FROM notifications
                     WHERE
                         recipient_user_id = ?
-                        OR target_user_id = ?
-                        OR LOWER(COALESCE(recipient_email, '')) = ?
+                        OR LOWER(
+                            TRIM(
+                                COALESCE(recipient_email, '')
+                            )
+                        ) = ?
                     ORDER BY datetime(created_at) DESC, id DESC
                 `;
 
                 params = [
                     userId,
-                    userId,
                     email
                 ];
             }
 
-            db.all(sql, params, (err, rows) => {
-                if (err) {
-                    console.error("Fetch notifications error:", err);
+            db.all(
+                sql,
+                params,
+                (err, rows) => {
+                    if (err) {
+                        console.error(
+                            "Fetch notifications error:",
+                            err
+                        );
 
-                    return res.status(500).json({
-                        success: false,
-                        message: "Failed to load notifications"
+                        return res.status(500).json({
+                            success: false,
+                            message:
+                                "Failed to load notifications"
+                        });
+                    }
+
+                    const notifications =
+                        Array.isArray(rows)
+                            ? rows
+                            : [];
+
+                    const unreadCount =
+                        notifications.filter(
+                            notification =>
+                                Number(
+                                    notification.is_read
+                                ) === 0
+                        ).length;
+
+                    return res.json({
+                        success: true,
+                        unreadCount,
+                        notifications
                     });
                 }
-
-                const notifications = Array.isArray(rows) ? rows : [];
-
-                const unreadCount = notifications.filter(
-                    notification => Number(notification.is_read) === 0
-                ).length;
-
-                return res.json({
-                    success: true,
-                    unreadCount,
-                    notifications
-                });
-            });
+            );
         }
     );
 });
+
 app.post("/api/notifications/test", async (req, res) => {
     if (!req.session || !req.session.userId) {
         return res.status(401).json({
@@ -988,7 +980,32 @@ app.patch("/api/notifications/:id/read", (req, res) => {
             message: "Not logged in"
         });
     }
+
+    const notificationId = Number(req.params.id);
+    const userId = Number(req.session.userId);
+
+    db.run(
+        `UPDATE notifications
+         SET is_read = 1
+         WHERE id = ?
+         AND recipient_user_id = ?`,
+        [notificationId, userId],
+        function (err) {
+            if (err) {
+                return res.status(500).json({
+                    success: false,
+                    message: "Failed to mark notification as read"
+                });
+            }
+
+            return res.json({
+                success: true,
+                updated: this.changes
+            });
+        }
+    );
 });
+
 app.delete("/api/notifications/:id", (req, res) => {
     if (!req.session || !req.session.userId) {
         return res.status(401).json({
@@ -1139,6 +1156,17 @@ app.put("/api/about", (req, res) => {
                     message: "Could not update About details."
                 });
             }
+notifyUsers({
+    title: "About Section Updated",
+    message: "Portal About information was updated.",
+    category: "system",
+    priority: "info",
+
+    actorUserId: req.session.userId,
+
+    recipientRoles: ["owner"],
+    actionUrl: "/dashboard"
+});
 
             return res.json({
                 success: true,
@@ -1246,6 +1274,20 @@ app.post(
                         message: "Could not add notice."
                     });
                 }
+notifyUsers({
+    title: "New Notice",
+    message: `${title}: ${message}`,
+    category: "notice",
+    priority: "important",
+
+    actorUserId: req.session.userId,
+
+    organizationCode,
+    branchCode,
+
+    recipientRoles: ["owner", "super_admin", "admin", "user"],
+    actionUrl: "/dashboard"
+});
 
                 return res.json({
                     success: true,
@@ -1317,6 +1359,25 @@ app.post("/api/progress", (req, res) => {
                     message: err.message
                 });
             }
+            notifyUsers({
+    title: "Progress Updated",
+    message: "Your study progress report was updated.",
+    category: "progress",
+    priority: "info",
+
+    actorUserId: req.session.userId,
+    targetUserId: req.session.userId,
+
+    organizationCode: req.session.organizationCode,
+    branchCode: req.session.branchCode,
+
+    recipientUserIds: [req.session.userId],
+    recipientRoles: ["owner"],
+
+    module: "progress",
+    actionUrl: "/dashboard",
+    eventKey: `progress_${req.session.userId}_${this.lastID}`
+});
 
             res.json({
                 success: true,
@@ -1819,6 +1880,30 @@ app.post(
                                         message: insertErr.message
                                     });
                                 }
+                                createNotification({
+    title: "New User Created",
+    message: `${name} (${email}) was created as ${role}.`,
+    category: "user_management",
+    priority: "info",
+
+    actorUserId: req.session.userId,
+    actorEmail: req.session.email,
+
+    targetUserId: this.lastID,
+
+    recipientUserId: this.lastID,
+    recipientEmail: email,
+    recipientRole: role,
+
+    organizationCode: finalOrganizationCode,
+    branchCode: finalBranchCode || null,
+
+    module: "user_management",
+    actionUrl: "/dashboard",
+    eventKey: `user_created_${this.lastID}`
+}).catch(err => {
+    console.error("User creation notification error:", err);
+});
 
                                 return res.json({
                                     success: true,
@@ -1844,95 +1929,122 @@ app.get(
     "/api/users",
     allowRoles("owner", "super_admin", "admin"),
     (req, res) => {
-
         const scope = getScope(req);
 
         const fields = `
-            id,
-            name,
-            email,
-            role,
-            mobile,
-            enrollment,
-            branch,
-            semester,
-            admission_year,
-            organization_code,
-            branch_code
+            u.id,
+            u.name,
+            u.email,
+            u.role,
+            u.mobile,
+            u.enrollment,
+            u.branch,
+            u.semester,
+            u.admission_year,
+            u.organization_code,
+            u.branch_code,
+            o.name AS organization_name
         `;
 
         // OWNER → all users
         if (scope.isOwner) {
             return db.all(
-                `SELECT ${fields}
-                 FROM users
-                 ORDER BY id DESC`,
+                `
+                SELECT ${fields}
+                FROM users u
+                LEFT JOIN organizations o
+                    ON u.organization_code = o.organization_code
+                ORDER BY u.id DESC
+                `,
                 [],
                 (err, users) => {
                     if (err) {
+                        console.error("Owner users fetch error:", err);
+
                         return res.status(500).json({
                             success: false,
                             message: err.message
                         });
                     }
 
-                    return res.json({ success: true, users });
+                    return res.json({
+                        success: true,
+                        users
+                    });
                 }
             );
         }
 
         // SUPER ADMIN → only assigned organization
-        console.log("SUPER ADMIN ORG =", scope.organizationCode);
         if (req.session.role === "super_admin") {
             return db.all(
-                `SELECT ${fields}
-                 FROM users
-                 WHERE organization_code = ?
-                 ORDER BY id DESC`,
+                `
+                SELECT ${fields}
+                FROM users u
+                LEFT JOIN organizations o
+                    ON u.organization_code = o.organization_code
+                WHERE u.organization_code = ?
+                ORDER BY u.id DESC
+                `,
                 [scope.organizationCode],
                 (err, users) => {
                     if (err) {
+                        console.error("Super Admin users fetch error:", err);
+
                         return res.status(500).json({
                             success: false,
                             message: err.message
                         });
                     }
 
-                    return res.json({ success: true, users });
+                    return res.json({
+                        success: true,
+                        users
+                    });
                 }
             );
         }
 
-        // ADMIN → assigned organization + branch
-     db.all(
-    `SELECT ${fields}
-     FROM users
-     WHERE organization_code = ?
-     AND (
-         role = 'super_admin'
-         OR (
-             role = 'user'
-             AND branch_code = ?
-         )
-     )
-     ORDER BY id DESC`,
-    [scope.organizationCode, scope.branchCode],
-    (err, users) => {
-        if (err) {
-            return res.status(500).json({
-                success: false,
-                message: err.message
-            });
-        }
+        // ADMIN → own organization + own branch users
+        return db.all(
+            `
+            SELECT ${fields}
+            FROM users u
+            LEFT JOIN organizations o
+                ON u.organization_code = o.organization_code
+            WHERE u.organization_code = ?
+            AND (
+                u.role = 'super_admin'
+                OR (
+                    u.role = 'user'
+                    AND u.branch_code = ?
+                )
+            )
+            ORDER BY u.id DESC
+            `,
+            [
+                scope.organizationCode,
+                scope.branchCode
+            ],
+            (err, users) => {
+                if (err) {
+                    console.error("Admin users fetch error:", err);
 
-        return res.json({
-            success: true,
-            users
-        });
+                    return res.status(500).json({
+                        success: false,
+                        message: err.message
+                    });
+                }
+
+                return res.json({
+                    success: true,
+                    users
+                });
+            }
+        );
     }
 );
-    }
-);
+
 app.patch(
     "/api/users/:id/role",
     allowRoles("owner", "super_admin"),
@@ -2040,6 +2152,27 @@ if (
                             oldRole: account.role,
                             newRole
                         });
+createNotification({
+    title: "Role Changed",
+    message: `${account.name}'s role changed from ${account.role} to ${newRole}.`,
+    category: "user_management",
+    priority: "important",
+
+    actorUserId: req.session.userId,
+    actorEmail: req.session.email,
+
+    targetUserId: userId,
+    recipientUserId: userId,
+    recipientRole: newRole,
+
+    organizationCode: account.organization_code,
+
+    module: "user_management",
+    actionUrl: "/dashboard",
+    eventKey: `role_changed_${userId}_${Date.now()}`
+}).catch(err => {
+    console.error("Role change notification error:", err);
+});
 
                         return res.json({
                             success: true,
@@ -2231,6 +2364,21 @@ app.patch(
                                 message: "Could not change password"
                             });
                         }
+                        notifyUsers({
+    title: "Password Changed",
+    message: "Your account password was changed by an authorized administrator.",
+    category: "security",
+    priority: "important",
+
+    actorUserId: req.session.userId,
+    targetUserId: userId,
+
+    recipientUserIds: [userId],
+
+    module: "security",
+    actionUrl: "/dashboard",
+    eventKey: `password_changed_${userId}_${Date.now()}`
+});
 
                         res.json({
                             success: true,
@@ -2314,6 +2462,21 @@ app.patch(
                         message: "User not found"
                     });
                 }
+notifyUsers({
+    title: "Profile Updated",
+    message: "Your profile details were updated by an authorized administrator.",
+    category: "profile",
+    priority: "info",
+
+    actorUserId: req.session.userId,
+    targetUserId: userId,
+
+    recipientUserIds: [userId],
+
+    module: "user_management",
+    actionUrl: "/dashboard",
+    eventKey: `profile_updated_${userId}_${Date.now()}`
+});
 
                 res.json({
                     success: true,
@@ -2366,10 +2529,7 @@ if (!OWNER_PASSWORD) {
     );
 }
 
-// Login page
-app.get("/", (req, res) => {
-    res.sendFile(path.join(__dirname, "login.html"));
-});
+
 // CSS aur JavaScript
 app.get("/style.css", (req, res) => {
     res.sendFile("style.css", {
@@ -2588,7 +2748,7 @@ const newStatus =
                 ) {
                     return res.status(409).json({
                         success: false,
-                        message: "This email is already registered."
+                        message: "This email is already registered. Please login with this account or use Forgot Password to reset your password. Please login with this account or use Forgot Password to reset your password. Please login with this account or use Forgot Password to reset your password. Please login with this account or use Forgot Password to reset your password. Please login with this account or use Forgot Password to reset your password. Please login with this account or use Forgot Password to reset your password. Please login with this account or use Forgot Password to reset your password. Please login with this account or use Forgot Password to reset your password. Please login with this account or use Forgot Password to reset your password. Please login with this account or use Forgot Password to reset your password. Please login with this account or use Forgot Password to reset your password. Please login with this account or use Forgot Password to reset your password. Please login with this account or use Forgot Password to reset your password. Please login with this account or use Forgot Password to reset your password. Please login with this account or use Forgot Password to reset your password."
                     });
                 }
 
@@ -2634,6 +2794,25 @@ targetUserId: newUserId,
     actionUrl: "/dashboard"
 });
 }if (isNewOrganization) {
+    notifyUsers({
+    title: "Organization Created",
+    message: `${name} created a new organization successfully.`,
+    category: "organization",
+    priority: "important",
+
+    actorUserId: newUserId,
+    targetUserId: newUserId,
+
+    organizationCode: finalOrganizationCode,
+
+    recipientUserIds: [newUserId],
+    recipientRoles: ["owner"],
+
+    module: "organization",
+    actionUrl: "/dashboard",
+    eventKey: `organization_created_${newUserId}`
+});
+
     return res.json({
         success: true,
         message:
@@ -2751,30 +2930,35 @@ app.post("/api/groups/join", (req, res) => {
                 });
             }
 
-            db.get(
-                `SELECT id
-                 FROM users
-                 WHERE LOWER(TRIM(email)) = LOWER(TRIM(?))`,
-                [cleanEmail],
-                (emailError, existingUser) => {
-                    if (emailError) {
-                        console.error(
-                            "Join email check error:",
-                            emailError
-                        );
+          db.get(
+    `SELECT id, organization_code
+     FROM users
+     WHERE LOWER(TRIM(email)) = LOWER(TRIM(?))
+     LIMIT 1`,
+    [cleanEmail],
+    (emailError, existingUser) => {
+        if (emailError) {
+            console.error(
+                "Join email check error:",
+                emailError
+            );
 
-                        return res.status(500).json({
-                            success: false,
-                            message: "Could not verify email."
-                        });
-                    }
+            return res.status(500).json({
+                success: false,
+                message: "Could not verify email."
+            });
+        }
 
-                    if (existingUser) {
-                        return res.status(409).json({
-                            success: false,
-                            message: "This email is already registered."
-                        });
-                    }
+        if (existingUser) {
+    return res.status(409).json({
+        success: false,
+        code: "EMAIL_ALREADY_REGISTERED",
+        email: cleanEmail,
+        message:
+            `${cleanEmail} is already registered. ` +
+            `Please login with this account or use Forgot Password to reset access.`
+    });
+}
 
                     let hashedPassword;
 
@@ -2849,7 +3033,7 @@ app.post("/api/groups/join", (req, res) => {
                                     return res.status(409).json({
                                         success: false,
                                         message:
-                                            "This email is already registered."
+                                            "This email is already registered. Please login with this account or use Forgot Password to reset your password. Please login with this account or use Forgot Password to reset your password. Please login with this account or use Forgot Password to reset your password. Please login with this account or use Forgot Password to reset your password. Please login with this account or use Forgot Password to reset your password. Please login with this account or use Forgot Password to reset your password. Please login with this account or use Forgot Password to reset your password. Please login with this account or use Forgot Password to reset your password. Please login with this account or use Forgot Password to reset your password. Please login with this account or use Forgot Password to reset your password. Please login with this account or use Forgot Password to reset your password. Please login with this account or use Forgot Password to reset your password. Please login with this account or use Forgot Password to reset your password. Please login with this account or use Forgot Password to reset your password. Please login with this account or use Forgot Password to reset your password."
                                     });
                                 }
 
@@ -3009,6 +3193,21 @@ notifyUsers({
     recipientUserIds: [Number(userId)],
     actionUrl: "/dashboard"
 });
+notifyUsers({
+    title: "Account Approved",
+    message: "Your account has been approved successfully.",
+    category: "account",
+    priority: "important",
+
+    actorUserId: req.session.userId,
+    targetUserId: userId,
+
+    recipientUserIds: [userId],
+
+    module: "user_management",
+    actionUrl: "/dashboard",
+    eventKey: `user_approved_${userId}_${Date.now()}`
+});
 
             return res.json({
                 success: true,
@@ -3117,7 +3316,27 @@ if (account.status === "rejected") {
             req.session.organizationCode =
     account.organization_code || "OWNER";
 req.session.branchCode = account.branch_code;
-            return res.json({
+       notifyUsers({
+    title: "Account Login",
+    message: `${account.name || account.email} logged into the portal.`,
+    category: "security",
+    priority: "info",
+
+    actorUserId: account.id,
+    targetUserId: account.id,
+
+    organizationCode: account.organization_code,
+    branchCode: account.branch_code,
+
+    recipientUserIds: [account.id],
+    recipientRoles: ["owner"],
+
+    module: "authentication",
+    actionUrl: "/dashboard",
+    eventKey: `login_${account.id}_${Date.now()}`
+});
+
+return res.json({
                 success: true,
                 message: "Login successful",
                 role: account.role,
@@ -3224,65 +3443,83 @@ app.post("/forgot-password", (req, res) => {
 
                             const resetLink =
                                 `${baseUrl}/reset-password?token=${encodeURIComponent(resetToken)}`;
-(async () => {
-    try {
-        await transporter.sendMail({
-            from: `"Global Study Portal" <${process.env.EMAIL_USER}>`,
-            to: user.email,
-            subject: "Reset Your Global Study Portal Password",
-            html: `
-                <h2>Password Reset Request</h2>
+                                 console.log("FORGOT PASSWORD EMAIL DEBUG:", {
+    to: user.email,
+    from: process.env.EMAIL_USER,
+    baseUrl,
+    hasEmailPass: !!process.env.EMAIL_PASS
+});
 
-                <p>Hello,</p>
+                                transporter.sendMail(
+    {
+        from: `"Global Study Portal" <${process.env.EMAIL_USER}>`,
+        to: user.email,
+        subject: "Reset Your Global Study Portal Password",
+        html: `
+            <h2>Password Reset Request</h2>
 
-                <p>
-                    We received a request to reset your
-                    Global Study Portal password.
-                </p>
+            <p>Hello,</p>
 
-                <p>
-                    <a
-                        href="${resetLink}"
-                        style="
-                            display:inline-block;
-                            padding:12px 22px;
-                            background:#2563eb;
-                            color:#ffffff;
-                            text-decoration:none;
-                            border-radius:8px;
-                            font-weight:bold;
-                        "
-                    >
-                        Reset Password
-                    </a>
-                </p>
+            <p>
+                We received a request to reset your
+                Global Study Portal password.
+            </p>
 
-                <p>This link will expire in 15 minutes.</p>
+            <p>
+                <a href="${resetLink}">
+                    Reset Password
+                </a>
+            </p>
 
-                <p>
-                    If you did not request this password reset,
-                    you can ignore this email.
-                </p>
+            <p>
+                This link will expire in 15 minutes.
+            </p>
 
-                <hr>
+            <p>
+                If you did not request this,
+                you can ignore this email.
+            </p>
+        `
+    },
+    (mailError) => {
+        console.log("SENDMAIL CALLBACK HIT:");
+console.log(mailError);
 
-                <p><strong>Global Study Portal</strong></p>
-            `
+        if (mailError) {
+            console.error(
+                "Password reset email error:",
+                mailError
+            );
+
+            return res.status(500).json({
+                success: false,
+                message:
+                    "Reset request was created, but email could not be sent."
+            });
+        }
+
+        notifyUsers({
+            title: "Password Reset Requested",
+            message:
+                "A password reset was requested for your account.",
+            category: "security",
+            priority: "important",
+
+            actorUserId: user.id,
+            targetUserId: user.id,
+
+            recipientUserIds: [user.id],
+            recipientRoles: ["owner"],
+
+            module: "authentication",
+            actionUrl: "/login.html",
+            eventKey:
+                `password_reset_requested_${user.id}_${Date.now()}`
         });
-
-        console.log("Reset email sent successfully");
 
         return res.json(genericResponse);
-
-    } catch (emailError) {
-        console.error("Reset email error:", emailError);
-
-        return res.status(500).json({
-            success: false,
-            message: emailError.message
-        });
     }
-})();
+);
 
 
                         }
@@ -3369,6 +3606,22 @@ app.post("/reset-password", (req, res) => {
                          WHERE id = ?`,
                         [currentTime, resetRow.id]
                     );
+                    notifyUsers({
+    title: "Password Reset Successful",
+    message: "Your account password was reset successfully.",
+    category: "security",
+    priority: "important",
+
+    actorUserId: user.id,
+    targetUserId: user.id,
+
+    recipientUserIds: [user.id],
+    recipientRoles: ["owner"],
+
+    module: "authentication",
+    actionUrl: "/login.html",
+    eventKey: `password_reset_${user.id}_${Date.now()}`
+});
 
                     return res.json({
                         success: true,
@@ -3701,6 +3954,22 @@ app.put("/api/users/:id/permissions", allowRoles("owner"), (req, res) => {
                     message: "User not found"
                 });
             }
+            notifyUsers({
+    title: "Permissions Updated",
+    message: "Your account permissions were updated by the Owner.",
+    category: "security",
+    priority: "important",
+
+    actorUserId: req.session.userId,
+    targetUserId: userId,
+
+    recipientUserIds: [userId],
+    recipientRoles: ["owner"],
+
+    module: "user_management",
+    actionUrl: "/dashboard",
+    eventKey: `permissions_updated_${userId}_${Date.now()}`
+});
 
             return res.json({
                 success: true,
@@ -3776,6 +4045,23 @@ app.delete("/api/attendance/:id", (req, res) => {
                     message: "Attendance record not found"
                 });
             }
+notifyUsers({
+    title: "Attendance Deleted",
+    message: "An attendance record was deleted.",
+    category: "attendance",
+    priority: "info",
+
+    actorUserId: req.session.userId,
+
+    organizationCode: req.session.organizationCode,
+    branchCode: req.session.branchCode,
+
+    recipientRoles: ["owner", "super_admin", "admin", "user"],
+
+    module: "attendance",
+    actionUrl: "/dashboard",
+    eventKey: `attendance_deleted_${Date.now()}`
+});
 
             res.json({
                 success: true,
@@ -4213,6 +4499,21 @@ app.post(
                                             "Unable to save attendance"
                                     });
                                 }
+                                notifyUsers({
+    title: "Attendance Updated",
+    message: `${subject} attendance was updated for ${student.email}.`,
+    category: "attendance",
+    priority: "info",
+
+    actorUserId: req.session.userId,
+    targetUserId: student.id,
+
+    organizationCode: student.organization_code,
+    branchCode: student.branch_code,
+
+    recipientUserIds: [student.id],
+    actionUrl: "/dashboard"
+});
 
                                 return res.json({
                                     success: true,
@@ -4245,10 +4546,37 @@ app.get("/dashboard", (req, res) => {
 
 // Logout
 app.get("/logout", (req, res) => {
+    const userId = req.session.userId;
+    const organizationCode = req.session.organizationCode;
+    const branchCode = req.session.branchCode;
+
+    if (userId) {
+        notifyUsers({
+            title: "Account Logout",
+            message: "Account logged out of the portal.",
+            category: "security",
+            priority: "info",
+
+            actorUserId: userId,
+            targetUserId: userId,
+
+            organizationCode,
+            branchCode,
+
+            recipientUserIds: [userId],
+            recipientRoles: ["owner"],
+
+            module: "authentication",
+            actionUrl: "/dashboard",
+            eventKey: `logout_${userId}_${Date.now()}`
+        });
+    }
+
     req.session.destroy(() => {
         res.redirect("/");
     });
 });
+
 app.post(
     "/api/timetable",
     allowRoles("owner", "super_admin", "admin"),
@@ -4612,21 +4940,87 @@ app.put("/api/notices/:id", (req, res) => {
         [title, message, req.params.id],
         function (err) {
             if (err) return res.status(500).json({ error: err.message });
+          notifyUsers({
+    title: "Notice Updated",
+    message: `Notice "${title}" was updated.`,
+    category: "notice",
+    priority: "info",
+
+    actorUserId: req.session.userId,
+
+    recipientRoles: ["owner", "super_admin", "admin", "user"],
+    actionUrl: "/dashboard"
+});
+
             res.json({ success: true });
+        }
+    );
+});
+app.delete("/api/notices/:id", (req, res) => {
+    const noticeId = req.params.id;
+
+    db.get(
+        `SELECT title, organization_code, branch_code
+         FROM notices
+         WHERE id = ?`,
+        [noticeId],
+        (findErr, notice) => {
+            if (findErr) {
+                return res.status(500).json({
+                    success: false,
+                    message: findErr.message
+                });
+            }
+
+            if (!notice) {
+                return res.status(404).json({
+                    success: false,
+                    message: "Notice not found"
+                });
+            }
+
+            db.run(
+                `DELETE FROM notices WHERE id = ?`,
+                [noticeId],
+                function (err) {
+                    if (err) {
+                        return res.status(500).json({
+                            success: false,
+                            message: err.message
+                        });
+                    }
+
+                    notifyUsers({
+                        title: "Notice Deleted",
+                        message: `Notice "${notice.title}" was deleted.`,
+                        category: "notice",
+                        priority: "info",
+
+                        actorUserId: req.session.userId,
+
+                        organizationCode: notice.organization_code,
+                        branchCode: notice.branch_code,
+
+                        recipientRoles: [
+                            "owner",
+                            "super_admin",
+                            "admin",
+                            "user"
+                        ],
+
+                        module: "notice_board",
+                        actionUrl: "/dashboard"
+                    });
+
+                    return res.json({
+                        success: true
+                    });
+                }
+            );
         }
     );
 });
 
-app.delete("/api/notices/:id", (req, res) => {
-    db.run(
-        `DELETE FROM notices WHERE id = ?`,
-        [req.params.id],
-        function (err) {
-            if (err) return res.status(500).json({ error: err.message });
-            res.json({ success: true });
-        }
-    );
-});
 app.get("/api/debug-notices", (req, res) => {
     db.all(
         `SELECT id, title, message, organization_code, branch_code
@@ -4724,6 +5118,21 @@ app.post("/change-password", (req, res) => {
                                 message: "Unable to change password."
                             });
                         }
+                        notifyUsers({
+    title: "Password Changed",
+    message: "Your account password was changed successfully.",
+    category: "security",
+    priority: "important",
+
+    actorUserId: req.session.userId,
+    targetUserId: req.session.userId,
+
+    recipientUserIds: [req.session.userId],
+
+    module: "security",
+    actionUrl: "/dashboard",
+    eventKey: `self_password_changed_${req.session.userId}_${Date.now()}`
+});
 
                         return res.json({
                             success: true,

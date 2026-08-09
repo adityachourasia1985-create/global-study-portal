@@ -1464,20 +1464,21 @@ transition:
                                 OTP or reset-link backend will be connected next.
                             </p>
 
-                            <form id="forgotPasswordForm">
+                            <form id="forgotPasswordForm" action="/forgot-password" method="POST">
                                 <div class="input-group">
                                     <label for="resetEmail">
                                         Registered email
                                     </label>
 
                                     <div class="input-shell">
-                                        <input
-                                            type="email"
-                                            id="resetEmail"
-                                            placeholder="Enter registered email"
-                                            autocomplete="email"
-                                            required
-                                        >
+                                    <input
+    type="email"
+    id="resetEmail"
+    name="email"
+    placeholder="Enter registered email"
+    autocomplete="email"
+    required
+>
 
                                         <span class="input-icon">✉</span>
                                     </div>
@@ -1865,49 +1866,57 @@ loginButton.addEventListener("pointerenter", (event) => {
                 resetMessage.textContent = "";
             }
         );
-
-       forgotPasswordForm.addEventListener(
+forgotPasswordForm.addEventListener(
     "submit",
     async (event) => {
-                event.preventDefault();
+        event.preventDefault();
 
-                const email =
-                    resetEmail.value.trim();
+        const email = resetEmail.value.trim();
 
-                if (!email) {
-                    resetMessage.textContent =
-                        "Please enter your registered email.";
+        if (!email) {
+            resetMessage.textContent =
+                "Please enter your registered email.";
 
-                    resetMessage.className =
-                        "message error";
+            resetMessage.className =
+                "message error";
 
-                    return;
-                }
-try {
-    const response = await fetch("/forgot-password", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ email })
-    });
+            return;
+        }
 
-    const data = await response.json();
+        try {
+            const response = await fetch("/forgot-password", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ email })
+            });
 
-    resetMessage.textContent = data.message;
-    resetMessage.className =
-        "message " + (data.success ? "success" : "error");
+            const data = await response.json();
 
-    if (data.resetToken) {
-        console.log("Reset Token:", data.resetToken);
+            resetMessage.textContent =
+                data.message || "Request completed.";
+
+            resetMessage.className =
+                "message " +
+                (response.ok && data.success
+                    ? "success"
+                    : "error");
+
+        } catch (err) {
+            console.error(
+                "Forgot Password request error:",
+                err
+            );
+
+            resetMessage.textContent =
+                "Something went wrong.";
+
+            resetMessage.className =
+                "message error";
+        }
     }
-} catch (err) {
-    resetMessage.textContent =
-        "Something went wrong.";
-    resetMessage.className = "message error";
-}
-            }
-        );
+);
 
         createGroupBtn.addEventListener(
             "click",

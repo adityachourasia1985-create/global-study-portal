@@ -333,10 +333,16 @@ applyThemeBtn.addEventListener("click", () => {
 
 
         // ================= Pomodoro Timer =================
-let time = 30*60;
+let time = 30 * 60;
 let timer;
 let running = false;
-let currentSessionMinites = 30;
+let currentSessionMinutes = 30;
+
+let timerStartedAt = null;
+let timerPausedAt = null;
+
+const TIMER_STATE_KEY = "globalStudyPortalTimerState";
+
 
 function updateTimer() {
     let min = Math.floor(time / 60);
@@ -355,15 +361,44 @@ function startTimer() {
     if (running) return;
 
     running = true;
+        timerStartedAt = Date.now();
+    timerPausedAt = null;
+
+    localStorage.setItem(
+        TIMER_STATE_KEY,
+        JSON.stringify({
+            mode: "pomodoro",
+            running: true,
+            startedAt: timerStartedAt,
+            remainingTime: time,
+            sessionMinutes: currentSessionMinutes
+        })
+    );
 
     timer = setInterval(() => {
         if (time > 0) {
             time--;
+                    localStorage.setItem(
+            TIMER_STATE_KEY,
+            JSON.stringify({
+                mode: "pomodoro",
+                running: true,
+                startedAt: timerStartedAt,
+                remainingTime: time,
+                sessionMinutes: currentSessionMinutes
+            })
+        );
             updateTimer();
         } else {
             clearInterval(timer);
             timer = null;
             running = false;
+                localStorage.removeItem(
+        TIMER_STATE_KEY
+    );
+
+    timerStartedAt = null;
+    timerPausedAt = null;
 
             pomodoroCount++;
             completedMinutes += currentSessionMinutes;
@@ -386,6 +421,103 @@ function startTimer() {
 function pauseTimer() {
     clearInterval(timer);
     running = false;
+        timerPausedAt = Date.now();
+
+    localStorage.setItem(
+        TIMER_STATE_KEY,
+        JSON.stringify({
+            mode: "pomodoro",
+            running: false,
+            startedAt: timerStartedAt,
+            pausedAt: timerPausedAt,
+            remainingTime: time,
+            sessionMinutes: currentSessionMinutes
+        })
+    );
+}
+function restoreTimerState() {
+    const savedState =
+        localStorage.getItem(TIMER_STATE_KEY);
+
+    if (!savedState) return;
+
+    try {
+        const state = JSON.parse(savedState);
+
+        if (state.mode !== "pomodoro") return;
+
+        currentSessionMinutes =
+            Number(state.sessionMinutes) || 30;
+
+        if (state.running) {
+            const elapsedSeconds = Math.floor(
+                (Date.now() - Number(state.startedAt)) / 1000
+            );
+
+         time =
+    (Number(state.sessionMinutes) || 30) * 60 -
+    elapsedSeconds;
+
+            if (time <= 0) {
+                time = 0;
+                running = false;
+
+                localStorage.removeItem(
+                    TIMER_STATE_KEY
+                );
+
+                updateTimer();
+                return;
+            }
+
+            running = true;
+            timerStartedAt = Number(state.startedAt);
+
+            updateTimer();
+
+            clearInterval(timer);
+
+            timer = setInterval(() => {
+                if (time > 0) {
+                    time--;
+                    updateTimer();
+
+                    localStorage.setItem(
+                        TIMER_STATE_KEY,
+                        JSON.stringify({
+                            mode: "pomodoro",
+                            running: true,
+                            startedAt: timerStartedAt,
+                            remainingTime: time,
+                            sessionMinutes:
+                                currentSessionMinutes
+                        })
+                    );
+                }
+            }, 1000);
+
+        } else {
+            time =
+                Number(state.remainingTime) ||
+                currentSessionMinutes * 60;
+
+            running = false;
+            timerPausedAt =
+                Number(state.pausedAt) || null;
+
+            updateTimer();
+        }
+
+    } catch (error) {
+        console.error(
+            "Timer restore error:",
+            error
+        );
+
+        localStorage.removeItem(
+            TIMER_STATE_KEY
+        );
+    }
 }
 
 function resetTimer() {
@@ -412,6 +544,10 @@ updateTimer();
 // ================= Stopwatch =================
 let swTime = 0;
 let swInterval;
+let swStartedAt = null;
+
+const STOPWATCH_STATE_KEY =
+    "globalStudyPortalStopwatchState";
 
 function updateStopwatch() {
     let hrs = Math.floor(swTime / 3600);
@@ -431,18 +567,76 @@ function startStopwatch() {
     }
 
     if (swInterval) return;
+        swStartedAt = Date.now();
 
+    localStorage.setItem(
+        STOPWATCH_STATE_KEY,
+        JSON.stringify({
+            running: true,
+            startedAt: swStartedAt,
+            elapsedTime: swTime
+        })
+    );
     swInterval = setInterval(() => {
         swTime++;
         updateStopwatch();
     }, 1000);
 }
+function restoreStopwatchState() {
+    const savedState =
+        localStorage.getItem(STOPWATCH_STATE_KEY);
 
+    if (!savedState) return;
+
+    try {
+        const state = JSON.parse(savedState);
+
+        if (!state.running) return;
+
+        swStartedAt = Number(state.startedAt);
+  swTime = Math.floor(
+    (Date.now() - swStartedAt) / 1000
+);
+
+        updateStopwatch();
+
+        clearInterval(swInterval);
+
+        swInterval = setInterval(() => {
+            swTime++;
+            updateStopwatch();
+
+            localStorage.setItem(
+                STOPWATCH_STATE_KEY,
+                JSON.stringify({
+                    running: true,
+                    startedAt: swStartedAt,
+                    elapsedTime: swTime
+                })
+            );
+        }, 1000);
+
+    } catch (error) {
+        console.error(
+            "Stopwatch restore error:",
+            error
+        );
+
+        localStorage.removeItem(
+            STOPWATCH_STATE_KEY
+        );
+    }
+}
 function stopStopwatch() {
     if (!swInterval) return;
 
     clearInterval(swInterval);
     swInterval = null;
+
+    // Manual stop = permanently clear saved stopwatch state
+    localStorage.removeItem(STOPWATCH_STATE_KEY);
+
+    swStartedAt = null;
 
     if (swTime > 0) {
         const stopwatchMinutes = swTime / 60;
@@ -1006,6 +1200,8 @@ window.addEventListener("load", () => {
         document.getElementById("welcomeName").innerHTML = savedName;
         document.getElementById("displayName").value = savedName;
     }
+        restoreTimerState();
+        restoreStopwatchState();
 });
 const profileImageInput = document.getElementById("profileImageInput");
 const profileImagePreview = document.getElementById("profileImagePreview");
@@ -2155,6 +2351,7 @@ async function loadManagedUsers() {
             row.innerHTML = `
                 <td>${user.name || "No Name"}</td>
                 <td>${user.email || "-"}</td>
+                <td>${user.organization_name || user.organization_code || "-"}</td>
                 <td>${user.role || "user"}</td>
                 <td>${user.status || "pending"}</td>
 
@@ -2665,9 +2862,14 @@ function getVisibleNotifications() {
     const searchText = notificationSearchText.trim().toLowerCase();
 
     return allNotifications.filter((notification) => {
-        const category = String(
-            notification.category || "system"
-        ).toLowerCase();
+       const category = String(
+    notification.category || "system"
+)
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, "_")
+    .replace(/-/g, "_");
+
 
         const isUnread =
             Number(notification.is_read) === 0 ||
@@ -2716,6 +2918,47 @@ function updateNotificationBadge() {
 
     badge.style.display =
         unreadCount > 0 ? "flex" : "none";
+}
+async function toggleNotificationRead(notificationId, isUnread) {
+    if (!isUnread) return;
+
+    try {
+        const response = await fetch(
+            `/api/notifications/${notificationId}/read`,
+            {
+                method: "PATCH"
+            }
+        );
+
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+            throw new Error(
+                data.message ||
+                "Failed to mark notification as read"
+            );
+        }
+
+        const notification =
+            allNotifications.find(
+                item =>
+                    Number(item.id) ===
+                    Number(notificationId)
+            );
+
+        if (notification) {
+            notification.is_read = 1;
+        }
+
+        updateNotificationBadge();
+        renderNotifications();
+
+    } catch (error) {
+        console.error(
+            "Mark notification as read error:",
+            error
+        );
+    }
 }
 
 function renderNotifications() {
@@ -2891,17 +3134,32 @@ function bindNotificationControls() {
         button.dataset.bound = "true";
 
         button.addEventListener("click", () => {
-            const filter =
-                button.dataset.notificationFilter ||
-                button.dataset.filter ||
-                button.textContent
-                    .trim()
-                    .toLowerCase();
+           const rawFilter =
+    button.dataset.notificationFilter ||
+    button.dataset.filter ||
+    button.textContent ||
+    "all";
 
-            activeNotificationFilter =
-                filter === "requests"
-                    ? "request"
-                    : filter;
+let filter = String(rawFilter)
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, "_")
+    .replace(/-/g, "_");
+
+if (filter === "requests") {
+    filter = "request";
+}
+
+if (filter === "user_management") {
+    filter = "user_management";
+}
+
+if (filter === "notifications") {
+    filter = "system";
+}
+
+activeNotificationFilter = filter;
+
 
             filterButtons.forEach((filterButton) => {
                 filterButton.classList.remove("active");
