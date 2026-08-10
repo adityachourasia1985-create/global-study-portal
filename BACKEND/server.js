@@ -14,7 +14,28 @@ const openai = process.env.OPENAI_API_KEY
     : null;
 console.log("SERVER FILE IS RUNNING");
 const sqlite3 = require("sqlite3").verbose();
+// ===== ONE-TIME PRODUCTION DATABASE MIGRATION =====
+if (process.env.RAILWAY_ENVIRONMENT) {
+    const currentDb = "/data/polyportal.db";
+    const incomingDb = "/data/polyportal-next.db";
+    const backupDb = "/data/polyportal-backup.db";
 
+    if (fs.existsSync(incomingDb)) {
+        console.log("New production database detected.");
+
+        try {
+            if (fs.existsSync(currentDb)) {
+                fs.copyFileSync(currentDb, backupDb);
+                console.log("Old production DB backed up.");
+            }
+
+            fs.renameSync(incomingDb, currentDb);
+            console.log("Real users database activated successfully.");
+        } catch (error) {
+            console.error("Database migration failed:", error);
+        }
+    }
+}
 const dbPath =
     process.env.RAILWAY_ENVIRONMENT
         ? "/data/polyportal.db"
@@ -349,6 +370,113 @@ const transporter = nodemailer.createTransport({
     }
 });
 const app = express();
+const databaseUpload = multer({
+    dest: "/data/"
+});
+
+app.post(
+    "/internal/database-migration",
+    databaseUpload.single("database"),
+    (req, res) => {
+
+        const migrationKey = String(
+            req.headers["x-migration-key"] || ""
+        );
+
+        if (
+            !process.env.MIGRATION_KEY ||
+            migrationKey !== process.env.MIGRATION_KEY
+        ) {
+            if (req.file?.path) {
+                fs.unlink(req.file.path, () => {});
+            }
+
+            return res.status(403).json({
+                success: false,
+                message: "Migration access denied"
+            });
+        }
+
+        if (!req.file) {
+            return res.status(400).json({
+                success: false,
+                message: "Database file required"
+            });
+        }
+
+        const uploadedPath = req.file.path;
+        const targetPath = "/data/polyportal-next.db";
+
+        const testDb = new sqlite3.Database(
+            uploadedPath,
+            sqlite3.OPEN_READONLY,
+            (error) => {
+                if (error) {
+                    fs.unlink(uploadedPath, () => {});
+
+                    return res.status(400).json({
+                        success: false,
+                        message: "Invalid SQLite database"
+                    });
+                }
+
+                testDb.get(
+                    "SELECT COUNT(*) AS count FROM users",
+                    [],
+                    (checkError, result) => {
+
+                        testDb.close();
+
+                        if (
+                            checkError ||
+                            !result ||
+                            Number(result.count) < 1
+                        ) {
+                            fs.unlink(uploadedPath, () => {});
+
+                            return res.status(400).json({
+                                success: false,
+                                message:
+                                    "Database does not contain valid users"
+                            });
+                        }
+
+                        try {
+                            if (fs.existsSync(targetPath)) {
+                                fs.unlinkSync(targetPath);
+                            }
+
+                            fs.renameSync(
+                                uploadedPath,
+                                targetPath
+                            );
+
+                            return res.json({
+                                success: true,
+                                users: Number(result.count),
+                                message:
+                                    "Database uploaded. Restart deployment once."
+                            });
+
+                        } catch (moveError) {
+                            console.error(
+                                "Database upload move error:",
+                                moveError
+                            );
+
+                            return res.status(500).json({
+                                success: false,
+                                message:
+                                    "Could not prepare production database"
+                            });
+                        }
+                    }
+                );
+            }
+        );
+    }
+);
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(
