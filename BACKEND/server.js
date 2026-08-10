@@ -157,7 +157,32 @@ CREATE TABLE IF NOT EXISTS progress_report (
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 `);
-
+db.run(
+    `ALTER TABLE users ADD COLUMN account_type TEXT`,
+    (err) => {
+        if (
+            err &&
+            !String(err.message).includes("duplicate column name")
+        ) {
+            console.error(
+                "Add account_type column error:",
+                err
+            );
+        }
+    }
+);
+db.run(`
+    UPDATE users
+    SET account_type =
+        CASE
+            WHEN organization_code IS NOT NULL
+                 AND TRIM(organization_code) != ''
+            THEN 'organization'
+            ELSE 'individual'
+        END
+    WHERE account_type IS NULL
+       OR TRIM(account_type) = ''
+`);
 db.run(`
 CREATE TABLE IF NOT EXISTS group_join_requests (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -3213,7 +3238,44 @@ const newStatus =
     isNewOrganization || isIndividual
         ? "approved"
         : "pending";
-        
+        const normalizedEmail =
+    email.trim().toLowerCase();
+
+const normalizedAccountType =
+    accountType === "organization"
+        ? "organization"
+        : "individual";
+        const existingSameTypeAccount = await new Promise(
+    (resolve, reject) => {
+        db.get(
+            `SELECT id
+             FROM users
+             WHERE LOWER(TRIM(email)) = ?
+             AND LOWER(TRIM(account_type)) = ?
+             LIMIT 1`,
+            [
+                normalizedEmail,
+                normalizedAccountType
+            ],
+            (err, row) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(row);
+                }
+            }
+        );
+    }
+);
+if (existingSameTypeAccount) {
+    return res.status(409).json({
+        success: false,
+        message:
+            normalizedAccountType === "individual"
+                ? "An Individual account already exists with this email. You may still create one Organization account."
+                : "An Organization account already exists with this email. You may still create one Individual account."
+    });
+}
         const gender = req.body.gender || null;
     db.run(
         `INSERT INTO users (
@@ -3231,9 +3293,10 @@ const newStatus =
             profession,
             branch_code,
             organization_code,
-            status
+            status,
+           account_type   
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        VALUES (? ,?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
             name.trim(),
             email.trim().toLowerCase(),

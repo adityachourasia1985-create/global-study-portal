@@ -573,7 +573,8 @@ if (window.groupRegistrationMode === "join") {
     registerMessage.textContent =
         result.message || "Organization created successfully.";
 }
-
+registerForm.reset();
+updateRegistrationFields();
     } catch (error) {
         registerMessage.textContent =
             "Unable to register. Please try again.";
