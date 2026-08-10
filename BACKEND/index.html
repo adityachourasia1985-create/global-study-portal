@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <link rel = "stylesheet" href="style.css">
-    
+    <link rel="stylesheet" href="feedback.css">
 </head>
 <body class="theme-owner">
 
@@ -47,6 +47,15 @@
 
  
 <li id="menu-settings" onclick="switchSection('settings-tab', 'menu-settings')"><a><i class="fa-solid fa-gear"></i> Settings</a></li>
+<li
+    id="menu-feedback"
+    onclick="switchSection('feedback-tab', 'menu-feedback')"
+>
+    <a href="javascript:void(0)">
+        <i class="fa-solid fa-comments"></i>
+        Feedback & Suggestions
+    </a>
+</li>
 <li id="menu-about" onclick="switchSection('about-tab', 'menu-about')">
     <a href="javascript:void(0)">
         <i class="fa-solid fa-circle-info"></i>
@@ -1671,6 +1680,324 @@ class="table-responsive">
         Logout
     </button>
    </div>
+   <!-- ================= FEEDBACK & SUGGESTIONS ================= -->
+<div id="feedback-tab" class="tab-content">
+
+    <section class="feedback-page feedback-page-simple">
+
+        <!-- Compact Header -->
+        <header class="feedback-hero feedback-hero-simple">
+            <div>
+                <span class="feedback-label">FEEDBACK CENTER</span>
+
+                <h2>Feedback & Suggestions</h2>
+
+                <p>
+                    Report an issue, share an idea or suggest an improvement.
+                </p>
+            </div>
+
+            <div class="feedback-hero-icon">
+                <i class="fa-solid fa-comments"></i>
+            </div>
+        </header>
+
+
+        <!-- Compact Status Strip -->
+        <section class="feedback-status-strip">
+
+            <div class="feedback-status-item">
+                <i class="fa-solid fa-paper-plane"></i>
+
+                <span>Submitted</span>
+
+                <strong id="feedbackSubmittedCount">0</strong>
+            </div>
+
+            <div class="feedback-status-item">
+                <i class="fa-solid fa-clock"></i>
+
+                <span>Under Review</span>
+
+                <strong id="feedbackReviewCount">0</strong>
+            </div>
+
+            <div class="feedback-status-item">
+                <i class="fa-solid fa-circle-check"></i>
+
+                <span>Resolved</span>
+
+                <strong id="feedbackResolvedCount">0</strong>
+            </div>
+
+        </section>
+
+
+        <!-- Submit Form -->
+        <section class="feedback-form-card feedback-form-card-simple">
+
+            <div class="feedback-card-heading">
+                <div>
+                    <span class="feedback-small-label">
+                        SEND FEEDBACK
+                    </span>
+
+                    <h3>Tell us what happened</h3>
+                </div>
+            </div>
+
+            <form id="feedbackForm">
+
+                <div class="feedback-form-grid">
+
+                    <div class="feedback-field">
+                        <label for="feedbackCategory">
+                            Category
+                        </label>
+
+                        <select id="feedbackCategory" required>
+                            <option value="">Select category</option>
+                            <option value="bug">Bug Report</option>
+                            <option value="suggestion">Suggestion</option>
+                            <option value="feature">Feature Request</option>
+                            <option value="ui">UI / UX Feedback</option>
+                            <option value="performance">Performance Issue</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+
+
+                    <div class="feedback-field">
+                        <label for="feedbackPriority">
+                            Priority
+                        </label>
+
+                        <select id="feedbackPriority">
+                            <option value="low">Low</option>
+                            <option value="medium" selected>Medium</option>
+                            <option value="high">High</option>
+                        </select>
+                    </div>
+
+                </div>
+
+
+                <div class="feedback-field">
+                    <label for="feedbackTitle">Title</label>
+
+                    <input
+                        type="text"
+                        id="feedbackTitle"
+                        maxlength="100"
+                        placeholder="Short title for your feedback"
+                        required
+                    >
+                </div>
+
+
+                <div class="feedback-field">
+                    <div class="feedback-label-row">
+                        <label for="feedbackMessage">
+                            Description
+                        </label>
+
+                        <span id="feedbackCharacterCount">
+                            0 / 1000
+                        </span>
+                    </div>
+
+                    <textarea
+                        id="feedbackMessage"
+                        maxlength="1000"
+                        rows="5"
+                        placeholder="Describe the issue or suggestion clearly..."
+                        required
+                    ></textarea>
+                </div>
+
+
+                <div class="feedback-form-bottom">
+
+                    <div class="feedback-rating-section">
+
+                        <span class="feedback-rating-title">
+                            Experience
+                            <small>(optional)</small>
+                        </span>
+
+                        <div
+                            class="feedback-stars"
+                            id="feedbackStars"
+                            role="group"
+                            aria-label="Rate your experience"
+                        >
+                            <button type="button" data-rating="1">
+                                <i class="fa-regular fa-star"></i>
+                            </button>
+
+                            <button type="button" data-rating="2">
+                                <i class="fa-regular fa-star"></i>
+                            </button>
+
+                            <button type="button" data-rating="3">
+                                <i class="fa-regular fa-star"></i>
+                            </button>
+
+                            <button type="button" data-rating="4">
+                                <i class="fa-regular fa-star"></i>
+                            </button>
+
+                            <button type="button" data-rating="5">
+                                <i class="fa-regular fa-star"></i>
+                            </button>
+                        </div>
+
+                        <input
+                            type="hidden"
+                            id="feedbackRating"
+                            value="0"
+                        >
+
+                    </div>
+
+
+                    <button
+                        type="submit"
+                        class="feedback-submit-btn"
+                        id="feedbackSubmitBtn"
+                    >
+                        <i class="fa-solid fa-paper-plane"></i>
+                        <span>Submit Feedback</span>
+                    </button>
+
+                </div>
+
+                <div
+                    id="feedbackFormMessage"
+                    class="feedback-form-message"
+                ></div>
+
+            </form>
+
+        </section>
+
+
+        <!-- My Feedback -->
+        <section class="feedback-history-card feedback-history-simple">
+
+            <div class="feedback-history-header">
+
+                <div>
+                    <span class="feedback-small-label">
+                        MY FEEDBACK
+                    </span>
+
+                    <h3>Your submissions</h3>
+                </div>
+
+                <select id="myFeedbackFilter">
+                    <option value="all">All Status</option>
+                    <option value="submitted">Submitted</option>
+                    <option value="review">Under Review</option>
+                    <option value="progress">In Progress</option>
+                    <option value="resolved">Resolved</option>
+                </select>
+
+            </div>
+
+
+            <div
+                class="feedback-list"
+                id="myFeedbackList"
+            >
+                <div class="feedback-empty-state">
+                    <div>
+                        <i class="fa-regular fa-message"></i>
+                    </div>
+
+                    <h4>No feedback yet</h4>
+
+                    <p>
+                        Your submitted feedback will appear here.
+                    </p>
+                </div>
+            </div>
+
+        </section>
+
+
+        <!-- OWNER ONLY -->
+        <section
+            class="feedback-owner-panel feedback-owner-simple"
+            id="feedbackOwnerPanel"
+            style="display:none;"
+        >
+
+            <div class="feedback-owner-header">
+
+                <div>
+                    <span class="feedback-small-label">
+                        OWNER CONTROL
+                    </span>
+
+                    <h3>Feedback Management</h3>
+                </div>
+
+                <div class="feedback-owner-badge">
+                    <i class="fa-solid fa-crown"></i>
+                    Owner
+                </div>
+
+            </div>
+
+
+            <div class="feedback-owner-tools">
+
+                <div class="feedback-search-box">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+
+                    <input
+                        type="search"
+                        id="feedbackOwnerSearch"
+                        placeholder="Search feedback..."
+                    >
+                </div>
+
+                <select id="feedbackOwnerStatusFilter">
+                    <option value="all">All Status</option>
+                    <option value="submitted">Submitted</option>
+                    <option value="review">Under Review</option>
+                    <option value="planned">Planned</option>
+                    <option value="progress">In Progress</option>
+                    <option value="resolved">Resolved</option>
+                </select>
+
+            </div>
+
+
+            <div
+                class="feedback-owner-list"
+                id="feedbackOwnerList"
+            >
+                <div class="feedback-empty-state">
+                    <div>
+                        <i class="fa-solid fa-inbox"></i>
+                    </div>
+
+                    <h4>No feedback loaded</h4>
+
+                    <p>
+                        User feedback will appear here.
+                    </p>
+                </div>
+            </div>
+
+        </section>
+
+    </section>
+
+</div>
+
 <div id="about-tab" class="tab-content">
     <section class="about-page about-page-redesigned">
 
@@ -3495,7 +3822,9 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     </div>
 </div>
+
      <script src="/script.js?v=2"></script>
+     <script src="/feedback.js"></script>
 <style>
 /* FORCE PROFESSIONAL PERMISSIONS MODAL */
 

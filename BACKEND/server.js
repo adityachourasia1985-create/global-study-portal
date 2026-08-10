@@ -269,6 +269,47 @@ db.run(`
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
 `);
+// ==========================================
+// FEEDBACK & SUGGESTIONS TABLE
+// ==========================================
+
+db.run(`
+    CREATE TABLE IF NOT EXISTS feedback (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+        user_id INTEGER NOT NULL,
+
+        category TEXT NOT NULL,
+        title TEXT NOT NULL,
+        message TEXT NOT NULL,
+
+        rating INTEGER DEFAULT 0,
+        priority TEXT DEFAULT 'medium',
+
+        status TEXT DEFAULT 'submitted',
+
+        owner_response TEXT,
+
+        organization_code TEXT,
+        branch_code TEXT,
+
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+
+        FOREIGN KEY (user_id)
+            REFERENCES users(id)
+    )
+`, (err) => {
+    if (err) {
+        console.error(
+            "Feedback table creation error:",
+            err
+        );
+        return;
+    }
+
+    console.log("Feedback table ready");
+});
 db.run(`ALTER TABLE notifications ADD COLUMN recipient_email TEXT`, () => {});
 db.run(`ALTER TABLE notifications ADD COLUMN actor_email TEXT`, () => {});
 db.run(`ALTER TABLE notifications ADD COLUMN module TEXT`, () => {});
@@ -510,6 +551,285 @@ app.get(["/dashboard", "/index.html"], (req, res) => {
 
     return res.sendFile(path.join(__dirname, "index.html"));
 });
+app.post("/api/feedback", (req, res) => {
+    if (
+        !req.session ||
+        !req.session.isLoggedIn ||
+        !req.session.userId
+    ) {
+        return res.status(401).json({
+            success: false,
+            message: "Please login first."
+        });
+    }
+
+    const userId = Number(req.session.userId);
+
+    const category = String(req.body.category || "").trim();
+    const title = String(req.body.title || "").trim();
+    const message = String(req.body.message || "").trim();
+    const priority = String(req.body.priority || "medium").trim();
+    const rating = Number(req.body.rating || 0);
+
+    if (!category || !title || !message) {
+        return res.status(400).json({
+            success: false,
+            message: "Category, title and message are required."
+        });
+    }
+
+    if (title.length > 100) {
+        return res.status(400).json({
+            success: false,
+            message: "Title is too long."
+        });
+    }
+
+    if (message.length > 1000) {
+        return res.status(400).json({
+            success: false,
+            message: "Feedback message is too long."
+        });
+    }
+
+    const safePriority = ["low", "medium", "high"].includes(priority)
+        ? priority
+        : "medium";
+
+    const safeRating =
+        Number.isInteger(rating) &&
+        rating >= 0 &&
+        rating <= 5
+            ? rating
+            : 0;
+
+    db.run(
+        `INSERT INTO feedback
+        (
+            user_id,
+            category,
+            title,
+            message,
+            rating,
+            priority,
+            status,
+            organization_code,
+            branch_code
+        )
+        VALUES (?, ?, ?, ?, ?, ?, 'submitted', ?, ?)`,
+        [
+            userId,
+            category,
+            title,
+            message,
+            safeRating,
+            safePriority,
+            req.session.organizationCode || null,
+            req.session.branchCode || null
+        ],
+        function (err) {
+            if (err) {
+                console.error("Feedback submit error:", err);
+
+                return res.status(500).json({
+                    success: false,
+                    message: "Could not submit feedback."
+                });
+            }
+
+            notifyUsers({
+                title: "New Feedback Received",
+                message: `${title}`,
+                category: "feedback",
+                priority: safePriority,
+
+                actorUserId: userId,
+                targetUserId: userId,
+
+                organizationCode:
+                    req.session.organizationCode || null,
+                branchCode:
+                    req.session.branchCode || null,
+
+                recipientRoles: ["owner"],
+
+                module: "feedback",
+                actionUrl: "/dashboard",
+                eventKey: `feedback_${this.lastID}`
+            });
+
+            return res.json({
+                success: true,
+                feedbackId: this.lastID,
+                message: "Feedback submitted successfully."
+            });
+        }
+    );
+});
+app.get("/api/feedback", (req, res) => {
+    if (
+        !req.session ||
+        !req.session.isLoggedIn ||
+        !req.session.userId
+    ) {
+        return res.status(401).json({
+            success: false,
+            message: "Please login first."
+        });
+    }
+
+    db.all(
+        `SELECT
+            id,
+            category,
+            title,
+            message,
+            rating,
+            priority,
+            status,
+            owner_response,
+            created_at,
+            updated_at
+         FROM feedback
+         WHERE user_id = ?
+         ORDER BY created_at DESC`,
+        [req.session.userId],
+        (err, rows) => {
+            if (err) {
+                console.error("Feedback load error:", err);
+
+                return res.status(500).json({
+                    success: false,
+                    message: "Could not load feedback."
+                });
+            }
+
+            return res.json({
+                success: true,
+                feedback: rows || []
+            });
+        }
+    );
+});
+app.get(
+    "/api/feedback/all",
+    allowRoles("owner"),
+    (req, res) => {
+
+        db.all(
+            `SELECT
+                f.*,
+                u.name AS user_name,
+                u.email AS user_email
+             FROM feedback f
+             LEFT JOIN users u
+                ON u.id = f.user_id
+             ORDER BY f.created_at DESC`,
+            [],
+            (err, rows) => {
+                if (err) {
+                    console.error(
+                        "Owner feedback load error:",
+                        err
+                    );
+
+                    return res.status(500).json({
+                        success: false,
+                        message:
+                            "Could not load feedback."
+                    });
+                }
+
+                return res.json({
+                    success: true,
+                    feedback: rows || []
+                });
+            }
+        );
+    }
+);
+app.patch(
+    "/api/feedback/:id",
+    allowRoles("owner"),
+    (req, res) => {
+        const feedbackId = Number(req.params.id);
+
+        const status = String(
+            req.body.status || ""
+        ).trim().toLowerCase();
+
+        const ownerResponse = String(
+            req.body.owner_response || ""
+        ).trim();
+
+        const allowedStatuses = [
+            "submitted",
+            "review",
+            "planned",
+            "progress",
+            "resolved",
+            "rejected"
+        ];
+
+        if (
+            !Number.isInteger(feedbackId) ||
+            feedbackId <= 0
+        ) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid feedback ID."
+            });
+        }
+
+        if (!allowedStatuses.includes(status)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid feedback status."
+            });
+        }
+
+        db.run(
+            `UPDATE feedback
+             SET
+                status = ?,
+                owner_response = ?,
+                updated_at = CURRENT_TIMESTAMP
+             WHERE id = ?`,
+            [
+                status,
+                ownerResponse || null,
+                feedbackId
+            ],
+            function (err) {
+                if (err) {
+                    console.error(
+                        "Feedback update error:",
+                        err
+                    );
+
+                    return res.status(500).json({
+                        success: false,
+                        message:
+                            "Could not update feedback."
+                    });
+                }
+
+                if (this.changes === 0) {
+                    return res.status(404).json({
+                        success: false,
+                        message: "Feedback not found."
+                    });
+                }
+
+                return res.json({
+                    success: true,
+                    message:
+                        "Feedback updated successfully."
+                });
+            }
+        );
+    }
+);
 
 app.use(
     express.static(__dirname, {
