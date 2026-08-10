@@ -1307,6 +1307,61 @@ transition:
 
     will-change: left, top;
 }
+/* =========================
+   PUBLIC FOOTER
+========================= */
+
+.public-footer {
+    width: 100%;
+    margin-top: 26px;
+    padding: 18px 12px 8px;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 13px;
+}
+
+.public-footer-links {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 8px;
+}
+
+.public-footer a {
+    color: #67e8f9;
+    text-decoration: none;
+    font-weight: 700;
+    transition:
+        color 0.2s ease,
+        opacity 0.2s ease;
+}
+
+.public-footer a:hover {
+    color: #ffffff;
+}
+
+.footer-dot {
+    color: #475569;
+}
+
+.public-footer-copy {
+    color: #64748b;
+    font-size: 12px;
+}
+
+@media (max-width: 430px) {
+    .public-footer {
+        margin-top: 20px;
+        font-size: 12px;
+    }
+
+    .public-footer-links {
+        gap: 9px;
+    }
+}
+
     </style>
 </head>
 
@@ -1543,7 +1598,27 @@ transition:
 
         </div>
     </main>
+<footer class="public-footer">
+    <div class="public-footer-links">
+        <a href="/about">About</a>
 
+        <span class="footer-dot">•</span>
+
+        <a href="#" onclick="return false;">
+            Privacy
+        </a>
+
+        <span class="footer-dot">•</span>
+
+        <a href="#" onclick="return false;">
+            Contact
+        </a>
+    </div>
+
+    <div class="public-footer-copy">
+        © 2026 Global Study Portal
+    </div>
+</footer>
     <script>
         const body = document.body;
 

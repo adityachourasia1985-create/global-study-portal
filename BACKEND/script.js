@@ -3544,3 +3544,93 @@ async function updateRoleBadge() {
     }
 }
 document.addEventListener("DOMContentLoaded", updateRoleBadge);
+// =====================================================
+// PUBLIC ABOUT PAGE - FORCE ABOUT ONLY
+// =====================================================
+
+function openPublicAbout() {
+    if (window.location.pathname !== "/about") {
+        return;
+    }
+
+    const aboutFounder =
+        document.getElementById("aboutFounderName");
+
+    if (!aboutFounder) {
+        console.error("About section not found.");
+        return;
+    }
+
+    const aboutTab =
+        aboutFounder.closest(".tab-content");
+
+    if (!aboutTab) {
+        console.error("About tab container not found.");
+        return;
+    }
+
+    // Hide ALL portal sections
+    document
+        .querySelectorAll(".tab-content")
+        .forEach(tab => {
+            tab.classList.remove("active-tab");
+
+            tab.style.setProperty(
+                "display",
+                "none",
+                "important"
+            );
+        });
+
+    // Show ONLY About
+    aboutTab.classList.add("active-tab");
+
+    aboutTab.style.setProperty(
+        "display",
+        "block",
+        "important"
+    );
+
+    // Hide private dashboard navigation
+    const elementsToHide = [
+        document.querySelector(".sidebar"),
+        document.querySelector("header"),
+        document.querySelector(".topbar"),
+        document.querySelector(".dashboard-nav")
+    ];
+
+    elementsToHide.forEach(element => {
+        if (element) {
+            element.style.setProperty(
+                "display",
+                "none",
+                "important"
+            );
+        }
+    });
+
+    if (typeof loadAboutSection === "function") {
+        loadAboutSection();
+    }
+
+    window.scrollTo(0, 0);
+}
+
+
+// Run at every important page stage
+document.addEventListener(
+    "DOMContentLoaded",
+    openPublicAbout
+);
+
+window.addEventListener(
+    "load",
+    openPublicAbout
+);
+
+// Prevent another initializer from reopening Dashboard
+if (window.location.pathname === "/about") {
+    setTimeout(openPublicAbout, 100);
+    setTimeout(openPublicAbout, 500);
+    setTimeout(openPublicAbout, 1000);
+}
