@@ -498,6 +498,11 @@ console.log("Dashboard path:", dashboardPath);
 app.get("/", (req, res) => {
     return res.sendFile("login.html", { root: __dirname });
 });
+app.get("/about", (req, res) => {
+    return res.sendFile("index.html", {
+        root: __dirname
+    });
+});
 app.get(["/dashboard", "/index.html"], (req, res) => {
     if (!req.session || !req.session.userId) {
         return res.sendFile(path.join(__dirname, "login.html"));
@@ -1433,28 +1438,80 @@ notifyUsers({
     }
 );
 
-app.get("/api/progress", (req, res) => {
-    const scope = getScope(req);
+// =====================================================
+// PROGRESS REPORT - STRICT PER USER ISOLATION
+// =====================================================
 
-    const sql = scope.isOwner
-        ? `SELECT * FROM progress_report ORDER BY created_at DESC`
-        : `SELECT * FROM progress_report
-           WHERE organization_code = ?
-           AND branch_code = ?
-           ORDER BY created_at DESC`;
+app.get("/api/progress", (req, res) => {
+    if (
+        !req.session ||
+        !req.session.isLoggedIn ||
+        !req.session.userId
+    ) {
+        return res.status(401).json({
+            success: false,
+            message: "Please login first."
+        });
+    }
+
+    const userId = Number(req.session.userId);
+
+    if (!Number.isInteger(userId) || userId <= 0) {
+        return res.status(401).json({
+            success: false,
+            message: "Invalid session."
+        });
+    }
 
     db.all(
-        sql,
-        scope.isOwner ? [] : [scope.organizationCode, scope.branchCode],
+        `SELECT *
+         FROM progress_report
+         WHERE user_id = ?
+         ORDER BY created_at DESC`,
+        [userId],
         (err, rows) => {
             if (err) {
-                return res.status(500).json({ success: false, message: err.message });
+                console.error(
+                    "Progress fetch error:",
+                    err
+                );
+
+                return res.status(500).json({
+                    success: false,
+                    message: "Could not load progress."
+                });
             }
-            res.json({ success: true, data: rows });
+
+            return res.json({
+                success: true,
+                data: rows || []
+            });
         }
     );
 });
+
+
 app.post("/api/progress", (req, res) => {
+    if (
+        !req.session ||
+        !req.session.isLoggedIn ||
+        !req.session.userId
+    ) {
+        return res.status(401).json({
+            success: false,
+            message: "Please login first."
+        });
+    }
+
+    const userId = Number(req.session.userId);
+
+    if (!Number.isInteger(userId) || userId <= 0) {
+        return res.status(401).json({
+            success: false,
+            message: "Invalid session."
+        });
+    }
+
     const {
         progress_date,
         total_study_time,
@@ -1477,43 +1534,53 @@ app.post("/api/progress", (req, res) => {
         )
         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
         [
-            req.session.userId,
-            progress_date,
+            userId,
+            progress_date || null,
             Number(total_study_time || 0),
             Number(pomodoro_sessions || 0),
             Number(completed_tasks || 0),
             Number(productivity || 0),
-            req.session.organizationCode,
-            req.session.branchCode
+            req.session.organizationCode || null,
+            req.session.branchCode || null
         ],
         function (err) {
             if (err) {
+                console.error(
+                    "Progress save error:",
+                    err
+                );
+
                 return res.status(500).json({
                     success: false,
-                    message: err.message
+                    message: "Could not save progress."
                 });
             }
+
             notifyUsers({
-    title: "Progress Updated",
-    message: "Your study progress report was updated.",
-    category: "progress",
-    priority: "info",
+                title: "Progress Updated",
+                message:
+                    "Your study progress report was updated.",
+                category: "progress",
+                priority: "info",
 
-    actorUserId: req.session.userId,
-    targetUserId: req.session.userId,
+                actorUserId: userId,
+                targetUserId: userId,
 
-    organizationCode: req.session.organizationCode,
-    branchCode: req.session.branchCode,
+                organizationCode:
+                    req.session.organizationCode || null,
+                branchCode:
+                    req.session.branchCode || null,
 
-    recipientUserIds: [req.session.userId],
-    recipientRoles: ["owner"],
+                recipientUserIds: [userId],
+                recipientRoles: ["owner"],
 
-    module: "progress",
-    actionUrl: "/dashboard",
-    eventKey: `progress_${req.session.userId}_${this.lastID}`
-});
+                module: "progress",
+                actionUrl: "/dashboard",
+                eventKey:
+                    `progress_${userId}_${this.lastID}`
+            });
 
-            res.json({
+            return res.json({
                 success: true,
                 id: this.lastID
             });
@@ -1577,27 +1644,27 @@ app.post("/api/study-analysis", (req, res) => {
         }
     );
 });
-app.get("/api/about", (req, res) => {
-    db.get(
-        "SELECT * FROM about_content WHERE id = 1",
-        [],
-        (err, row) => {
-            if (err) {
-                console.error("Load about content error:", err);
+// app.get("/api/about", (req, res) => {
+//     db.get(
+//         "SELECT * FROM about_content WHERE id = 1",
+//         [],
+//         (err, row) => {
+//             if (err) {
+//                 console.error("Load about content error:", err);
 
-                return res.status(500).json({
-                    success: false,
-                    message: "Could not load About content."
-                });
-            }
+//                 return res.status(500).json({
+//                     success: false,
+//                     message: "Could not load About content."
+//                 });
+//             }
 
-            return res.json({
-                success: true,
-                about: row
-            });
-        }
-    );
-});
+//             return res.json({
+//                 success: true,
+//                 about: row
+//             });
+//         }
+//     );
+// });
 app.put("/api/about", (req, res) => {
     if (!req.session || req.session.role !== "owner") {
         return res.status(403).json({

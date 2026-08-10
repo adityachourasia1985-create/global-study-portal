@@ -1883,15 +1883,17 @@ loginButton.addEventListener("pointerenter", (event) => {
 
                     return;
                 }
+console.log("Forgot Password button clicked");
 try {
     const response = await fetch("/forgot-password", {
+    
         method: "POST",
         headers: {
             "Content-Type": "application/json"
         },
         body: JSON.stringify({ email })
     });
-
+console.log("STATUS:", response.status);
     const data = await response.json();
 
     resetMessage.textContent = data.message;
