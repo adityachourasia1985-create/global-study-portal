@@ -3273,7 +3273,15 @@ console.log("LOGIN CHECK:", {
     passwordReceived: !!password,
     passwordLength: password.length
 });
-    db.get(
+
+db.all(
+    "SELECT id, name, email, role, status FROM users LIMIT 20",
+    (e, rows) => {
+        console.log("RAILWAY USERS SAMPLE:", e || rows);
+    }
+);
+
+db.get(
         
         "SELECT * FROM users WHERE LOWER(email) = ?",
         [email],
