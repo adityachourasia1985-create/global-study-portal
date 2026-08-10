@@ -14,7 +14,14 @@ const openai = process.env.OPENAI_API_KEY
     : null;
 console.log("SERVER FILE IS RUNNING");
 const sqlite3 = require("sqlite3").verbose();
-const db = new sqlite3.Database(__dirname + "/polyportal.db", (err) => {
+const path = require("path");
+
+const dbPath =
+    process.env.RAILWAY_ENVIRONMENT
+        ? "/data/polyportal.db"
+        : path.join(__dirname, "polyportal.db");
+
+const db = new sqlite3.Database(dbPath, (err) => {
     if (err) {
         console.error("Database connection error:", err.message);
     } else {
