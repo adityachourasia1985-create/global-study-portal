@@ -14,7 +14,6 @@ const openai = process.env.OPENAI_API_KEY
     : null;
 console.log("SERVER FILE IS RUNNING");
 const sqlite3 = require("sqlite3").verbose();
-const path = require("path");
 
 const dbPath =
     process.env.RAILWAY_ENVIRONMENT
