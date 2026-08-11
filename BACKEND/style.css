@@ -16853,3 +16853,92 @@ tbody tr:hover td {
     outline: 2px dashed rgba(255, 255, 255, 0.6);
     outline-offset: 5px;
 }
+/* ================================
+   PERSONAL & FAMILY SECTION
+================================ */
+
+.about-personal-family-section {
+    margin-top: 2.5rem;
+}
+
+.about-personal-family-card {
+    display: grid;
+    gap: 1.4rem;
+
+    padding: clamp(1.2rem, 2vw, 1.8rem);
+
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 1.5rem;
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(17, 24, 39, 0.88),
+            rgba(15, 23, 42, 0.72)
+        );
+
+    box-shadow:
+        0 1.2rem 3rem rgba(0, 0, 0, 0.28),
+        inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.about-personal-block {
+    padding: 0.2rem 0;
+}
+
+.about-personal-label {
+    display: inline-block;
+    margin-bottom: 0.55rem;
+
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.11em;
+
+    color: #94a3b8;
+}
+
+.about-personal-block h4 {
+    margin-bottom: 0.45rem;
+
+    font-size: clamp(1.15rem, 2vw, 1.45rem);
+    line-height: 1.25;
+}
+
+.about-personal-block p {
+    max-width: 62rem;
+
+    color: #cbd5e1;
+    line-height: 1.7;
+}
+
+.about-family-divider {
+    width: 100%;
+    height: 1px;
+
+    background:
+        linear-gradient(
+            to right,
+            transparent,
+            rgba(148, 163, 184, 0.22),
+            transparent
+        );
+}
+
+.about-family-note-block {
+    padding-bottom: 0.1rem;
+}
+
+@media (max-width: 48rem) {
+    .about-personal-family-section {
+        margin-top: 2rem;
+    }
+
+    .about-personal-family-card {
+        gap: 1.15rem;
+        border-radius: 1.2rem;
+    }
+
+    .about-personal-block p {
+        font-size: 0.94rem;
+    }
+}

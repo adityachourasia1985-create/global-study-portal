@@ -2299,7 +2299,139 @@ class="table-responsive">
             </div>
 
         </section>
+        <!-- ================= PERSONAL & FAMILY ================= -->
+<section class="about-personal-family-section">
 
+    <div class="about-section-heading">
+        <span>PERSONAL & FAMILY</span>
+
+        <h3
+            id="aboutPersonalFamilyHeading"
+            class="about-live-field"
+        >
+            The people and experiences behind the journey
+        </h3>
+    </div>
+
+    <div class="about-personal-family-card">
+
+        <!-- ABOUT ME -->
+        <div class="about-personal-block">
+            <span class="about-personal-label">
+                ABOUT ME
+            </span>
+
+            <h4
+                id="aboutPersonalName"
+                class="about-live-field"
+            >
+                Aditya Chourasia
+            </h4>
+
+            <p
+                id="aboutPersonalRole"
+                class="about-live-field"
+            >
+                Founder & Full-Stack Developer of Global Study Portal
+            </p>
+
+            <p
+                id="aboutPersonalDescription"
+                class="about-live-field"
+            >
+                A Computer Science student focused on software development,
+                practical problem solving and building useful digital products
+                for education.
+            </p>
+        </div>
+
+        <div class="about-family-divider"></div>
+
+        <!-- FATHER -->
+        <div class="about-personal-block">
+            <span class="about-personal-label">
+                FATHER
+            </span>
+
+            <h4
+                id="aboutFatherName"
+                class="about-live-field"
+            >
+                Atul Chourasia
+            </h4>
+
+            <p
+                id="aboutFatherRole"
+                class="about-live-field"
+            >
+                Chartered Accountant • First Chartered Accountant from Dindori
+            </p>
+
+            <p
+                id="aboutFatherDescription"
+                class="about-live-field"
+            >
+                A finance and accounting professional known for discipline,
+                precision and responsibility. His knowledge of accounts,
+                financial management and professional ethics has been a strong
+                source of guidance and inspiration.
+            </p>
+        </div>
+
+        <div class="about-family-divider"></div>
+
+        <!-- MOTHER -->
+        <div class="about-personal-block">
+            <span class="about-personal-label">
+                MOTHER
+            </span>
+
+            <h4
+                id="aboutMotherName"
+                class="about-live-field"
+            >
+                Poonam Chourasia
+            </h4>
+
+            <p
+                id="aboutMotherRole"
+                class="about-live-field"
+            >
+                Former Biotechnology Company Manager • Owner, Rewa Medico Agency
+            </p>
+
+            <p
+                id="aboutMotherDescription"
+                class="about-live-field"
+            >
+                A dedicated professional and the most special person in my life.
+                Alongside her professional responsibilities, she has always
+                worked tirelessly for our family and has been a constant source
+                of strength, care and support.
+            </p>
+        </div>
+
+        <div class="about-family-divider"></div>
+
+        <!-- FAMILY NOTE -->
+        <div class="about-personal-block about-family-note-block">
+            <span class="about-personal-label">
+                FAMILY NOTE
+            </span>
+
+            <p
+                id="aboutFamilyNote"
+                class="about-live-field"
+            >
+                My family has played a major role in shaping my values,
+                discipline and determination. Their support continues to be one
+                of the strongest foundations behind my journey.
+            </p>
+        </div>
+
+    </div>
+
+</section>
 
         <!-- ================= PROJECT JOURNEY ================= -->
         <section class="about-journey-section">
@@ -3652,7 +3784,11 @@ async function deleteLecture(id) {
         }
     };
 
+
+    // =========================
     // HERO
+    // =========================
+
     setText(
         "aboutHeroHeading",
         about.platform_title,
@@ -3670,7 +3806,11 @@ async function deleteLecture(id) {
         "Version 1.0"
     );
 
+
+    // =========================
     // OVERVIEW
+    // =========================
+
     setText(
         "aboutOverviewHeading",
         about.overview_heading
@@ -3681,7 +3821,11 @@ async function deleteLecture(id) {
         about.overview_description
     );
 
+
+    // =========================
     // CAPABILITIES
+    // =========================
+
     setText(
         "aboutCapabilitiesHeading",
         about.capabilities_heading
@@ -3725,6 +3869,7 @@ async function deleteLecture(id) {
                     }
                 }
             );
+
         } catch (error) {
             console.error(
                 "Capabilities parse error:",
@@ -3733,7 +3878,11 @@ async function deleteLecture(id) {
         }
     }
 
+
+    // =========================
     // FOUNDER PHOTO
+    // =========================
+
     const founderImages =
         document.querySelectorAll(
             "#aboutFounderImage"
@@ -3748,7 +3897,11 @@ async function deleteLecture(id) {
         }
     });
 
+
+    // =========================
     // FOUNDER
+    // =========================
+
     setText(
         "aboutFounderName",
         about.founder_name,
@@ -3776,7 +3929,89 @@ async function deleteLecture(id) {
         about.founder_vision
     );
 
+
+    // =========================
+    // PERSONAL & FAMILY
+    // =========================
+
+    setText(
+        "aboutPersonalFamilyHeading",
+        about.personal_family_heading,
+        "The people and experiences behind the journey"
+    );
+
+    // ABOUT ME
+
+    setText(
+        "aboutPersonalName",
+        about.personal_name,
+        "Aditya Chourasia"
+    );
+
+    setText(
+        "aboutPersonalRole",
+        about.personal_role,
+        "Founder & Full-Stack Developer of Global Study Portal"
+    );
+
+    setText(
+        "aboutPersonalDescription",
+        about.personal_description
+    );
+
+
+    // FATHER
+
+    setText(
+        "aboutFatherName",
+        about.father_name,
+        "Atul Chourasia"
+    );
+
+    setText(
+        "aboutFatherRole",
+        about.father_role,
+        "Chartered Accountant • First Chartered Accountant from Dindori"
+    );
+
+    setText(
+        "aboutFatherDescription",
+        about.father_description
+    );
+
+
+    // MOTHER
+
+    setText(
+        "aboutMotherName",
+        about.mother_name,
+        "Poonam Chourasia"
+    );
+
+    setText(
+        "aboutMotherRole",
+        about.mother_role,
+        "Former Biotechnology Company Manager • Owner, Rewa Medico Agency"
+    );
+
+    setText(
+        "aboutMotherDescription",
+        about.mother_description
+    );
+
+
+    // FAMILY NOTE
+
+    setText(
+        "aboutFamilyNote",
+        about.family_note
+    );
+
+
+    // =========================
     // PROJECT JOURNEY
+    // =========================
+
     setText(
         "aboutJourneyHeading",
         about.journey_heading
@@ -3821,6 +4056,7 @@ async function deleteLecture(id) {
                     }
                 }
             );
+
         } catch (error) {
             console.error(
                 "Journey parse error:",
@@ -3829,7 +4065,11 @@ async function deleteLecture(id) {
         }
     }
 
+
+    // =========================
     // CONTACT
+    // =========================
+
     setText(
         "aboutContactHeading",
         about.contact_heading
@@ -4013,82 +4253,74 @@ async function saveAboutInlineChanges() {
                 });
             });
 
+        const getText = (id) =>
+            document.getElementById(id)
+                ?.textContent.trim() || "";
+
         const payload = {
-            heading:
-                document
-                    .getElementById("aboutHeroHeading")
-                    ?.textContent.trim() || "",
+            heading: getText("aboutHeroHeading"),
+            description: getText("aboutHeroDescription"),
 
-            description:
-                document
-                    .getElementById("aboutHeroDescription")
-                    ?.textContent.trim() || "",
-
-            purpose:
-                document
-                    .getElementById("aboutOverviewDescription")
-                    ?.textContent.trim() || "",
-
-            features:
-                JSON.stringify(capabilities),
-
-            founder_name:
-                document
-                    .getElementById("aboutFounderName")
-                    ?.textContent.trim() || "",
-
-            founder_description:
-                document
-                    .getElementById("aboutFounderDescription")
-                    ?.textContent.trim() || "",
-
-            version:
-                document
-                    .getElementById("aboutVersion")
-                    ?.textContent.trim() || "",
-
-            overview_heading:
-                document
-                    .getElementById("aboutOverviewHeading")
-                    ?.textContent.trim() || "",
+            purpose: getText("aboutOverviewDescription"),
+            overview_heading: getText("aboutOverviewHeading"),
 
             capabilities_heading:
-                document
-                    .getElementById("aboutCapabilitiesHeading")
-                    ?.textContent.trim() || "",
+                getText("aboutCapabilitiesHeading"),
+            features: JSON.stringify(capabilities),
 
-            founder_role:
-                document
-                    .getElementById("aboutFounderRole")
-                    ?.textContent.trim() || "",
-
+            founder_name: getText("aboutFounderName"),
+            founder_role: getText("aboutFounderRole"),
+            founder_description:
+                getText("aboutFounderDescription"),
             founder_journey:
-                document
-                    .getElementById("aboutFounderJourney")
-                    ?.textContent.trim() || "",
-
+                getText("aboutFounderJourney"),
             founder_vision:
-                document
-                    .getElementById("aboutFounderVision")
-                    ?.textContent.trim() || "",
+                getText("aboutFounderVision"),
+
+            version: getText("aboutVersion"),
 
             journey_heading:
-                document
-                    .getElementById("aboutJourneyHeading")
-                    ?.textContent.trim() || "",
-
-            journey:
-                JSON.stringify(journey),
+                getText("aboutJourneyHeading"),
+            journey: JSON.stringify(journey),
 
             contact_heading:
-                document
-                    .getElementById("aboutContactHeading")
-                    ?.textContent.trim() || "",
-
+                getText("aboutContactHeading"),
             contact_description:
-                document
-                    .getElementById("aboutContactDescription")
-                    ?.textContent.trim() || ""
+                getText("aboutContactDescription"),
+
+            // PERSONAL & FAMILY
+            personal_family_heading:
+                getText("aboutPersonalFamilyHeading"),
+
+            personal_name:
+                getText("aboutPersonalName"),
+
+            personal_role:
+                getText("aboutPersonalRole"),
+
+            personal_description:
+                getText("aboutPersonalDescription"),
+
+            father_name:
+                getText("aboutFatherName"),
+
+            father_role:
+                getText("aboutFatherRole"),
+
+            father_description:
+                getText("aboutFatherDescription"),
+
+            mother_name:
+                getText("aboutMotherName"),
+
+            mother_role:
+                getText("aboutMotherRole"),
+
+            mother_description:
+                getText("aboutMotherDescription"),
+
+            family_note:
+                getText("aboutFamilyNote")
         };
 
         const response = await fetch("/api/about", {
@@ -4110,6 +4342,7 @@ async function saveAboutInlineChanges() {
 
         fields.forEach((element) => {
             element.contentEditable = "false";
+
             element.classList.remove(
                 "about-edit-mode"
             );
@@ -4117,7 +4350,10 @@ async function saveAboutInlineChanges() {
 
         resetAboutEditButtons();
 
-        alert("About section updated successfully.");
+        alert(
+            "About section updated successfully."
+        );
+
     } catch (error) {
         console.error(
             "Save About error:",

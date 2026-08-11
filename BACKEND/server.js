@@ -449,8 +449,24 @@ const aboutExtraColumns = [
     ["journey_heading", "TEXT"],
     ["journey_json", "TEXT"],
     ["contact_heading", "TEXT"],
-    ["contact_description", "TEXT"]
+    ["contact_description", "TEXT"],
+
+    ["personal_family_heading", "TEXT"],
+    ["personal_name", "TEXT"],
+    ["personal_role", "TEXT"],
+    ["personal_description", "TEXT"],
+
+    ["father_name", "TEXT"],
+    ["father_role", "TEXT"],
+    ["father_description", "TEXT"],
+
+    ["mother_name", "TEXT"],
+    ["mother_role", "TEXT"],
+    ["mother_description", "TEXT"],
+
+    ["family_note", "TEXT"]
 ];
+
 
 db.all(
     `PRAGMA table_info(about_settings)`,
@@ -1742,7 +1758,20 @@ app.put("/api/about", (req, res) => {
         journey,
         contact_heading,
         contact_description,
+        personal_family_heading,
+personal_name,
+personal_role,
+personal_description,
 
+father_name,
+father_role,
+father_description,
+
+mother_name,
+mother_role,
+mother_description,
+
+family_note,
         cofounder_enabled,
         cofounder_name,
         cofounder_role,
@@ -1775,7 +1804,20 @@ app.put("/api/about", (req, res) => {
 
             contact_heading = ?,
             contact_description = ?,
+            personal_family_heading = ?,
+personal_name = ?,
+personal_role = ?,
+personal_description = ?,
 
+father_name = ?,
+father_role = ?,
+father_description = ?,
+
+mother_name = ?,
+mother_role = ?,
+mother_description = ?,
+
+family_note = ?,    
             cofounder_enabled = ?,
             cofounder_name = ?,
             cofounder_role = ?,
@@ -1806,7 +1848,20 @@ app.put("/api/about", (req, res) => {
 
             contact_heading || "",
             contact_description || "",
+            personal_family_heading || "",
+personal_name || "",
+personal_role || "",
+personal_description || "",
 
+father_name || "",
+father_role || "",
+father_description || "",
+
+mother_name || "",
+mother_role || "",
+mother_description || "",
+
+family_note || "",
             cofounder_enabled ? 1 : 0,
             cofounder_name || "",
             cofounder_role || "",
