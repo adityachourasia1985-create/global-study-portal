@@ -2002,28 +2002,37 @@ class="table-responsive">
     <section class="about-page about-page-redesigned">
 
         <!-- ================= HERO ================= -->
-        <section class="about-hero about-hero-compact">
+        <section class="about-hero about-hero-compact about-editable-section">
 
             <div class="about-hero-copy">
                 <span class="about-label">
                     ABOUT GLOBAL STUDY PORTAL
                 </span>
 
-                <h2>
-                    Smarter College Management
-                </h2>
+              <h2
+    id="aboutHeroHeading"
+    class="about-live-field"
+>
+    Smarter College Management
+</h2>
 
-                <p>
-                    A unified digital workspace for students, administrators,
-                    individuals and educational institutions to manage
-                    academics, attendance, communication, progress and
-                    everyday productivity.
-                </p>
+<p
+    id="aboutHeroDescription"
+    class="about-live-field"
+>
+    A unified digital workspace for students, administrators,
+    individuals and educational institutions to manage
+    academics, attendance, communication, progress and
+    everyday productivity.
+</p>
 
                 <div class="about-hero-meta">
-                    <span class="about-version">
-                        Version 1.0
-                    </span>
+               <span
+    class="about-version about-live-field"
+    id="aboutVersion"
+>
+    Version 1.0
+</span>
 
                     <span class="about-platform-status">
                         <i class="fa-solid fa-circle-check"></i>
@@ -2041,7 +2050,13 @@ class="table-responsive">
                         id="aboutFounderImage"
                         class="about-profile-photo"
                     >
-
+<input
+    type="file"
+    id="aboutFounderImageInput"
+    accept="image/*"
+    hidden
+    onchange="previewAboutFounderImage(this)"
+>
                     <span class="about-profile-role-badge">
                         Founder
                     </span>
@@ -2072,16 +2087,24 @@ class="table-responsive">
 
             <div class="about-section-heading">
                 <span>PLATFORM OVERVIEW</span>
-                <h3>Built to organize the complete academic experience</h3>
+               <h3
+    id="aboutOverviewHeading"
+    class="about-live-field"
+>
+    Built to organize the complete academic experience
+</h3>
             </div>
 
-            <p>
-                Global Study Portal brings essential educational tools into
-                one responsive and secure platform. It helps users manage
-                daily academic work, institutional communication, student
-                progress and role-based responsibilities without switching
-                between multiple disconnected systems.
-            </p>
+           <p
+    id="aboutOverviewDescription"
+    class="about-live-field"
+>
+    Global Study Portal brings essential educational tools into
+    one responsive and secure platform. It helps users manage
+    daily academic work, institutional communication, student
+    progress and role-based responsibilities without switching
+    between multiple disconnected systems.
+</p>
 
         </section>
 
@@ -2091,7 +2114,12 @@ class="table-responsive">
 
             <div class="about-section-heading">
                 <span>CORE CAPABILITIES</span>
-                <h3>Everything important, connected in one place</h3>
+               <h3
+    id="aboutCapabilitiesHeading"
+    class="about-live-field"
+>
+    Everything important, connected in one place
+</h3>
             </div>
 
             <div class="about-capabilities-grid">
@@ -2204,10 +2232,18 @@ class="table-responsive">
                         FOUNDER PROFILE
                     </span>
 
-                    <h3 id="aboutFounderName">Aditya Chourasia</h3>
+                    <h3
+    id="aboutFounderName"
+    class="about-live-field"
+>
+    Aditya Chourasia
+</h3>
 
 
-                 <p class="about-founder-role" id="aboutFounderRole">
+                 <p
+    class="about-founder-role about-live-field"
+    id="aboutFounderRole"
+>
     Founder & Full-Stack Developer
 </p>
 
@@ -2224,30 +2260,39 @@ class="table-responsive">
 
                 <h4>Building practical technology for education</h4>
 
-                <p>
-                    Aditya Chourasia is a student developer and the founder
-                    of Global Study Portal. After completing a Polytechnic
-                    diploma in Computer Science, he is continuing his
-                    academic and technical journey with a strong interest in
-                    software development, AI and real-world problem solving.
-                </p>
+<p
+    id="aboutFounderDescription"
+    class="about-live-field"
+>
+    Aditya Chourasia is a student developer and the founder
+    of Global Study Portal. After completing a Polytechnic
+    diploma in Computer Science, he is continuing his
+    academic and technical journey with a strong interest in
+    software development, AI and real-world problem solving.
+</p>
 
-                <p>
-                    The platform reflects a hands-on approach to learning:
-                    designing, coding, debugging and improving a complete
-                    system that can make educational management simpler,
-                    more accessible and more organized.
-                </p>
+                <p
+    id="aboutFounderJourney"
+    class="about-live-field"
+>
+    The platform reflects a hands-on approach to learning:
+    designing, coding, debugging and improving a complete
+    system that can make educational management simpler,
+    more accessible and more organized.
+</p>
 
                 <div class="about-founder-vision">
                     <i class="fa-solid fa-lightbulb"></i>
 
                     <div>
                         <span>Founder Vision</span>
-                        <strong>
-                            Build useful digital products that solve genuine
-                            educational problems.
-                        </strong>
+                        <strong
+    id="aboutFounderVision"
+    class="about-live-field"
+>
+    Build useful digital products that solve genuine
+    educational problems.
+</strong>
                     </div>
                 </div>
 
@@ -2261,7 +2306,12 @@ class="table-responsive">
 
             <div class="about-section-heading">
                 <span>PROJECT JOURNEY</span>
-                <h3>From an idea to a working educational platform</h3>
+                <h3
+    id="aboutJourneyHeading"
+    class="about-live-field"
+>
+    From an idea to a working educational platform
+</h3>
             </div>
 
             <div class="about-journey-timeline">
@@ -2367,10 +2417,13 @@ class="table-responsive">
 
                 <h2>Contact the Founder</h2>
 
-                <p>
-                    For platform support, feedback, collaboration or
-                    professional communication, use the options below.
-                </p>
+               <p
+    id="aboutContactDescription"
+    class="about-live-field"
+>
+    For platform support, feedback, collaboration or
+    professional communication, use the options below.
+</p>
             </div>
 
             <div class="about-contact-grid">
@@ -3585,29 +3638,208 @@ async function deleteLecture(id) {
         console.error("Delete lecture error:", error);
         alert("Could not delete lecture");
     }
-}
-function renderAboutContent(about) {
-    const heading = document.querySelector(".about-hero h2");
-    const description = document.querySelector(".about-hero-content p");
-    const purpose = document.querySelector(".about-card:nth-child(1) p");
-    const features = document.querySelector(".about-card:nth-child(2) p");
-    const founderName = document.querySelector(".founder-name");
-    const founderDescription =
-        document.querySelector(".founder-card p:last-child");
-    const version = document.querySelector(".about-version");
+}function renderAboutContent(about) {
+    const setText = (id, value, fallback = "") => {
+        const element = document.getElementById(id);
 
-    if (heading) heading.textContent = about.heading || "";
-    if (description) description.textContent = about.description || "";
-    if (purpose) purpose.textContent = about.purpose || "";
-    if (features) features.textContent = about.features || "";
-    if (founderName) founderName.textContent = about.founder_name || "";
-    if (founderDescription) {
-        founderDescription.textContent =
-            about.founder_description || "";
+        if (
+            element &&
+            value !== undefined &&
+            value !== null
+        ) {
+            element.textContent =
+                value || fallback;
+        }
+    };
+
+    // HERO
+    setText(
+        "aboutHeroHeading",
+        about.platform_title,
+        "Smarter College Management"
+    );
+
+    setText(
+        "aboutHeroDescription",
+        about.platform_description
+    );
+
+    setText(
+        "aboutVersion",
+        about.version,
+        "Version 1.0"
+    );
+
+    // OVERVIEW
+    setText(
+        "aboutOverviewHeading",
+        about.overview_heading
+    );
+
+    setText(
+        "aboutOverviewDescription",
+        about.overview_description
+    );
+
+    // CAPABILITIES
+    setText(
+        "aboutCapabilitiesHeading",
+        about.capabilities_heading
+    );
+
+    if (about.capabilities_json) {
+        try {
+            const capabilities =
+                JSON.parse(
+                    about.capabilities_json
+                );
+
+            const cards =
+                document.querySelectorAll(
+                    ".about-capability-card"
+                );
+
+            capabilities.forEach(
+                (item, index) => {
+                    const card = cards[index];
+
+                    if (!card) return;
+
+                    const title =
+                        card.querySelector("h4");
+
+                    const description =
+                        card.querySelector("p");
+
+                    if (title && item.title) {
+                        title.textContent =
+                            item.title;
+                    }
+
+                    if (
+                        description &&
+                        item.description
+                    ) {
+                        description.textContent =
+                            item.description;
+                    }
+                }
+            );
+        } catch (error) {
+            console.error(
+                "Capabilities parse error:",
+                error
+            );
+        }
     }
-    if (version) version.textContent = about.version || "Version 1.0";
-}
 
+    // FOUNDER PHOTO
+    const founderImages =
+        document.querySelectorAll(
+            "#aboutFounderImage"
+        );
+
+    founderImages.forEach((image) => {
+        if (about.founder_image) {
+            image.src =
+                about.founder_image +
+                "?t=" +
+                Date.now();
+        }
+    });
+
+    // FOUNDER
+    setText(
+        "aboutFounderName",
+        about.founder_name,
+        "Aditya Chourasia"
+    );
+
+    setText(
+        "aboutFounderRole",
+        about.founder_role,
+        "Founder & Full-Stack Developer"
+    );
+
+    setText(
+        "aboutFounderDescription",
+        about.founder_bio
+    );
+
+    setText(
+        "aboutFounderJourney",
+        about.founder_journey
+    );
+
+    setText(
+        "aboutFounderVision",
+        about.founder_vision
+    );
+
+    // PROJECT JOURNEY
+    setText(
+        "aboutJourneyHeading",
+        about.journey_heading
+    );
+
+    if (about.journey_json) {
+        try {
+            const journey =
+                JSON.parse(
+                    about.journey_json
+                );
+
+            const steps =
+                document.querySelectorAll(
+                    ".about-journey-step"
+                );
+
+            journey.forEach(
+                (item, index) => {
+                    const step =
+                        steps[index];
+
+                    if (!step) return;
+
+                    const title =
+                        step.querySelector("h4");
+
+                    const description =
+                        step.querySelector("p");
+
+                    if (title && item.title) {
+                        title.textContent =
+                            item.title;
+                    }
+
+                    if (
+                        description &&
+                        item.description
+                    ) {
+                        description.textContent =
+                            item.description;
+                    }
+                }
+            );
+        } catch (error) {
+            console.error(
+                "Journey parse error:",
+                error
+            );
+        }
+    }
+
+    // CONTACT
+    setText(
+        "aboutContactHeading",
+        about.contact_heading
+    );
+
+    setText(
+        "aboutContactDescription",
+        about.contact_description
+    );
+}
 async function loadAboutContent() {
     try {
         const response = await fetch("/api/about");
@@ -3625,6 +3857,7 @@ async function loadAboutContent() {
     }
 }
 
+let aboutOriginalValues = {};
 async function openAboutEditor() {
     try {
         const meResponse = await fetch("/api/me");
@@ -3639,93 +3872,319 @@ async function openAboutEditor() {
             return;
         }
 
-        const aboutResponse = await fetch("/api/about");
-        const aboutData = await aboutResponse.json();
+        const fields = document.querySelectorAll(
+            ".about-live-field, " +
+            ".about-capability-card h4, " +
+            ".about-capability-card p, " +
+            ".about-journey-step h4, " +
+            ".about-journey-step p"
+        );
 
-        if (
-            !aboutResponse.ok ||
-            !aboutData.success ||
-            !aboutData.about
-        ) {
-            throw new Error(
-                aboutData.message || "Could not load About content."
+        aboutOriginalValues = {};
+
+        fields.forEach((element, index) => {
+            const key =
+                element.id ||
+                `aboutAutoField_${index}`;
+
+            if (!element.id) {
+                element.dataset.aboutEditKey = key;
+            }
+
+            aboutOriginalValues[key] =
+                element.innerHTML;
+
+            element.contentEditable = "true";
+            element.classList.add("about-edit-mode");
+
+            element.setAttribute(
+                "spellcheck",
+                "true"
+            );
+        });
+
+        // Founder image editing
+        const founderImage =
+            document.getElementById("aboutFounderImage");
+
+        if (founderImage) {
+            founderImage.classList.add(
+                "about-image-edit-mode"
+            );
+
+            founderImage.onclick = () => {
+                document
+                    .getElementById("aboutFounderImageInput")
+                    ?.click();
+            };
+        }
+
+        const editBtn =
+            document.getElementById("editAboutBtn");
+
+        if (editBtn) {
+            editBtn.innerHTML = `
+                <i class="fa-solid fa-floppy-disk"></i>
+                Save Changes
+            `;
+
+            editBtn.onclick =
+                saveAboutInlineChanges;
+        }
+
+        let cancelBtn =
+            document.getElementById(
+                "cancelAboutEditBtn"
+            );
+
+        if (!cancelBtn) {
+            cancelBtn =
+                document.createElement("button");
+
+            cancelBtn.type = "button";
+            cancelBtn.id =
+                "cancelAboutEditBtn";
+
+            cancelBtn.className =
+                "edit-about-btn";
+
+            cancelBtn.innerHTML = `
+                <i class="fa-solid fa-xmark"></i>
+                Cancel
+            `;
+
+            cancelBtn.onclick =
+                cancelAboutInlineEdit;
+
+            editBtn?.insertAdjacentElement(
+                "afterend",
+                cancelBtn
             );
         }
 
-        const current = aboutData.about;
-
-        const heading = prompt(
-            "About heading:",
-            current.heading || ""
+    } catch (error) {
+        console.error(
+            "About edit mode error:",
+            error
         );
-        if (heading === null) return;
 
-        const description = prompt(
-            "About description:",
-            current.description || ""
+        alert(
+            "Could not enable About edit mode."
         );
-        if (description === null) return;
-
-        const purpose = prompt(
-            "Our Purpose:",
-            current.purpose || ""
+    }
+}
+async function saveAboutInlineChanges() {
+    try {
+        const fields = document.querySelectorAll(
+            ".about-live-field, " +
+            ".about-capability-card h4, " +
+            ".about-capability-card p, " +
+            ".about-journey-step h4, " +
+            ".about-journey-step p"
         );
-        if (purpose === null) return;
 
-        const features = prompt(
-            "Core Features:",
-            current.features || ""
-        );
-        if (features === null) return;
+        const capabilities = [];
 
-        const founderName = prompt(
-            "Founder name:",
-            current.founder_name || ""
-        );
-        if (founderName === null) return;
+        document
+            .querySelectorAll(".about-capability-card")
+            .forEach((card) => {
+                capabilities.push({
+                    title:
+                        card.querySelector("h4")
+                            ?.textContent.trim() || "",
+                    description:
+                        card.querySelector("p")
+                            ?.textContent.trim() || ""
+                });
+            });
 
-        const founderDescription = prompt(
-            "Founder description:",
-            current.founder_description || ""
-        );
-        if (founderDescription === null) return;
+        const journey = [];
 
-        const version = prompt(
-            "Platform version:",
-            current.version || "Version 1.0"
-        );
-        if (version === null) return;
+        document
+            .querySelectorAll(".about-journey-step")
+            .forEach((step) => {
+                journey.push({
+                    title:
+                        step.querySelector("h4")
+                            ?.textContent.trim() || "",
+                    description:
+                        step.querySelector("p")
+                            ?.textContent.trim() || ""
+                });
+            });
 
-        const updateResponse = await fetch("/api/about", {
+        const payload = {
+            heading:
+                document
+                    .getElementById("aboutHeroHeading")
+                    ?.textContent.trim() || "",
+
+            description:
+                document
+                    .getElementById("aboutHeroDescription")
+                    ?.textContent.trim() || "",
+
+            purpose:
+                document
+                    .getElementById("aboutOverviewDescription")
+                    ?.textContent.trim() || "",
+
+            features:
+                JSON.stringify(capabilities),
+
+            founder_name:
+                document
+                    .getElementById("aboutFounderName")
+                    ?.textContent.trim() || "",
+
+            founder_description:
+                document
+                    .getElementById("aboutFounderDescription")
+                    ?.textContent.trim() || "",
+
+            version:
+                document
+                    .getElementById("aboutVersion")
+                    ?.textContent.trim() || "",
+
+            overview_heading:
+                document
+                    .getElementById("aboutOverviewHeading")
+                    ?.textContent.trim() || "",
+
+            capabilities_heading:
+                document
+                    .getElementById("aboutCapabilitiesHeading")
+                    ?.textContent.trim() || "",
+
+            founder_role:
+                document
+                    .getElementById("aboutFounderRole")
+                    ?.textContent.trim() || "",
+
+            founder_journey:
+                document
+                    .getElementById("aboutFounderJourney")
+                    ?.textContent.trim() || "",
+
+            founder_vision:
+                document
+                    .getElementById("aboutFounderVision")
+                    ?.textContent.trim() || "",
+
+            journey_heading:
+                document
+                    .getElementById("aboutJourneyHeading")
+                    ?.textContent.trim() || "",
+
+            journey:
+                JSON.stringify(journey),
+
+            contact_heading:
+                document
+                    .getElementById("aboutContactHeading")
+                    ?.textContent.trim() || "",
+
+            contact_description:
+                document
+                    .getElementById("aboutContactDescription")
+                    ?.textContent.trim() || ""
+        };
+
+        const response = await fetch("/api/about", {
             method: "PUT",
             headers: {
                 "Content-Type": "application/json"
             },
-            body: JSON.stringify({
-                heading,
-                description,
-                purpose,
-                features,
-                founder_name: founderName,
-                founder_description: founderDescription,
-                version
-            })
+            body: JSON.stringify(payload)
         });
 
-        const updateData = await updateResponse.json();
+        const data = await response.json();
 
-        if (!updateResponse.ok || !updateData.success) {
+        if (!response.ok || !data.success) {
             throw new Error(
-                updateData.message ||
-                "Could not update About content."
+                data.message ||
+                "Could not save About content."
             );
         }
 
-        await loadAboutContent();
-        alert(updateData.message);
+        fields.forEach((element) => {
+            element.contentEditable = "false";
+            element.classList.remove(
+                "about-edit-mode"
+            );
+        });
+
+        resetAboutEditButtons();
+
+        alert("About section updated successfully.");
     } catch (error) {
-        console.error("Update About error:", error);
-        alert(error.message || "Could not update About content.");
+        console.error(
+            "Save About error:",
+            error
+        );
+
+        alert(
+            error.message ||
+            "Could not save About content."
+        );
+    }
+}
+
+function cancelAboutInlineEdit() {
+    const fields = document.querySelectorAll(
+        ".about-live-field, " +
+        ".about-capability-card h4, " +
+        ".about-capability-card p, " +
+        ".about-journey-step h4, " +
+        ".about-journey-step p"
+    );
+
+    fields.forEach((element, index) => {
+        const key =
+            element.id ||
+            element.dataset.aboutEditKey ||
+            `aboutAutoField_${index}`;
+
+        if (
+            Object.prototype.hasOwnProperty.call(
+                aboutOriginalValues,
+                key
+            )
+        ) {
+            element.innerHTML =
+                aboutOriginalValues[key];
+        }
+
+        element.contentEditable = "false";
+        element.classList.remove(
+            "about-edit-mode"
+        );
+    });
+
+    resetAboutEditButtons();
+}
+
+function resetAboutEditButtons() {
+    const editBtn =
+        document.getElementById("editAboutBtn");
+
+    if (editBtn) {
+        editBtn.innerHTML = `
+            <i class="fa-solid fa-pen-to-square"></i>
+            Edit About
+        `;
+
+        editBtn.onclick = openAboutEditor;
+    }
+
+    const cancelBtn =
+        document.getElementById(
+            "cancelAboutEditBtn"
+        );
+
+    if (cancelBtn) {
+        cancelBtn.remove();
     }
 }
 
@@ -3734,7 +4193,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     await loadCurrentLoggedInRole();
     await loadUsers();
 });
-
+document.addEventListener("DOMContentLoaded", () => {
+    loadAboutContent();
+});
 </script>
  <!-- Permissions Modal -->
 <div id="permissionsModal"

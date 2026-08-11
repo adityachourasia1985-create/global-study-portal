@@ -120,6 +120,18 @@ db.run(`
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
 `);
+db.all(
+    "SELECT id, name, organization_code FROM organizations",
+    [],
+    (err, rows) => {
+        if (err) {
+            console.error("ORGANIZATIONS CHECK ERROR:", err);
+            return;
+        }
+
+        console.log("ORGANIZATIONS TABLE:", rows);
+    }
+);
 db.run(`
     CREATE TABLE IF NOT EXISTS organization_branches (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -426,6 +438,62 @@ db.serialize(() => {
         );
     });
 });
+const aboutExtraColumns = [
+    ["version", "TEXT DEFAULT 'Version 1.0'"],
+    ["overview_heading", "TEXT"],
+    ["overview_description", "TEXT"],
+    ["capabilities_heading", "TEXT"],
+    ["capabilities_json", "TEXT"],
+    ["founder_journey", "TEXT"],
+    ["founder_vision", "TEXT"],
+    ["journey_heading", "TEXT"],
+    ["journey_json", "TEXT"],
+    ["contact_heading", "TEXT"],
+    ["contact_description", "TEXT"]
+];
+
+db.all(
+    `PRAGMA table_info(about_settings)`,
+    [],
+    (error, columns) => {
+        if (error) {
+            console.error(
+                "About settings schema check error:",
+                error
+            );
+            return;
+        }
+
+        const existingColumns =
+            new Set(columns.map(column => column.name));
+
+        aboutExtraColumns.forEach(
+            ([columnName, definition]) => {
+
+                if (existingColumns.has(columnName)) {
+                    return;
+                }
+
+                db.run(
+                    `ALTER TABLE about_settings
+                     ADD COLUMN ${columnName} ${definition}`,
+                    (alterError) => {
+                        if (alterError) {
+                            console.error(
+                                `Could not add ${columnName}:`,
+                                alterError
+                            );
+                        } else {
+                            console.log(
+                                `About column added: ${columnName}`
+                            );
+                        }
+                    }
+                );
+            }
+        );
+    }
+);
 const express = require("express");
 const session = require("express-session");
 const transporter = nodemailer.createTransport({
@@ -1175,6 +1243,60 @@ const uploadProfileImage = multer({
         cb(null, true);
     }
 });
+app.post(
+    "/api/about/founder-photo",
+    uploadProfileImage.single("founder_image"),
+    (req, res) => {
+        if (
+            !req.session ||
+            !req.session.isLoggedIn ||
+            req.session.role !== "owner"
+        ) {
+            return res.status(403).json({
+                success: false,
+                message: "Only the Owner can update Founder photo."
+            });
+        }
+
+        if (!req.file) {
+            return res.status(400).json({
+                success: false,
+                message: "Please select an image."
+            });
+        }
+
+        const imagePath =
+            `/uploads/profiles/${req.file.filename}`;
+
+        db.run(
+            `
+            UPDATE about_settings
+            SET founder_image = ?
+            WHERE id = 1
+            `,
+            [imagePath],
+            function (error) {
+                if (error) {
+                    console.error(
+                        "Founder image update error:",
+                        error
+                    );
+
+                    return res.status(500).json({
+                        success: false,
+                        message: "Could not save Founder photo."
+                    });
+                }
+
+                return res.json({
+                    success: true,
+                    founder_image: imagePath,
+                    message: "Founder photo updated successfully."
+                });
+            }
+        );
+    }
+);
 app.get("/api/notifications", (req, res) => {
     if (!req.session || !req.session.userId) {
         return res.status(401).json({
@@ -1568,22 +1690,29 @@ app.put("/api/about", (req, res) => {
     ) {
         return res.status(403).json({
             success: false,
-            message: "Only the owner can update About details."
+            message: "Only the Owner can edit About content."
         });
     }
 
     const {
-        platform_title,
-        platform_description,
+        heading,
+        description,
+        purpose,
+        features,
         founder_name,
+        founder_description,
+        version,
+
+        overview_heading,
+        capabilities_heading,
         founder_role,
-        founder_bio,
-        founder_email,
-        founder_whatsapp,
-        founder_instagram,
-        founder_linkedin,
-        founder_skills,
-        founder_image,
+        founder_journey,
+        founder_vision,
+        journey_heading,
+        journey,
+        contact_heading,
+        contact_description,
+
         cofounder_enabled,
         cofounder_name,
         cofounder_role,
@@ -1597,34 +1726,57 @@ app.put("/api/about", (req, res) => {
         SET
             platform_title = ?,
             platform_description = ?,
+            version = ?,
+
+            overview_heading = ?,
+            overview_description = ?,
+
+            capabilities_heading = ?,
+            capabilities_json = ?,
+
             founder_name = ?,
             founder_role = ?,
             founder_bio = ?,
-            founder_email = ?,
-            founder_whatsapp = ?,
-            founder_instagram = ?,
-            founder_linkedin = ?,
-            founder_skills = ?,
-            founder_image = ?,
+            founder_journey = ?,
+            founder_vision = ?,
+
+            journey_heading = ?,
+            journey_json = ?,
+
+            contact_heading = ?,
+            contact_description = ?,
+
             cofounder_enabled = ?,
             cofounder_name = ?,
             cofounder_role = ?,
             cofounder_bio = ?,
             cofounder_image = ?
+
         WHERE id = 1
         `,
         [
-            platform_title || "Global Study Portal",
-            platform_description || "",
+            heading || "Global Study Portal",
+            description || "",
+            version || "Version 1.0",
+
+            overview_heading || "",
+            purpose || "",
+
+            capabilities_heading || "",
+            features || "[]",
+
             founder_name || "Aditya Chourasia",
-            founder_role || "Owner, Founder & Developer",
-            founder_bio || "",
-            founder_email || "",
-            founder_whatsapp || "",
-            founder_instagram || "",
-            founder_linkedin || "",
-            founder_skills || "",
-            founder_image || "/uploads/about/owner-profile.jpg",
+            founder_role || "Founder & Full-Stack Developer",
+            founder_description || "",
+            founder_journey || "",
+            founder_vision || "",
+
+            journey_heading || "",
+            journey || "[]",
+
+            contact_heading || "",
+            contact_description || "",
+
             cofounder_enabled ? 1 : 0,
             cofounder_name || "",
             cofounder_role || "",
@@ -1633,28 +1785,31 @@ app.put("/api/about", (req, res) => {
         ],
         function (error) {
             if (error) {
-                console.error("Update About error:", error);
+                console.error(
+                    "Update About error:",
+                    error
+                );
 
                 return res.status(500).json({
                     success: false,
-                    message: "Could not update About details."
+                    message: "Could not update About content."
                 });
             }
-notifyUsers({
-    title: "About Section Updated",
-    message: "Portal About information was updated.",
-    category: "system",
-    priority: "info",
 
-    actorUserId: req.session.userId,
+            notifyUsers({
+                title: "About Section Updated",
+                message: "Portal About information was updated.",
+                category: "system",
+                priority: "info",
 
-    recipientRoles: ["owner"],
-    actionUrl: "/dashboard"
-});
+                actorUserId: req.session.userId,
+                recipientRoles: ["owner"],
+                actionUrl: "/dashboard"
+            });
 
             return res.json({
                 success: true,
-                message: "About details updated successfully."
+                message: "About content updated successfully."
             });
         }
     );
@@ -1989,8 +2144,6 @@ app.post("/api/study-analysis", (req, res) => {
         }
     );
 });
-// app.get("/api/about", (req, res) => {
-//     db.get(
 //         "SELECT * FROM about_content WHERE id = 1",
 //         [],
 //         (err, row) => {
@@ -2010,79 +2163,6 @@ app.post("/api/study-analysis", (req, res) => {
 //         }
 //     );
 // });
-app.put("/api/about", (req, res) => {
-    if (!req.session || req.session.role !== "owner") {
-        return res.status(403).json({
-            success: false,
-            message: "Only the Owner can edit About content."
-        });
-    }
-
-    const {
-        heading,
-        description,
-        purpose,
-        features,
-        founder_name,
-        founder_description,
-        version
-    } = req.body;
-
-    if (
-        !heading?.trim() ||
-        !description?.trim() ||
-        !purpose?.trim() ||
-        !features?.trim() ||
-        !founder_name?.trim() ||
-        !founder_description?.trim() ||
-        !version?.trim()
-    ) {
-        return res.status(400).json({
-            success: false,
-            message: "All About fields are required."
-        });
-    }
-
-    db.run(
-        `
-        UPDATE about_content
-        SET
-            heading = ?,
-            description = ?,
-            purpose = ?,
-            features = ?,
-            founder_name = ?,
-            founder_description = ?,
-            version = ?,
-            updated_at = CURRENT_TIMESTAMP
-        WHERE id = 1
-        `,
-        [
-            heading.trim(),
-            description.trim(),
-            purpose.trim(),
-            features.trim(),
-            founder_name.trim(),
-            founder_description.trim(),
-            version.trim()
-        ],
-        function (err) {
-            if (err) {
-                console.error("Update about content error:", err);
-
-                return res.status(500).json({
-                    success: false,
-                    message: "Could not update About content."
-                });
-            }
-
-            return res.json({
-                success: true,
-                message: "About content updated successfully."
-            });
-        }
-    );
-});
 function allowRoles(...roles) {
     return (req, res, next) => {
         if (!req.session.isLoggedIn) {
@@ -4264,20 +4344,23 @@ app.get("/api/me", (req, res) => {
 
     db.get(
         `SELECT
-            id,
-            name,
-            email,
-            role,
-            organization_code,
-            profession,
-            mobile,
-            enrollment,
-            branch,
-            semester,
-            admission_year,
-            profile_image
-         FROM users
-         WHERE email = ?`,
+            u.id,
+            u.name,
+            u.email,
+            u.role,
+            u.organization_code,
+            o.name AS organization_name,
+            u.profession,
+            u.mobile,
+            u.enrollment,
+            u.branch,
+            u.semester,
+            u.admission_year,
+            u.profile_image
+         FROM users u
+         LEFT JOIN organizations o
+            ON u.organization_code = o.organization_code
+         WHERE u.email = ?`,
         [req.session.email],
         (err, account) => {
             if (err) {
@@ -4308,9 +4391,13 @@ app.get("/api/me", (req, res) => {
                 name: account.name,
                 email: account.email,
                 role: account.role,
+
                 accountType,
                 account_type: accountType,
+
                 organization_code: account.organization_code,
+                organization_name: account.organization_name,
+
                 profession: account.profession,
                 mobile: account.mobile,
                 enrollment: account.enrollment,
@@ -4327,6 +4414,7 @@ app.get("/api/me", (req, res) => {
         }
     );
 });
+
 app.post(
     "/api/profile/photo",
     uploadProfileImage.single("profile_image"),

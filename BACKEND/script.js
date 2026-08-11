@@ -1882,6 +1882,13 @@ document.body.classList.toggle(
             "Profession",
             user.profession
         );
+    const organizationNameElement =
+    document.getElementById("welcomeOrganizationName");
+
+if (organizationNameElement) {
+    organizationNameElement.textContent =
+        user.organization_name || "";
+}
     } catch (error) {
         console.error(
             "Dashboard profile loading error:",
@@ -3633,4 +3640,54 @@ if (window.location.pathname === "/about") {
     setTimeout(openPublicAbout, 100);
     setTimeout(openPublicAbout, 500);
     setTimeout(openPublicAbout, 1000);
+}
+async function previewAboutFounderImage(input) {
+    const file = input.files?.[0];
+
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append("founder_image", file);
+
+    try {
+        const response = await fetch(
+            "/api/about/founder-photo",
+            {
+                method: "POST",
+                body: formData
+            }
+        );
+
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+            throw new Error(
+                data.message ||
+                "Could not update Founder photo."
+            );
+        }
+
+        const founderImages =
+            document.querySelectorAll(
+                "#aboutFounderImage"
+            );
+
+        founderImages.forEach((image) => {
+            image.src =
+                data.founder_image +
+                "?t=" +
+                Date.now();
+        });
+
+    } catch (error) {
+        console.error(
+            "Founder photo upload error:",
+            error
+        );
+
+        alert(
+            error.message ||
+            "Could not update Founder photo."
+        );
+    }
 }

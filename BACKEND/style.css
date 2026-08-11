@@ -16817,3 +16817,39 @@ tbody tr:hover td {
         grid-column: 1 / -1 !important;
     }
 }
+#editAboutBtn,
+#cancelAboutEditBtn {
+    position: static !important;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: auto;
+    margin: 12px 8px 0 0;
+}
+
+#cancelAboutEditBtn {
+    background: transparent;
+}
+.about-edit-mode {
+    outline: 1px dashed rgba(255, 255, 255, 0.35);
+    outline-offset: 4px;
+    border-radius: 6px;
+    cursor: text;
+    transition: 0.2s ease;
+}
+
+.about-edit-mode:hover {
+    outline-color: rgba(255, 255, 255, 0.7);
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.about-edit-mode:focus {
+    outline: 2px solid rgba(255, 255, 255, 0.85);
+    background: rgba(255, 255, 255, 0.06);
+}
+.about-image-edit-mode {
+    cursor: pointer;
+    outline: 2px dashed rgba(255, 255, 255, 0.6);
+    outline-offset: 5px;
+}
