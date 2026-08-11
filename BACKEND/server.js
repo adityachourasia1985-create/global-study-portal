@@ -924,36 +924,60 @@ app.patch(
     }
 );
 
+    app.use(
+        express.static(__dirname, {
+            index: false
+        })
+    );
+
+
+if (process.env.RAILWAY_ENVIRONMENT) {
+    app.use(
+        "/uploads/profiles",
+        express.static("/data/uploads/profiles")
+    );
+} else {
+    app.use(
+        "/uploads/profiles",
+        express.static(
+            path.join(
+                __dirname,
+                "public",
+                "uploads",
+                "profiles"
+            )
+        )
+    );
+}
+
 app.use(
-    express.static(__dirname, {
-        index: false
-    })
+    "/uploads",
+    express.static(
+        path.join(__dirname, "public", "uploads")
+    )
 );
+    function createNotification({
+        title,
+        message,
+        category = "system",
+        priority = "info",
 
+        actorUserId = null,
+        actorEmail = null,
 
-app.use("/uploads", express.static(path.join(__dirname, "public", "uploads")));
-function createNotification({
-    title,
-    message,
-    category = "system",
-    priority = "info",
+        targetUserId = null,
 
-    actorUserId = null,
-    actorEmail = null,
+        recipientRole = null,
+        recipientUserId = null,
+        recipientEmail = null,
 
-    targetUserId = null,
+        organizationCode = null,
+        branchCode = null,
 
-    recipientRole = null,
-    recipientUserId = null,
-    recipientEmail = null,
-
-    organizationCode = null,
-    branchCode = null,
-
-    module = null,
-    actionUrl = null,
-    eventKey = null
-}) {
+        module = null,
+        actionUrl = null,
+        eventKey = null
+    }) {
     return new Promise((resolve, reject) => {
         db.run(
             `
@@ -1187,14 +1211,20 @@ function notifyUsers({
         }
     );
 }
-
-const profileUploadDir = path.join(
-    __dirname,
-    "public",
-    "uploads",
-    "profiles"
-);
-
+const profileUploadDir =
+    process.env.RAILWAY_ENVIRONMENT
+        ? "/data/uploads/profiles"
+        : path.join(
+            __dirname,
+            "public",
+            "uploads",
+            "profiles"
+        );
+if (!fs.existsSync(profileUploadDir)) {
+    fs.mkdirSync(profileUploadDir, {
+        recursive: true
+    });
+}
 if (!fs.existsSync(profileUploadDir)) {
     fs.mkdirSync(profileUploadDir, {
         recursive: true
