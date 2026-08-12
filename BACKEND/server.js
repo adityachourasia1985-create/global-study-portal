@@ -4320,7 +4320,7 @@ app.post("/forgot-password", (req, res) => {
 
 app.get("/reset-password", (req, res) => {
     res.sendFile("reset-password.html", {
-        root: path.join(__dirname, "..")
+        root: __dirname
     });
 });
 app.post("/reset-password", (req, res) => {
