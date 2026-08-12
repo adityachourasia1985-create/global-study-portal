@@ -170,6 +170,194 @@
 .password-monkey{
     display:block;
 }
+.register-header {
+    text-align: center;
+    margin-bottom: 28px;
+}
+
+.register-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 7px 14px;
+    margin-bottom: 12px;
+
+    border: 1px solid rgba(69, 180, 255, 0.28);
+    border-radius: 999px;
+
+    background: rgba(69, 180, 255, 0.08);
+    color: #7fd0ff;
+
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 1.6px;
+}
+
+.register-header h2 {
+    margin: 0;
+    font-size: clamp(28px, 4vw, 42px);
+    line-height: 1.05;
+    font-weight: 800;
+    letter-spacing: -1px;
+}
+
+.register-header .subtitle {
+    max-width: 620px;
+    margin: 12px auto 0;
+    color: #aebfd0;
+    font-size: 14px;
+    line-height: 1.65;
+}
+
+.field-help,
+.account-type-help {
+    margin: 0;
+    color: #8ea5bb;
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.account-type-help {
+    margin-top: 4px;
+    padding: 10px 12px;
+
+    border-left: 3px solid rgba(69, 180, 255, 0.6);
+    border-radius: 8px;
+
+    background: rgba(69, 180, 255, 0.05);
+}
+
+.form-group {
+    position: relative;
+}
+
+.form-group label {
+    color: #e8f1f8;
+}
+
+input,
+select {
+    min-height: 48px;
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease,
+        transform 0.2s ease;
+}
+
+input:hover,
+select:hover {
+    border-color: rgba(69, 180, 255, 0.4);
+}
+
+input:focus,
+select:focus {
+    transform: translateY(-1px);
+}
+
+.primary-btn {
+    min-height: 50px;
+    border-radius: 14px;
+    box-shadow: 0 12px 30px rgba(28, 156, 244, 0.22);
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease,
+        opacity 0.2s ease;
+}
+
+.primary-btn:hover {
+    opacity: 1;
+    transform: translateY(-2px);
+    box-shadow: 0 16px 36px rgba(28, 156, 244, 0.3);
+}
+
+@media (max-width: 700px) {
+    .register-header {
+        margin-bottom: 22px;
+    }
+
+    .register-header h2 {
+        font-size: clamp(26px, 8vw, 34px);
+    }
+
+    .register-header .subtitle {
+        font-size: 13px;
+    }
+
+    .account-type-help {
+        font-size: 11px;
+    }
+}
+.account-choice-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+    margin-top: 8px;
+}
+
+.account-choice-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+
+    width: 100%;
+    padding: 16px;
+
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 16px;
+
+    background: rgba(255, 255, 255, 0.04);
+    color: #ffffff;
+
+    text-align: left;
+    cursor: pointer;
+
+    transition:
+        transform 0.2s ease,
+        border-color 0.2s ease,
+        background 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.account-choice-card:hover {
+    transform: translateY(-2px);
+    border-color: rgba(69, 180, 255, 0.45);
+    background: rgba(69, 180, 255, 0.07);
+}
+
+.account-choice-card.active {
+    border-color: #45b4ff;
+    background: rgba(69, 180, 255, 0.12);
+    box-shadow: 0 0 0 3px rgba(69, 180, 255, 0.10);
+}
+
+.choice-icon {
+    font-size: 24px;
+    line-height: 1;
+}
+
+.choice-content {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.choice-content strong {
+    font-size: 14px;
+    color: #f4f8fb;
+}
+
+.choice-content small {
+    color: #9db0c2;
+    font-size: 12px;
+    line-height: 1.45;
+}
+
+@media (max-width: 700px) {
+    .account-choice-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
     </style>
 </head>
 
@@ -177,10 +365,16 @@
 
 <div class="register-card">
 
-    <h2>User Registration</h2>
+   <div class="register-header">
+    <div class="register-badge">GLOBAL STUDY PORTAL</div>
+
+    <h2>Create your account</h2>
+
     <p class="subtitle">
-        Create your PolyPortal account. Your account will remain pending until reviewed by the Owner.
+        Set up your personal account or connect with your
+        college, institute or organization.
     </p>
+</div>
 
     <form id="registerForm">
 
@@ -260,16 +454,74 @@ monkey.textContent = hidden ? '🙊' : '🙈';
         <option value="prefer_not_to_say">Prefer not to say</option>
     </select>
 </div>
-    <div class="form-group">
-    <label for="accountType">Account Type</label>
-    <select id="accountType" required>
-        <option value="">Select account type</option>
+<div class="form-group account-choice-group">
+    <label>How do you want to use Global Study Portal?</label>
+
+    <div class="account-choice-grid">
+        <button
+            type="button"
+            class="account-choice-card"
+            data-account-type="individual"
+        >
+            <span class="choice-icon">👤</span>
+
+            <span class="choice-content">
+                <strong>Individual Account</strong>
+                <small>
+                    Personal study access without joining an organization.
+                </small>
+            </span>
+        </button>
+
+        <button
+            type="button"
+            class="account-choice-card"
+            data-account-type="organization"
+        >
+            <span class="choice-icon">🏫</span>
+
+            <span class="choice-content">
+                <strong>Organization Account</strong>
+                <small>
+                    Join or create a college, institute or group.
+                </small>
+            </span>
+        </button>
+    </div>
+
+    <select id="accountType" required hidden>
+        <option value="">Choose an option</option>
         <option value="individual">Individual</option>
         <option value="organization">Organization</option>
     </select>
 </div>
 
 
+
+<div
+    class="form-group"
+    id="organizationModeGroup"
+    style="display: none;"
+>
+    <label for="organizationMode">
+        What do you want to do?
+    </label>
+
+    <select id="organizationMode">
+        <option value="">Choose an option</option>
+        <option value="join">
+            Join an existing organization
+        </option>
+        <option value="create">
+            Create a new organization
+        </option>
+    </select>
+
+    <div class="account-type-help">
+        Join = you already have an organization/college code.<br>
+        Create = you are setting up a new college, institute or group.
+    </div>
+</div>
     <div id="organizationFields" style="display: none;">
             <div class="form-group">
                 <label for="enrollment">Enrollment Number</label>
@@ -401,21 +653,74 @@ window.groupRegistrationMode = isJoinGroupMode ? "join" : "create";
     sessionStorage.removeItem("joinGroupMode");
 });
 const accountType = document.getElementById("accountType");
+const accountChoiceCards =
+    document.querySelectorAll(".account-choice-card");
+
+accountChoiceCards.forEach((card) => {
+    card.addEventListener("click", () => {
+        const selectedType =
+            card.dataset.accountType;
+
+        accountType.value = selectedType;
+
+        accountChoiceCards.forEach((item) => {
+            item.classList.toggle(
+                "active",
+                item === card
+            );
+        });
+
+        accountType.dispatchEvent(
+            new Event("change")
+        );
+    });
+});
+
 const organizationFields = document.getElementById("organizationFields");
 const organizationCodeGroup = document.getElementById("organizationCodeGroup");
 const organizationCodeInput = document.getElementById("organizationCode");
+const organizationModeGroup =
+    document.getElementById("organizationModeGroup");
+
+const organizationMode =
+    document.getElementById("organizationMode");
 function updateRegistrationFields() {
     const isOrganization =
         accountType.value === "organization";
 
+    const selectedOrganizationMode =
+        organizationMode?.value || "";
+
     const isJoinMode =
-        window.groupRegistrationMode === "join";
+        window.groupRegistrationMode === "join" ||
+        (
+            !window.groupRegistrationMode &&
+            selectedOrganizationMode === "join"
+        );
 
     const isCreateMode =
-        window.groupRegistrationMode === "create";
+        window.groupRegistrationMode === "create" ||
+        (
+            !window.groupRegistrationMode &&
+            selectedOrganizationMode === "create"
+        );
 
-    // Academic fields दोनों account types में visible रहेंगे
-    organizationFields.style.display = "grid";
+    if (organizationModeGroup) {
+        organizationModeGroup.style.display =
+            isOrganization &&
+            !window.groupRegistrationMode
+                ? ""
+                : "none";
+    }
+
+    if (organizationMode) {
+        organizationMode.required =
+            isOrganization &&
+            !window.groupRegistrationMode;
+    }
+
+    organizationFields.style.display =
+        isOrganization ? "grid" : "none";
 
     const enrollmentGroup =
         document.getElementById("enrollment")
@@ -429,7 +734,6 @@ function updateRegistrationFields() {
         document.getElementById("admissionYear")
             ?.closest(".form-group");
 
-    // Individual account में ये fields hide रहेंगी
     if (enrollmentGroup) {
         enrollmentGroup.style.display =
             isOrganization ? "" : "none";
@@ -445,8 +749,19 @@ function updateRegistrationFields() {
             isOrganization ? "" : "none";
     }
 
-    // Join Group mode:
-    // Organization code user manually enter करेगा
+    if (!isOrganization) {
+        if (organizationCodeGroup) {
+            organizationCodeGroup.style.display = "none";
+        }
+
+        if (organizationCodeInput) {
+            organizationCodeInput.required = false;
+            organizationCodeInput.value = "";
+        }
+
+        return;
+    }
+
     if (isJoinMode) {
         if (organizationCodeGroup) {
             organizationCodeGroup.style.display = "";
@@ -459,8 +774,6 @@ function updateRegistrationFields() {
         return;
     }
 
-    // Create Group mode:
-    // Organization code backend generate करेगा
     if (isCreateMode) {
         if (organizationCodeGroup) {
             organizationCodeGroup.style.display = "none";
@@ -474,25 +787,24 @@ function updateRegistrationFields() {
         return;
     }
 
-    // Normal registration mode
     if (organizationCodeGroup) {
-        organizationCodeGroup.style.display =
-            isOrganization ? "" : "none";
+        organizationCodeGroup.style.display = "none";
     }
 
     if (organizationCodeInput) {
-        organizationCodeInput.required = isOrganization;
-
-        if (!isOrganization) {
-            organizationCodeInput.value = "";
-        }
+        organizationCodeInput.required = false;
+        organizationCodeInput.value = "";
     }
 }
+
 accountType.addEventListener(
     "change",
     updateRegistrationFields
 );
-
+organizationMode?.addEventListener(
+    "change",
+    updateRegistrationFields
+);
 updateRegistrationFields();
 
     const registerForm = document.getElementById("registerForm");
@@ -515,8 +827,12 @@ registerForm.addEventListener("submit", async function (e) {
      
 
         accountType: type,
-        organizationAction:
-    window.groupRegistrationMode === "join"
+       organizationAction:
+    window.groupRegistrationMode === "join" ||
+    (
+        !window.groupRegistrationMode &&
+        organizationMode?.value === "join"
+    )
         ? "join"
         : "create",
         enrollment: type === "organization"
@@ -544,8 +860,12 @@ organizationCode: type === "organization"
     registerMessage.textContent = "Creating account...";
 
     try {
-        const submitUrl =
-    window.groupRegistrationMode === "join"
+      const submitUrl =
+    window.groupRegistrationMode === "join" ||
+    (
+        !window.groupRegistrationMode &&
+        organizationMode?.value === "join"
+    )
         ? "/api/groups/join"
         : "/register";
         const response = await fetch(submitUrl, {
