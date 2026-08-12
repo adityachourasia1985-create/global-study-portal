@@ -6,6 +6,7 @@ const OpenAI = require("openai");
 const { Resend } = require("resend");
 const crypto = require("crypto");
 const nodemailer = require("nodemailer");
+const { google } = require("googleapis");
 const resend = new Resend(process.env.RESEND_API_KEY);
 const openai = process.env.OPENAI_API_KEY
     ? new OpenAI({
@@ -512,12 +513,19 @@ db.all(
 );
 const express = require("express");
 const session = require("express-session");
-const transporter = nodemailer.createTransport({
-    service: "gmail",
-    auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-    }
+const gmailOAuth2Client = new google.auth.OAuth2(
+    process.env.GMAIL_CLIENT_ID,
+    process.env.GMAIL_CLIENT_SECRET,
+    "https://developers.google.com/oauthplayground"
+);
+
+gmailOAuth2Client.setCredentials({
+    refresh_token: process.env.GMAIL_REFRESH_TOKEN
+});
+
+const gmail = google.gmail({
+    version: "v1",
+    auth: gmailOAuth2Client
 });
 const app = express();
 const databaseUpload = multer({
@@ -4211,76 +4219,95 @@ app.post("/forgot-password", (req, res) => {
     hasEmailPass: !!process.env.EMAIL_PASS
 });
 
-                                transporter.sendMail(
-    {
-        from: `"Global Study Portal" <${process.env.EMAIL_USER}>`,
-        to: user.email,
-        subject: "Reset Your Global Study Portal Password",
-        html: `
-            <h2>Password Reset Request</h2>
+ (async () => {
+    try {
+        const emailContent = [
+            `From: Global Study Portal <${process.env.GMAIL_SENDER}>`,
+            `To: ${user.email}`,
+            `Subject: Reset Your Global Study Portal Password`,
+            `MIME-Version: 1.0`,
+            `Content-Type: text/html; charset="UTF-8"`,
+            ``,
+            `
+                <h2>Password Reset Request</h2>
 
-            <p>Hello,</p>
+                <p>Hello,</p>
 
-            <p>
-                We received a request to reset your
-                Global Study Portal password.
-            </p>
+                <p>
+                    We received a request to reset your
+                    Global Study Portal password.
+                </p>
 
-            <p>
-                <a href="${resetLink}">
-                    Reset Password
-                </a>
-            </p>
+                <p>
+                    <a href="${resetLink}">
+                        Reset Password
+                    </a>
+                </p>
 
-            <p>
-                This link will expire in 15 minutes.
-            </p>
+                <p>
+                    This link will expire in 15 minutes.
+                </p>
 
-            <p>
-                If you did not request this,
-                you can ignore this email.
-            </p>
-        `
-    },
-    (mailError) => {
-        console.log("SENDMAIL CALLBACK HIT:");
-console.log(mailError);
+                <p>
+                    If you did not request this,
+                    you can ignore this email.
+                </p>
+            `
+        ].join("\r\n");
 
-        if (mailError) {
-            console.error(
-                "Password reset email error:",
-                mailError
-            );
+        const encodedMessage = Buffer
+            .from(emailContent)
+            .toString("base64")
+            .replace(/\+/g, "-")
+            .replace(/\//g, "_")
+            .replace(/=+$/, "");
 
-            return res.status(500).json({
-                success: false,
-                message:
-                    "Reset request was created, but email could not be sent."
-            });
-        }
-
-        notifyUsers({
-            title: "Password Reset Requested",
-            message:
-                "A password reset was requested for your account.",
-            category: "security",
-            priority: "important",
-
-            actorUserId: user.id,
-            targetUserId: user.id,
-
-            recipientUserIds: [user.id],
-            recipientRoles: ["owner"],
-
-            module: "authentication",
-            actionUrl: "/login.html",
-            eventKey:
-                `password_reset_requested_${user.id}_${Date.now()}`
+        await gmail.users.messages.send({
+            userId: "me",
+            requestBody: {
+                raw: encodedMessage
+            }
         });
 
+        console.log(
+            "Password reset email sent successfully to:",
+            user.email
+        );
+
+     notifyUsers({
+    title: "Password Reset Requested",
+    message:
+        "A password reset was requested for your account.",
+    category: "security",
+    priority: "important",
+
+    actorUserId: user.id,
+    targetUserId: user.id,
+
+    recipientUserIds: [user.id],
+    recipientRoles: ["owner"],
+
+    module: "authentication",
+    actionUrl: "/login.html",
+    eventKey:
+        `password_reset_requested_${user.id}_${Date.now()}`
+});
+
         return res.json(genericResponse);
+
+    } catch (mailError) {
+        console.error(
+            "Gmail API password reset error:",
+            mailError
+        );
+
+        return res.status(500).json({
+            success: false,
+            message:
+                "Reset request was created, but email could not be sent."
+        });
     }
-);
+})();
 
 
                         }
@@ -4367,22 +4394,24 @@ app.post("/reset-password", (req, res) => {
                          WHERE id = ?`,
                         [currentTime, resetRow.id]
                     );
-                    notifyUsers({
+notifyUsers({
     title: "Password Reset Successful",
     message: "Your account password was reset successfully.",
     category: "security",
     priority: "important",
 
-    actorUserId: user.id,
-    targetUserId: user.id,
+    actorUserId: resetRow.user_id,
+    targetUserId: resetRow.user_id,
 
-    recipientUserIds: [user.id],
+    recipientUserIds: [resetRow.user_id],
     recipientRoles: ["owner"],
 
     module: "authentication",
     actionUrl: "/login.html",
-    eventKey: `password_reset_${user.id}_${Date.now()}`
+    eventKey:
+        `password_reset_${resetRow.user_id}_${Date.now()}`
 });
+
 
                     return res.json({
                         success: true,
