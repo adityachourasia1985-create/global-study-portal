@@ -699,6 +699,35 @@ console.log("Dashboard path:", dashboardPath);
 app.get("/", (req, res) => {
     return res.sendFile("login.html", { root: __dirname });
 });
+app.get("/api/debug/users", (req, res) => {
+    if (!req.session.isLoggedIn || req.session.role !== "owner") {
+        return res.status(403).json({
+            success: false,
+            message: "Owner only."
+        });
+    }
+
+    db.all(
+        `SELECT id, name, email, role
+         FROM users
+         ORDER BY id DESC`,
+        [],
+        (err, rows) => {
+            if (err) {
+                return res.status(500).json({
+                    success: false,
+                    message: err.message
+                });
+            }
+
+            res.json({
+                success: true,
+                users: rows
+            });
+        }
+    );
+});
+
 app.get("/about", (req, res) => {
     return res.sendFile("index.html", {
         root: __dirname
