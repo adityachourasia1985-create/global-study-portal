@@ -751,6 +751,49 @@ app.get("/api/debug/database-files", (req, res) => {
         });
     });
 });
+app.get("/api/debug/backup-users", (req, res) => {
+    if (!req.session.isLoggedIn || req.session.role !== "owner") {
+        return res.status(403).json({
+            success: false,
+            message: "Owner only."
+        });
+    }
+
+    const backupDb = new sqlite3.Database(
+        "/data/polyportal-backup.db",
+        sqlite3.OPEN_READONLY,
+        (err) => {
+            if (err) {
+                return res.status(500).json({
+                    success: false,
+                    message: err.message
+                });
+            }
+
+            backupDb.all(
+                `SELECT id, name, email, role
+                 FROM users
+                 ORDER BY id DESC`,
+                [],
+                (error, users) => {
+                    backupDb.close();
+
+                    if (error) {
+                        return res.status(500).json({
+                            success: false,
+                            message: error.message
+                        });
+                    }
+
+                    return res.json({
+                        success: true,
+                        users
+                    });
+                }
+            );
+        }
+    );
+});
 app.get("/about", (req, res) => {
     return res.sendFile("index.html", {
         root: __dirname
