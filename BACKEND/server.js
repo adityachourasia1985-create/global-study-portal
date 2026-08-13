@@ -727,7 +727,30 @@ app.get("/api/debug/users", (req, res) => {
         }
     );
 });
+app.get("/api/debug/database-files", (req, res) => {
+    if (!req.session.isLoggedIn || req.session.role !== "owner") {
+        return res.status(403).json({
+            success: false,
+            message: "Owner only."
+        });
+    }
 
+    const fs = require("fs");
+
+    fs.readdir("/data", (err, files) => {
+        if (err) {
+            return res.status(500).json({
+                success: false,
+                error: err.message
+            });
+        }
+
+        res.json({
+            success: true,
+            files
+        });
+    });
+});
 app.get("/about", (req, res) => {
     return res.sendFile("index.html", {
         root: __dirname
