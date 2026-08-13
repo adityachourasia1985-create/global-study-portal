@@ -241,6 +241,50 @@ CREATE TABLE IF NOT EXISTS group_members (
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP
         )
     `);
+    db.all(`PRAGMA table_info(notices)`, (err, columns) => {
+    if (err) {
+        console.error("Notice table check error:", err);
+        return;
+    }
+
+    const existingColumns = columns.map(col => col.name);
+
+    const migrations = [
+        {
+            name: "organization_code",
+            sql: `ALTER TABLE notices ADD COLUMN organization_code TEXT`
+        },
+        {
+            name: "branch_code",
+            sql: `ALTER TABLE notices ADD COLUMN branch_code TEXT`
+        },
+        {
+            name: "created_by",
+            sql: `ALTER TABLE notices ADD COLUMN created_by INTEGER`
+        },
+        {
+            name: "is_global",
+            sql: `ALTER TABLE notices ADD COLUMN is_global INTEGER DEFAULT 0`
+        }
+    ];
+
+    migrations.forEach(migration => {
+        if (!existingColumns.includes(migration.name)) {
+            db.run(migration.sql, error => {
+                if (error) {
+                    console.error(
+                        `Notice migration failed: ${migration.name}`,
+                        error
+                    );
+                } else {
+                    console.log(
+                        `Notice column added: ${migration.name}`
+                    );
+                }
+            });
+        }
+    });
+});
 db.run("ALTER TABLE notices ADD COLUMN organization_code TEXT", () => {});
 db.run("ALTER TABLE notices ADD COLUMN branch_code TEXT", () => {});
 db.run("ALTER TABLE timetable ADD COLUMN organization_code TEXT", () => {});
@@ -1548,12 +1592,13 @@ app.get("/api/notices", (req, res) => {
         `;
     } else if (req.session.role === "super_admin") {
         // Super Admin can see all notices from own organization
-        sql = `
-            SELECT *
-            FROM notices
-            WHERE organization_code = ?
-            ORDER BY created_at DESC
-        `;
+       sql = `
+    SELECT *
+    FROM notices
+    WHERE organization_code = ?
+       OR is_global = 1
+    ORDER BY created_at DESC
+`;
 
         params = [
             scope.organizationCode
@@ -1562,17 +1607,20 @@ app.get("/api/notices", (req, res) => {
         // Admin/User can see:
         // 1. notices for their own branch
         // 2. organization-wide notices created without a branch
-        sql = `
-            SELECT *
-            FROM notices
-            WHERE organization_code = ?
+      sql = `
+    SELECT *
+    FROM notices
+    WHERE is_global = 1
+       OR (
+            organization_code = ?
             AND (
                 branch_code = ?
                 OR branch_code IS NULL
                 OR TRIM(branch_code) = ''
             )
-            ORDER BY created_at DESC
-        `;
+       )
+    ORDER BY created_at DESC
+`;
 
         params = [
             scope.organizationCode,
@@ -1596,6 +1644,83 @@ app.get("/api/notices", (req, res) => {
         return res.json({
             success: true,
             notices
+        });
+    });
+});
+app.post("/api/notices", (req, res) => {
+    if (!req.session.isLoggedIn) {
+        return res.status(401).json({
+            success: false,
+            message: "Please login first."
+        });
+    }
+
+    const scope = getScope(req);
+
+    const title = String(req.body.title || "").trim();
+    const message = String(req.body.message || "").trim();
+    const isGlobal = req.body.isGlobal === true || req.body.isGlobal === "true";
+    console.log("GLOBAL NOTICE DEBUG:", req.session.role, req.body.isGlobal, isGlobal);
+    if (!title || !message) {
+        return res.status(400).json({
+            success: false,
+            message: "Title and notice message are required."
+        });
+    }
+
+    // Only Owner can create GLOBAL notices
+    if (isGlobal && !scope.isOwner) {
+        return res.status(403).json({
+            success: false,
+            message: "Only Owner can create global notices."
+        });
+    }
+
+    const organizationCode = isGlobal
+        ? null
+        : scope.organizationCode;
+
+    const branchCode = isGlobal
+        ? null
+        : scope.branchCode;
+
+    const sql = `
+        INSERT INTO notices (
+            title,
+            message,
+            organization_code,
+            branch_code,
+            created_by,
+            is_global
+        )
+        VALUES (?, ?, ?, ?, ?, ?)
+    `;
+
+    const params = [
+        title,
+        message,
+        organizationCode,
+        branchCode,
+        req.session.userId,
+        isGlobal ? 1 : 0
+    ];
+
+    db.run(sql, params, function (error) {
+        if (error) {
+            console.error("Create notice error:", error);
+
+            return res.status(500).json({
+                success: false,
+                message: "Could not create notice."
+            });
+        }
+
+        return res.status(201).json({
+            success: true,
+            message: isGlobal
+                ? "Global notice published successfully."
+                : "Notice published successfully.",
+            noticeId: this.lastID
         });
     });
 });
@@ -5738,36 +5863,106 @@ app.post(
     }
 );
 app.put("/api/notices/:id", (req, res) => {
+    if (!req.session.isLoggedIn) {
+        return res.status(401).json({
+            success: false,
+            message: "Please login first."
+        });
+    }
+
     const { title, message } = req.body;
+    const noticeId = req.params.id;
+    const scope = getScope(req);
 
-    db.run(
-        `UPDATE notices
-         SET title = ?, message = ?
-         WHERE id = ?`,
-        [title, message, req.params.id],
-        function (err) {
-            if (err) return res.status(500).json({ error: err.message });
-          notifyUsers({
-    title: "Notice Updated",
-    message: `Notice "${title}" was updated.`,
-    category: "notice",
-    priority: "info",
+    db.get(
+        `SELECT * FROM notices WHERE id = ?`,
+        [noticeId],
+        (findErr, notice) => {
+            if (findErr) {
+                return res.status(500).json({
+                    success: false,
+                    message: "Could not verify notice."
+                });
+            }
 
-    actorUserId: req.session.userId,
+            if (!notice) {
+                return res.status(404).json({
+                    success: false,
+                    message: "Notice not found."
+                });
+            }
 
-    recipientRoles: ["owner", "super_admin", "admin", "user"],
-    actionUrl: "/dashboard"
-});
+            // Global notice can ONLY be edited by Owner
+            if (Number(notice.is_global) === 1 && !scope.isOwner) {
+                return res.status(403).json({
+                    success: false,
+                    message: "Only Owner can edit a global notice."
+                });
+            }
 
-            res.json({ success: true });
+            // Non-owner cannot edit another organization's notice
+            if (
+                !scope.isOwner &&
+                notice.organization_code !== scope.organizationCode
+            ) {
+                return res.status(403).json({
+                    success: false,
+                    message: "You cannot edit this notice."
+                });
+            }
+
+            db.run(
+                `UPDATE notices
+                 SET title = ?, message = ?
+                 WHERE id = ?`,
+                [title, message, noticeId],
+                function (err) {
+                    if (err) {
+                        return res.status(500).json({
+                            success: false,
+                            error: err.message
+                        });
+                    }
+
+                    notifyUsers({
+                        title: "Notice Updated",
+                        message: `Notice "${title}" was updated.`,
+                        category: "notice",
+                        priority: "info",
+
+                        actorUserId: req.session.userId,
+
+                        recipientRoles: [
+                            "owner",
+                            "super_admin",
+                            "admin",
+                            "user"
+                        ],
+
+                        actionUrl: "/dashboard"
+                    });
+
+                    return res.json({
+                        success: true
+                    });
+                }
+            );
         }
     );
 });
 app.delete("/api/notices/:id", (req, res) => {
+    if (!req.session.isLoggedIn) {
+        return res.status(401).json({
+            success: false,
+            message: "Please login first."
+        });
+    }
+
     const noticeId = req.params.id;
+    const scope = getScope(req);
 
     db.get(
-        `SELECT title, organization_code, branch_code
+        `SELECT title, organization_code, branch_code, is_global
          FROM notices
          WHERE id = ?`,
         [noticeId],
@@ -5783,6 +5978,25 @@ app.delete("/api/notices/:id", (req, res) => {
                 return res.status(404).json({
                     success: false,
                     message: "Notice not found"
+                });
+            }
+
+            // Global notice can ONLY be deleted by Owner
+            if (Number(notice.is_global) === 1 && !scope.isOwner) {
+                return res.status(403).json({
+                    success: false,
+                    message: "Only Owner can delete a global notice."
+                });
+            }
+
+            // Non-owner cannot delete another organization's notice
+            if (
+                !scope.isOwner &&
+                notice.organization_code !== scope.organizationCode
+            ) {
+                return res.status(403).json({
+                    success: false,
+                    message: "You cannot delete this notice."
                 });
             }
 

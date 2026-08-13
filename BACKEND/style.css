@@ -17093,3 +17093,143 @@ tbody tr:hover td {
     border-color: #47d3ff;
     transform: translateY(-1px);
 }
+.global-notice-option {
+    margin: 14px 0;
+    padding: 14px 16px;
+
+    border: 1px solid rgba(255, 190, 70, 0.28);
+    border-radius: 12px;
+
+    background: rgba(255, 190, 70, 0.05);
+}
+
+.global-notice-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.global-notice-header strong {
+    display: block;
+    font-size: 14px;
+}
+
+.global-notice-header small {
+    display: block;
+    margin-top: 4px;
+    opacity: 0.65;
+    line-height: 1.4;
+}
+
+.global-notice-warning {
+    margin-top: 10px;
+    padding-top: 10px;
+
+    border-top: 1px solid rgba(255,255,255,0.08);
+
+    font-size: 11px;
+    opacity: 0.7;
+}
+
+/* Toggle */
+
+.global-switch {
+    position: relative;
+    width: 46px;
+    height: 24px;
+    flex-shrink: 0;
+}
+
+.global-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.global-slider {
+    position: absolute;
+    inset: 0;
+
+    cursor: pointer;
+
+    background: rgba(255,255,255,0.12);
+    border-radius: 30px;
+
+    transition: 0.25s ease;
+}
+
+.global-slider::before {
+    content: "";
+
+    position: absolute;
+    width: 18px;
+    height: 18px;
+
+    left: 3px;
+    top: 3px;
+
+    background: white;
+    border-radius: 50%;
+
+    transition: 0.25s ease;
+}
+
+.global-switch input:checked + .global-slider {
+    background: linear-gradient(
+        135deg,
+        #f4b942,
+        #ffd76a
+    );
+}
+
+.global-switch input:checked + .global-slider::before {
+    transform: translateX(22px);
+}
+.global-notice-item {
+    border: 1px solid rgba(255, 196, 77, 0.35);
+    background: linear-gradient(
+        135deg,
+        rgba(255, 196, 77, 0.06),
+        rgba(255, 255, 255, 0.02)
+    );
+}
+
+.notice-title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.global-notice-badge {
+    flex-shrink: 0;
+    padding: 4px 8px;
+
+    border: 1px solid rgba(255, 196, 77, 0.4);
+    border-radius: 20px;
+
+    background: rgba(255, 196, 77, 0.1);
+
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.6px;
+}
+
+.global-notice-lock {
+    margin-top: 10px;
+
+    font-size: 11px;
+    opacity: 0.65;
+}
+
+@media (max-width: 600px) {
+    .notice-title-row {
+        align-items: flex-start;
+    }
+
+    .global-notice-badge {
+        font-size: 9px;
+        padding: 3px 7px;
+    }
+}

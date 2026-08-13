@@ -1209,6 +1209,27 @@
 <div id="noticeAdminControls" style="display: none;">
     <input type="text" id="noticeTitle" placeholder="Notice title">
     <textarea id="noticeMessage" placeholder="Write notice"></textarea>
+   <div id="globalNoticeOption" class="global-notice-option" style="display: none;">
+
+    <div class="global-notice-header">
+        <div>
+            <strong>🌐 Global Notice</strong>
+            <small>
+                Send this notice to every organization, branch and individual user.
+            </small>
+        </div>
+
+        <label class="global-switch">
+            <input type="checkbox" id="globalNoticeCheck">
+            <span class="global-slider"></span>
+        </label>
+    </div>
+
+    <div class="global-notice-warning">
+        🔒 Only the Owner can edit or delete this notice.
+    </div>
+
+</div>
     <button type="button" id="addNoticeBtn">Add Notice</button>
 </div>
 
@@ -2705,49 +2726,119 @@ class="table-responsive">
 
 async function loadNotices() {
     try {
-        const response = await fetch("/api/notices");
-        const data = await response.json();
+        const [noticeResponse, userResponse] = await Promise.all([
+            fetch("/api/notices"),
+            fetch("/api/me")
+        ]);
 
-        if (data.success) {
-            const noticeList = document.getElementById("noticeList");
-            noticeList.innerHTML = "";
-            const dashboardLatestNotice = document.getElementById("dashboardLatestNotice");
+        const noticeData = await noticeResponse.json();
+        const currentUser = await userResponse.json();
 
-if (dashboardLatestNotice) {
-    if (data.notices && data.notices.length > 0) {
-        const latestNotice = data.notices[0];
-        dashboardLatestNotice.textContent =
-            latestNotice.title || latestNotice.message || "No notices available";
-    } else {
-        dashboardLatestNotice.textContent = "No notices available";
-    }
-}
-            data.notices.forEach(notice => {
-                noticeList.innerHTML += `
-                 <div class="notice-item">
-    <h4>${notice.title}</h4>
-    <p>${notice.message}</p>
-
-    <div class="notice-actions">
-        <button onclick="editNotice(${notice.id}, '${notice.title}', '${notice.message}')">
-            Edit
-        </button>
-
-        <button onclick="deleteNotice(${notice.id})">
-            Delete
-        </button>
-    </div>
-</div>
-                `;
-                loadTimetable();
-            });
+        if (!noticeData.success) {
+            return;
         }
+
+        const noticeList =
+            document.getElementById("noticeList");
+
+        const dashboardLatestNotice =
+            document.getElementById("dashboardLatestNotice");
+
+        noticeList.innerHTML = "";
+
+        const isOwner =
+            currentUser.role === "owner";
+
+        // Dashboard latest notice
+        if (dashboardLatestNotice) {
+            if (
+                noticeData.notices &&
+                noticeData.notices.length > 0
+            ) {
+                const latestNotice =
+                    noticeData.notices[0];
+
+                dashboardLatestNotice.textContent =
+                    latestNotice.title ||
+                    latestNotice.message ||
+                    "No notices available";
+            } else {
+                dashboardLatestNotice.textContent =
+                    "No notices available";
+            }
+        }
+
+        // Notice Board
+        noticeData.notices.forEach(notice => {
+            const isGlobal =
+                Number(notice.is_global) === 1;
+
+            const globalBadge = isGlobal
+                ? `<span class="global-notice-badge">🌐 GLOBAL</span>`
+                : "";
+
+            const canManageNotice =
+                !isGlobal || isOwner;
+
+            const noticeActions = canManageNotice
+                ? `
+                    <div class="notice-actions">
+                        <button
+                            onclick='editNotice(
+                                ${notice.id},
+                                ${JSON.stringify(notice.title)},
+                                ${JSON.stringify(notice.message)}
+                            )'
+                        >
+                            Edit
+                        </button>
+
+                        <button
+                            onclick="deleteNotice(${notice.id})"
+                        >
+                            Delete
+                        </button>
+                    </div>
+                `
+                : `
+                    <div class="global-notice-lock">
+                        🔒 Owner managed notice
+                    </div>
+                `;
+
+            noticeList.innerHTML += `
+                <div class="notice-item ${isGlobal ? "global-notice-item" : ""}">
+
+                    <div class="notice-title-row">
+                        <h4>${notice.title}</h4>
+                        ${globalBadge}
+                    </div>
+
+                    <p>${notice.message}</p>
+
+                    ${noticeActions}
+
+                </div>
+            `;
+        });
+
     } catch (error) {
-        console.error("Notice load error:", error);
+        console.error(
+            "Notice load error:",
+            error
+        );
     }
 }
+fetch("/api/me")
+    .then(response => response.json())
+    .then(user => {
+        const globalOption =
+            document.getElementById("globalNoticeOption");
 
-
+        if (globalOption && user.role === "owner") {
+            globalOption.style.display = "block";
+        }
+    });
 loadNotices();
 async function deleteNotice(id) {
     if (!confirm("Delete this notice?")) return;
@@ -2910,7 +3001,11 @@ document.getElementById("addNoticeBtn").addEventListener("click", async () => {
             headers: {
                 "Content-Type": "application/json"
             },
-            body: JSON.stringify({ title, message })
+            body: JSON.stringify({
+    title,
+    message,
+    isGlobal: document.getElementById("globalNoticeCheck")?.checked === true
+})
         });
 
         const data = await response.json();
