@@ -5331,13 +5331,22 @@ app.post(
 
 // Protected dashboard
 app.get("/dashboard", (req, res) => {
-    if (!req.session.isLoggedIn) {
-        return res.redirect("/");
+    if (!req.session || !req.session.isLoggedIn || !req.session.userId) {
+        return res.redirect("/login.html");
     }
 
-    res.sendFile("index.html", {
-        root: path.join(__dirname, "..")
-    });
+    return res.sendFile(
+        path.join(__dirname, "..", "index.html")
+    );
+});
+app.get("/index.html", (req, res) => {
+    if (!req.session || !req.session.isLoggedIn || !req.session.userId) {
+        return res.redirect("/login.html");
+    }
+
+    return res.sendFile(
+        path.join(__dirname, "..", "index.html")
+    );
 });
 // Change password
 ;

@@ -9,7 +9,35 @@
     >
 
     <title>Portal Login</title>
+    <style>
+.login-create-account {
+    display: flex;
+    align-items: center;
+    justify-content: center;
 
+    width: 100%;
+    min-height: 42px;
+    margin-top: 10px;
+
+    border: 1px solid rgba(71, 211, 255, 0.35);
+    border-radius: 12px;
+
+    background: rgba(71, 211, 255, 0.06);
+    color: #47d3ff;
+
+    font-size: 0.82rem;
+    font-weight: 700;
+    text-decoration: none;
+
+    transition: all 0.2s ease;
+}
+
+.login-create-account:hover {
+    background: rgba(71, 211, 255, 0.14);
+    border-color: #47d3ff;
+    transform: translateY(-1px);
+}
+</style>
     <style>
         :root {
             --bg-dark: #050816;
@@ -1863,6 +1891,53 @@ body.portal-open .ray-5 { animation-delay: -3.2s; }
     }
 }
     </style>
+    <style>
+#forgotPasswordView {
+    display: none !important;
+}
+#forgotPasswordView.active {
+    display: block;
+}
+#loginView {
+    display: none;
+}
+
+#loginView.active {
+    display: block;
+}
+</style>
+<style>
+.login-button-zone {
+    min-height: 115px !important;
+    border: none !important;
+}
+
+.login-button-zone > a[href="/register"] {
+    position: absolute !important;
+    top: 65px;
+    left: 50%;
+
+    width: 100%;
+    min-height: 40px;
+    margin: 0 !important;
+
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+
+    transform: translateX(-50%);
+
+    border: 1px solid rgba(103, 232, 249, 0.30);
+    border-radius: 11px;
+
+    background: rgba(34, 211, 238, 0.06);
+    color: #67e8f9 !important;
+
+    font-size: 13px;
+    font-weight: 700;
+    text-decoration: none;
+}
+</style>
 </head>
 
 <body>
@@ -1990,33 +2065,41 @@ body.portal-open .ray-5 { animation-delay: -3.2s; }
                                     </button>
                                 </div>
 
-                                <div class="login-button-zone">
-<button
-    type="submit"
-    class="login-button"
-    id="loginButton"
->
-    Enter Portal
-</button>
-                                </div>
+  <div class="login-button-zone">
+    <button
+        type="submit"
+        class="login-button"
+        id="loginButton"
+    >
+        Enter Portal
+    </button>
+
+    <a href="/register"
+       style="
+           display: block;
+           margin-top: 12px;
+           text-align: center;
+           color: #55dfff;
+           font-size: 13px;
+           font-weight: 600;
+           text-decoration: none;
+       ">
+        + Create Account
+    </a>
+</div>
 
                                 <div
                                     class="message"
                                     id="message"
-                                ></div>
+                                >
+                            </div>
                             </form>
-
-                   <p class="register-text">
-    New here?
-    <a href="/register">
-        click here to <br>Set up your portal access
-    </a>
-</p>
-                        </div>
+</div>
                         <div
                             class="form-view"
                             id="forgotPasswordView"
                         >
+                        <!-- </div> -->
                             <button
                                 type="button"
                                 class="back-button"
