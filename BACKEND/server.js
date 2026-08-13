@@ -41,7 +41,7 @@ const dbPath =
     process.env.RAILWAY_ENVIRONMENT
         ? "/data/polyportal.db"
         : path.join(__dirname, "polyportal.db");
-
+    console.log("DATABASE PATH:", dbPath);
 const db = new sqlite3.Database(dbPath, (err) => {
     if (err) {
         console.error("Database connection error:", err.message);
