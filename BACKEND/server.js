@@ -407,30 +407,37 @@ db.run(`
         version TEXT NOT NULL DEFAULT 'Version 1.0',
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
-`);
+`, (err) => {
+    if (err) {
+        console.error("About table creation error:", err);
+        return;
+    }
 
-db.run(`
-    INSERT OR IGNORE INTO about_content (
-        id,
-        heading,
-        description,
-        purpose,
-        features,
-        founder_name,
-        founder_description,
-        version
-    )
-    VALUES (
-        1,
-        'Smarter College Management, Simplified',
-        'A unified digital platform designed to help students, administrators and institutions manage academics, attendance, progress, notices and daily productivity.',
-        'To provide a simple, responsive and reliable platform that improves communication, academic tracking and institutional management.',
-        'Attendance, timetable, progress reports, study analysis, notice management, role-based accounts and organization management in one secure portal.',
-        'Aditya Chourasia',
-        'Designed and developed with the goal of building a professional and accessible digital ecosystem for educational institutions.',
-        'Version 1.0'
-    )
-`);
+    db.run(`
+        INSERT OR IGNORE INTO about_content (
+            id,
+            heading,
+            description,
+            purpose,
+            features,
+            founder_name,
+            founder_description,
+            version
+        )
+        VALUES (
+            1,
+            'Smarter College Management, Simplified',
+            'A unified digital platform designed to help students, administrators and institutions manage academics, attendance, progress, notices and daily productivity.',
+            'To provide a simple, responsive and reliable platform that improves communication, academic tracking and institutional management.',
+            'Attendance, timetable, progress reports, study analysis, notice management, role-based accounts and organization management in one secure portal.',
+            'Aditya Chourasia',
+            'Designed and developed with the goal of building a professional and accessible digital ecosystem for educational institutions.',
+            'Version 1.0'
+        )
+    `);
+});
+
+
 db.serialize(() => {
     db.run(`
         CREATE TABLE IF NOT EXISTS about_settings (
