@@ -41,7 +41,7 @@ const dbPath =
     process.env.DB_PATH ||
     path.join(__dirname, "polyportal.db");
     console.log("DATABASE PATH:", dbPath);
-const db = new sqlite3.Database(dbPath, (err) => {
+let db = new sqlite3.Database(dbPath, (err) => {
     if (err) {
         console.error("Database connection error:", err.message);
     } else {
@@ -644,62 +644,75 @@ testDb.get(
             });
         }
 
-        db.serialize(() => {
+    db.close((closeError) => {
+    if (closeError) {
+        fs.unlink(uploadedPath, () => {});
 
-            db.run(
-                "ATTACH DATABASE ? AS migrated",
-                [uploadedPath],
-                (attachError) => {
-
-                    if (attachError) {
-                        console.error(
-                            "Migration attach error:",
-                            attachError
-                        );
-
-                        fs.unlink(uploadedPath, () => {});
-
-                        return res.status(500).json({
-                            success: false,
-                            message: "Could not attach uploaded database"
-                        });
-                    }
-
-                    db.run(
-                        `INSERT OR REPLACE INTO users
-                         SELECT * FROM migrated.users`,
-                        (importError) => {
-
-                            db.run(
-                                "DETACH DATABASE migrated",
-                                () => {
-                                    fs.unlink(uploadedPath, () => {});
-                                }
-                            );
-
-                            if (importError) {
-                                console.error(
-                                    "Users import error:",
-                                    importError
-                                );
-
-                                return res.status(500).json({
-                                    success: false,
-                                    message: importError.message
-                                });
-                            }
-
-                            return res.json({
-                                success: true,
-                                users: Number(result.count),
-                                message:
-                                    "Users imported into Render successfully"
-                            });
-                        }
-                    );
-                }
-            );
+        return res.status(500).json({
+            success: false,
+            message: "Could not close current database"
         });
+    }
+
+    try {
+        const backupPath = path.join(
+            __dirname,
+            "polyportal-before-migration.db"
+        );
+
+        if (fs.existsSync(dbPath)) {
+            fs.copyFileSync(dbPath, backupPath);
+        }
+
+        fs.copyFileSync(
+            uploadedPath,
+            dbPath
+        );
+
+        fs.unlinkSync(uploadedPath);
+
+    } catch (copyError) {
+        console.error(
+            "Full database migration error:",
+            copyError
+        );
+
+        db = new sqlite3.Database(dbPath);
+
+        return res.status(500).json({
+            success: false,
+            message: "Could not replace Render database"
+        });
+    }
+
+    db = new sqlite3.Database(
+        dbPath,
+        (openError) => {
+            if (openError) {
+                console.error(
+                    "Database reopen error:",
+                    openError
+                );
+
+                return res.status(500).json({
+                    success: false,
+                    message: "Database copied but could not reopen"
+                });
+            }
+
+            console.log(
+                "FULL RAILWAY DATABASE ACTIVATED ON RENDER"
+            );
+
+            return res.json({
+                success: true,
+                message:
+                    "Full Railway database imported into Render successfully"
+            });
+        }
+    );
+});
+
     }
 );
         }
