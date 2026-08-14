@@ -715,6 +715,38 @@ app.use(
         saveUninitialized: false
     })
 );
+app.get("/internal/database-export", (req, res) => {
+    const migrationKey = String(
+        req.headers["x-migration-key"] || ""
+    );
+
+    if (
+        !process.env.MIGRATION_KEY ||
+        migrationKey !== process.env.MIGRATION_KEY
+    ) {
+        return res.status(403).json({
+            success: false,
+            message: "Export access denied"
+        });
+    }
+
+    const exportPath =
+        process.env.RAILWAY_ENVIRONMENT
+            ? "/data/polyportal.db"
+            : path.join(__dirname, "polyportal.db");
+
+    if (!fs.existsSync(exportPath)) {
+        return res.status(404).json({
+            success: false,
+            message: "Database file not found"
+        });
+    }
+
+    return res.download(
+        exportPath,
+        "railway-polyportal.db"
+    );
+});
 app.get(["/index.html", "/dashboard"], (req, res) => {
     if (!req.session || !req.session.userId) {
         return res.redirect("/login.html");
