@@ -1895,8 +1895,9 @@ body.portal-open .ray-5 { animation-delay: -3.2s; }
 #forgotPasswordView {
     display: none !important;
 }
+
 #forgotPasswordView.active {
-    display: block;
+    display: block !important;
 }
 #loginView {
     display: none;
@@ -2099,7 +2100,6 @@ body.portal-open .ray-5 { animation-delay: -3.2s; }
                             class="form-view"
                             id="forgotPasswordView"
                         >
-                        <!-- </div> -->
                             <button
                                 type="button"
                                 class="back-button"
@@ -2519,7 +2519,7 @@ loginButton.addEventListener("pointerenter", (event) => {
                 loginView.classList.remove("active");
 
                 forgotPasswordView.classList.add("active");
-                document.querySelector(".group-side").style.display = "none";
+                // document.querySelector(".group-side").style.display = "none";
                 resetEmail.value =
                     emailInput.value.trim();
 
@@ -2535,7 +2535,7 @@ loginButton.addEventListener("pointerenter", (event) => {
                 forgotPasswordView.classList.remove("active");
 
                 loginView.classList.add("active");
-                document.querySelector(".group-side").style.display = "";
+                // document.querySelector(".group-side").style.display = "";
                 resetMessage.textContent = "";
             }
         );
