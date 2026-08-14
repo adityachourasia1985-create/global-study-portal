@@ -4192,7 +4192,8 @@ app.patch("/api/groups/requests/:id/approve", allowRoles("owner","super_admin","
 app.post("/login", (req, res) => {
     const email = String(req.body.email || "").trim().toLowerCase();
     const password = String(req.body.password || "").trim();
-console.log("LOGIN CHECK:", {
+
+    console.log("LOGIN CHECK:", {
     email: email,
     passwordReceived: !!password,
     passwordLength: password.length
@@ -4210,7 +4211,13 @@ db.get(
         "SELECT * FROM users WHERE LOWER(email) = ?",
         [email],
         (err, account) => {
-            console.log(account)
+            console.log("LOGIN USER DEBUG:", {
+    id: account?.id,
+    email: account?.email,
+    hasPassword: !!account?.password,
+    passwordPrefix: account?.password?.slice(0, 4),
+    passwordLength: account?.password?.length
+});
             if (err) {
                 return res.status(500).json({
                     success: false,
