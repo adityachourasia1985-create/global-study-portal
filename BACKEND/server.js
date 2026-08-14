@@ -16,11 +16,11 @@ const openai = process.env.OPENAI_API_KEY
 console.log("SERVER FILE IS RUNNING");
 const sqlite3 = require("sqlite3").verbose();
 // ===== ONE-TIME PRODUCTION DATABASE MIGRATION =====
-if (process.env.RAILWAY_ENVIRONMENT) {
-    const currentDb = "/data/polyportal.db";
-    const incomingDb = "/data/polyportal-next.db";
-    const backupDb = "/data/polyportal-backup.db";
-
+{
+    const currentDb = path.join(__dirname, "polyportal.db");
+    const incomingDb = path.join(__dirname, "polyportal-next.db");
+    const backupDb = path.join(__dirname, "polyportal-backup.db");
+    
     if (fs.existsSync(incomingDb)) {
         console.log("New production database detected.");
 
@@ -611,7 +611,7 @@ app.post(
         }
 
         const uploadedPath = req.file.path;
-        const targetPath = "/data/polyportal-next.db";
+       const targetPath = path.join(__dirname, "polyportal-next.db");
 
         const testDb = new sqlite3.Database(
             uploadedPath,
