@@ -15,6 +15,7 @@ const openai = process.env.OPENAI_API_KEY
     : null;
 console.log("SERVER FILE IS RUNNING");
 const sqlite3 = require("sqlite3").verbose();
+const { Pool } = require("pg");
 // ===== ONE-TIME PRODUCTION DATABASE MIGRATION =====
 {
     const currentDb = path.join(__dirname, "polyportal.db");
@@ -41,6 +42,17 @@ const dbPath =
     process.env.DB_PATH ||
     path.join(__dirname, "polyportal.db");
     console.log("DATABASE PATH:", dbPath);
+    const pgPool = process.env.DATABASE_URL
+    ? new Pool({
+        connectionString: process.env.DATABASE_URL,
+        ssl: { rejectUnauthorized: false }
+    })
+    : null;
+    if (pgPool) {
+    pgPool.query("SELECT NOW()")
+        .then(() => console.log("NEON DATABASE CONNECTED ✅"))
+        .catch(err => console.error("NEON CONNECTION ERROR:", err.message));
+}
 let db = new sqlite3.Database(dbPath, (err) => {
     if (err) {
         console.error("Database connection error:", err.message);
