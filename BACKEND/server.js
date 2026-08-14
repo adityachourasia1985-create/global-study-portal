@@ -20,7 +20,7 @@ const sqlite3 = require("sqlite3").verbose();
     const currentDb = path.join(__dirname, "polyportal.db");
     const incomingDb = path.join(__dirname, "polyportal-next.db");
     const backupDb = path.join(__dirname, "polyportal-backup.db");
-    
+
     if (fs.existsSync(incomingDb)) {
         console.log("New production database detected.");
 
@@ -611,8 +611,7 @@ app.post(
         }
 
         const uploadedPath = req.file.path;
-       const targetPath = path.join(__dirname, "polyportal-next.db");
-
+        
         const testDb = new sqlite3.Database(
             uploadedPath,
             sqlite3.OPEN_READONLY,
@@ -625,64 +624,88 @@ app.post(
                         message: "Invalid SQLite database"
                     });
                 }
+testDb.get(
+    "SELECT COUNT(*) AS count FROM users",
+    [],
+    (checkError, result) => {
 
-                testDb.get(
-                    "SELECT COUNT(*) AS count FROM users",
-                    [],
-                    (checkError, result) => {
+        testDb.close();
 
-                        testDb.close();
+        if (
+            checkError ||
+            !result ||
+            Number(result.count) < 1
+        ) {
+            fs.unlink(uploadedPath, () => {});
 
-                        if (
-                            checkError ||
-                            !result ||
-                            Number(result.count) < 1
-                        ) {
-                            fs.unlink(uploadedPath, () => {});
+            return res.status(400).json({
+                success: false,
+                message: "Database does not contain valid users"
+            });
+        }
 
-                            return res.status(400).json({
-                                success: false,
-                                message:
-                                    "Database does not contain valid users"
-                            });
-                        }
+        db.serialize(() => {
 
-                        try {
-                            if (fs.existsSync(targetPath)) {
-                                fs.unlinkSync(targetPath);
-                            }
+            db.run(
+                "ATTACH DATABASE ? AS migrated",
+                [uploadedPath],
+                (attachError) => {
 
-                            fs.renameSync(
-                                uploadedPath,
-                                targetPath
+                    if (attachError) {
+                        console.error(
+                            "Migration attach error:",
+                            attachError
+                        );
+
+                        fs.unlink(uploadedPath, () => {});
+
+                        return res.status(500).json({
+                            success: false,
+                            message: "Could not attach uploaded database"
+                        });
+                    }
+
+                    db.run(
+                        `INSERT OR REPLACE INTO users
+                         SELECT * FROM migrated.users`,
+                        (importError) => {
+
+                            db.run(
+                                "DETACH DATABASE migrated",
+                                () => {
+                                    fs.unlink(uploadedPath, () => {});
+                                }
                             );
+
+                            if (importError) {
+                                console.error(
+                                    "Users import error:",
+                                    importError
+                                );
+
+                                return res.status(500).json({
+                                    success: false,
+                                    message: importError.message
+                                });
+                            }
 
                             return res.json({
                                 success: true,
                                 users: Number(result.count),
                                 message:
-                                    "Database uploaded. Restart deployment once."
-                            });
-
-                        } catch (moveError) {
-                            console.error(
-                                "Database upload move error:",
-                                moveError
-                            );
-
-                            return res.status(500).json({
-                                success: false,
-                                message:
-                                    "Could not prepare production database"
+                                    "Users imported into Render successfully"
                             });
                         }
-                    }
-                );
-            }
-        );
+                    );
+                }
+            );
+        });
     }
 );
-
+        }
+    );
+    }
+);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(
