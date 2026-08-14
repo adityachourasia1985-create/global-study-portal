@@ -49,6 +49,17 @@ const db = new sqlite3.Database(dbPath, (err) => {
     }
 });
 const bcrypt = require("bcryptjs");
+
+db.serialize(() => {
+    db.run(`
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT,
+            email TEXT,
+            password TEXT,
+            role TEXT      
+        )
+    `);
 db.run(
     "ALTER TABLE users ADD COLUMN permissions TEXT DEFAULT '{}'",
     (error) => {
@@ -59,20 +70,6 @@ db.run(
         }
     }
 );
-db.serialize(() => {
-    db.run(`
-        CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT,
-            email TEXT,
-            password TEXT,
-            role TEXT
-
-
-        
-        )
-    `);
-
 
  db.run(`
     CREATE TABLE IF NOT EXISTS password_reset_tokens (
