@@ -2519,7 +2519,7 @@ loginButton.addEventListener("pointerenter", (event) => {
                 loginView.classList.remove("active");
 
                 forgotPasswordView.classList.add("active");
-
+                document.querySelector(".group-side").style.display = "none";
                 resetEmail.value =
                     emailInput.value.trim();
 
@@ -2535,7 +2535,7 @@ loginButton.addEventListener("pointerenter", (event) => {
                 forgotPasswordView.classList.remove("active");
 
                 loginView.classList.add("active");
-
+                document.querySelector(".group-side").style.display = "";
                 resetMessage.textContent = "";
             }
         );
