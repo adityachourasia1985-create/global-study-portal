@@ -571,8 +571,10 @@ const gmail = google.gmail({
     auth: gmailOAuth2Client
 });
 const app = express();
+const path = require("path");
+
 const databaseUpload = multer({
-    dest: "/data/"
+    dest: path.join(__dirname, "uploads")
 });
 
 app.post(
