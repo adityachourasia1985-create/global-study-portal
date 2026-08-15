@@ -3733,19 +3733,19 @@ if (!/^[6-9]\d{9}$/.test(normalizedMobile)) {
     const normalizedRegistrationEmail =
     String(email || "").trim().toLowerCase();
 
-// const otpRecord =
-//     registrationOtps.get(normalizedRegistrationEmail);
+const otpRecord =
+    registrationOtps.get(normalizedRegistrationEmail);
 
-// if (
-//     !otpRecord ||
-//     !otpRecord.verified ||
-//     Date.now() > otpRecord.expiresAt
-// ) {
-//     return res.status(403).json({
-//         success: false,
-//         message: "Please verify your email before creating an account."
-//     });
-// }
+if (
+    !otpRecord ||
+    !otpRecord.verified ||
+    Date.now() > otpRecord.expiresAt
+) {
+    return res.status(403).json({
+        success: false,
+        message: "Please verify your email before creating an account."
+    });
+}
 
     const hashedPassword = bcrypt.hashSync(password, 10);
 
