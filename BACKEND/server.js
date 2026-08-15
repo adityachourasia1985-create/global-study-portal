@@ -3735,18 +3735,22 @@ if (!/^[6-9]\d{9}$/.test(normalizedMobile)) {
 
 const otpRecord =
     registrationOtps.get(normalizedRegistrationEmail);
-
 if (
     !otpRecord ||
     !otpRecord.verified ||
     Date.now() > otpRecord.expiresAt
 ) {
+    console.log("🚫 REGISTRATION BLOCKED BY OTP:", {
+        email: normalizedRegistrationEmail,
+        hasOtpRecord: !!otpRecord,
+        verified: otpRecord?.verified
+    });
+
     return res.status(403).json({
         success: false,
         message: "Please verify your email before creating an account."
     });
 }
-
     const hashedPassword = bcrypt.hashSync(password, 10);
 
     if (!name || !email || !password || !profession || !accountType) {
