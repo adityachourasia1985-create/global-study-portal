@@ -3746,15 +3746,7 @@ if (!/^[6-9]\d{9}$/.test(normalizedMobile)) {
 //         message: "Please verify your email before creating an account."
 //     });
 // }
-const normalizedMobile = String(mobile || "")
-    .replace(/\D/g, "");
 
-if (normalizedMobile && !/^[6-9]\d{9}$/.test(normalizedMobile)) {
-    return res.status(400).json({
-        success: false,
-        message: "Please enter a valid 10-digit Indian mobile number."
-    });
-}
     const hashedPassword = bcrypt.hashSync(password, 10);
 
     if (!name || !email || !password || !profession || !accountType) {
