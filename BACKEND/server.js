@@ -419,6 +419,10 @@ db.run(`
         FOREIGN KEY (user_id) REFERENCES users(id)
     )
 `);
+// db.run(`
+//     ALTER TABLE user_permissions
+//     ADD COLUMN IF NOT EXISTS can_create_without_otp INTEGER DEFAULT 0
+// `);
 db.run(`
     CREATE TABLE IF NOT EXISTS notifications (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -3577,7 +3581,127 @@ function generateUniqueOrganizationCode(organizationName, callback) {
 
     checkCode();
 }
+// ================= EMAIL OTP VERIFICATION =================
 
+const registrationOtps = new Map();
+
+app.post("/api/register/send-otp", async (req, res) => {
+    try {
+        const email = String(req.body.email || "")
+            .trim()
+            .toLowerCase();
+
+        const emailRegex =
+            /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+        if (!emailRegex.test(email)) {
+            return res.status(400).json({
+                success: false,
+                message: "Please enter a valid email address."
+            });
+        }
+
+        const otp = String(
+            Math.floor(100000 + Math.random() * 900000)
+        );
+
+        registrationOtps.set(email, {
+            otp,
+            expiresAt: Date.now() + 10 * 60 * 1000,
+            verified: false
+        });
+
+const emailContent = [
+    `From: Global Study Portal <${process.env.GMAIL_SENDER}>`,
+    `To: ${email}`,
+    `Subject: Verify Your Global Study Portal Account`,
+    `MIME-Version: 1.0`,
+    `Content-Type: text/html; charset="UTF-8"`,
+    ``,
+    `
+        <h2>Global Study Portal</h2>
+
+        <p>Your verification code is:</p>
+
+        <h1>${otp}</h1>
+
+        <p>This code expires in 10 minutes.</p>
+
+        <p>
+            If you did not request this verification,
+            you can ignore this email.
+        </p>
+    `
+].join("\r\n");
+
+const encodedMessage = Buffer
+    .from(emailContent)
+    .toString("base64")
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/, "");
+
+await gmail.users.messages.send({
+    userId: "me",
+    requestBody: {
+        raw: encodedMessage
+    }
+});
+
+        return res.json({
+            success: true,
+            message: "Verification code sent."
+        });
+
+    } catch (error) {
+        console.error("Registration OTP error:", error);
+
+        return res.status(500).json({
+            success: false,
+            message: "Could not send verification code."
+        });
+    }
+});
+
+app.post("/api/register/verify-otp", (req, res) => {
+    const email = String(req.body.email || "")
+        .trim()
+        .toLowerCase();
+
+    const otp = String(req.body.otp || "").trim();
+
+    const record = registrationOtps.get(email);
+
+    if (!record) {
+        return res.status(400).json({
+            success: false,
+            message: "Please request a verification code first."
+        });
+    }
+
+    if (Date.now() > record.expiresAt) {
+        registrationOtps.delete(email);
+
+        return res.status(400).json({
+            success: false,
+            message: "Verification code expired."
+        });
+    }
+
+    if (record.otp !== otp) {
+        return res.status(400).json({
+            success: false,
+            message: "Incorrect verification code."
+        });
+    }
+
+    record.verified = true;
+
+    return res.json({
+        success: true,
+        message: "Email verified successfully."
+    });
+});
 app.post("/register", async (req, res) => {
     console.log("REGISTER BODY:",req.body)
     const {
@@ -3597,6 +3721,40 @@ app.post("/register", async (req, res) => {
         branchCode,
         organizationCode
     } = req.body;
+    const normalizedMobile = String(mobile || "")
+    .replace(/\D/g, "");
+
+if (!/^[6-9]\d{9}$/.test(normalizedMobile)) {
+    return res.status(400).json({
+        success: false,
+        message: "Please enter a valid 10-digit Indian mobile number."
+    });
+}
+    const normalizedRegistrationEmail =
+    String(email || "").trim().toLowerCase();
+
+// const otpRecord =
+//     registrationOtps.get(normalizedRegistrationEmail);
+
+// if (
+//     !otpRecord ||
+//     !otpRecord.verified ||
+//     Date.now() > otpRecord.expiresAt
+// ) {
+//     return res.status(403).json({
+//         success: false,
+//         message: "Please verify your email before creating an account."
+//     });
+// }
+const normalizedMobile = String(mobile || "")
+    .replace(/\D/g, "");
+
+if (normalizedMobile && !/^[6-9]\d{9}$/.test(normalizedMobile)) {
+    return res.status(400).json({
+        success: false,
+        message: "Please enter a valid 10-digit Indian mobile number."
+    });
+}
     const hashedPassword = bcrypt.hashSync(password, 10);
 
     if (!name || !email || !password || !profession || !accountType) {

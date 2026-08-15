@@ -390,16 +390,36 @@ select:focus {
                 >
             </div>
 
-            <div class="form-group">
-                <label for="email">Email Address</label>
-                <input
-                    type="email"
-                    id="email"
-                    placeholder="Enter email address"
-                    required
-                >
-            </div>
+      <div class="form-group">
+    <label for="email">Email Address</label>
 
+    <input
+        type="email"
+        id="email"
+        placeholder="Enter email address"
+        required
+    >
+
+    <button type="button" id="sendOtpBtn">
+        Send OTP
+    </button>
+
+    <div id="otpSection" style="display:none; margin-top:10px;">
+        <input
+            type="text"
+            id="emailOtp"
+            maxlength="6"
+            inputmode="numeric"
+            placeholder="Enter 6-digit OTP"
+        >
+
+        <button type="button" id="verifyOtpBtn">
+            Verify OTP
+        </button>
+
+        <div id="otpMessage" style="margin-top:6px;"></div>
+    </div>
+</div>
     <div class="form-group">
     <label for="password">Password</label>
 
@@ -918,6 +938,96 @@ if (monkey) {
     monkey.textContent = isHidden ? "🙊" : "🙈";
 }
 }
+let emailVerified = false;
+
+const emailInput = document.getElementById("email");
+const sendOtpBtn = document.getElementById("sendOtpBtn");
+const verifyOtpBtn = document.getElementById("verifyOtpBtn");
+const otpSection = document.getElementById("otpSection");
+const emailOtp = document.getElementById("emailOtp");
+const otpMessage = document.getElementById("otpMessage");
+sendOtpBtn.addEventListener("click", async () => {
+    const email = emailInput.value.trim();
+
+    if (!email) {
+        otpSection.style.display = "block";
+        otpMessage.textContent = "Enter your email first.";
+        return;
+    }
+
+    sendOtpBtn.disabled = true;
+    sendOtpBtn.textContent = "Sending...";
+
+    try {
+        const response = await fetch("/api/register/send-otp", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ email })
+        });
+
+        const data = await response.json();
+
+        otpSection.style.display = "block";
+        otpMessage.textContent = data.message;
+
+    } catch (error) {
+        otpSection.style.display = "block";
+        otpMessage.textContent = "Could not send OTP.";
+    }
+
+    sendOtpBtn.disabled = false;
+    sendOtpBtn.textContent = "Send OTP";
+});
+verifyOtpBtn.addEventListener("click", async () => {
+    const email = emailInput.value.trim();
+    const otp = emailOtp.value.trim();
+
+    if (!otp) {
+        otpMessage.textContent = "Enter the OTP.";
+        return;
+    }
+
+    verifyOtpBtn.disabled = true;
+    verifyOtpBtn.textContent = "Verifying...";
+
+    try {
+        const response = await fetch("/api/register/verify-otp", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ email, otp })
+        });
+
+        const data = await response.json();
+
+        otpMessage.textContent = data.message;
+
+        if (data.success) {
+            emailVerified = true;
+            emailInput.readOnly = true;
+            emailOtp.disabled = true;
+
+            otpMessage.textContent = "✅ Email verified";
+            verifyOtpBtn.textContent = "Verified";
+            return;
+        }
+
+    } catch (error) {
+        otpMessage.textContent = "OTP verification failed.";
+    }
+
+    verifyOtpBtn.disabled = false;
+    verifyOtpBtn.textContent = "Verify OTP";
+});
+
+
+
+
+
+
 </script>
 </body>
 </html>
