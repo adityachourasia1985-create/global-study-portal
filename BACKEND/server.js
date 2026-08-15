@@ -1666,7 +1666,197 @@ app.get("/api/notifications", (req, res) => {
         }
     );
 });
+app.patch("/api/notifications/:id/read", (req, res) => {
+    if (!req.session || !req.session.userId) {
+        return res.status(401).json({
+            success: false,
+            message: "Not logged in"
+        });
+    }
 
+    const userId = Number(req.session.userId);
+    const notificationId = Number(req.params.id);
+
+    if (!Number.isInteger(notificationId)) {
+        return res.status(400).json({
+            success: false,
+            message: "Invalid notification ID"
+        });
+    }
+
+    db.get(
+        `
+        SELECT id, role, email
+        FROM users
+        WHERE id = ?
+        `,
+        [userId],
+        (userErr, user) => {
+            if (userErr || !user) {
+                return res.status(500).json({
+                    success: false,
+                    message: "Could not verify user"
+                });
+            }
+
+            const role = String(user.role || "")
+                .trim()
+                .toLowerCase();
+
+            const email = String(user.email || "")
+                .trim()
+                .toLowerCase();
+
+            let sql;
+            let params;
+
+            if (role === "owner") {
+                sql = `
+                    UPDATE notifications
+                    SET is_read = 1
+                    WHERE id = ?
+                `;
+
+                params = [notificationId];
+            } else {
+                sql = `
+                    UPDATE notifications
+                    SET is_read = 1
+                    WHERE id = ?
+                    AND (
+                        recipient_user_id = ?
+                        OR LOWER(TRIM(COALESCE(recipient_email, ''))) = ?
+                    )
+                `;
+
+                params = [
+                    notificationId,
+                    userId,
+                    email
+                ];
+            }
+
+            db.run(
+                sql,
+                params,
+                function (err) {
+                    if (err) {
+                        console.error(
+                            "Mark notification read error:",
+                            err
+                        );
+
+                        return res.status(500).json({
+                            success: false,
+                            message:
+                                "Failed to mark notification as read"
+                        });
+                    }
+
+                    if (this.changes === 0) {
+                        return res.status(404).json({
+                            success: false,
+                            message: "Notification not found"
+                        });
+                    }
+
+                    return res.json({
+                        success: true
+                    });
+                }
+            );
+        }
+    );
+});
+
+
+app.patch("/api/notifications/read-all", (req, res) => {
+    if (!req.session || !req.session.userId) {
+        return res.status(401).json({
+            success: false,
+            message: "Not logged in"
+        });
+    }
+
+    const userId = Number(req.session.userId);
+
+    db.get(
+        `
+        SELECT id, role, email
+        FROM users
+        WHERE id = ?
+        `,
+        [userId],
+        (userErr, user) => {
+            if (userErr || !user) {
+                return res.status(500).json({
+                    success: false,
+                    message: "Could not verify user"
+                });
+            }
+
+            const role = String(user.role || "")
+                .trim()
+                .toLowerCase();
+
+            const email = String(user.email || "")
+                .trim()
+                .toLowerCase();
+
+            let sql;
+            let params;
+
+            if (role === "owner") {
+                sql = `
+                    UPDATE notifications
+                    SET is_read = 1
+                    WHERE is_read = 0
+                `;
+
+                params = [];
+            } else {
+                sql = `
+                    UPDATE notifications
+                    SET is_read = 1
+                    WHERE is_read = 0
+                    AND (
+                        recipient_user_id = ?
+                        OR LOWER(TRIM(COALESCE(recipient_email, ''))) = ?
+                    )
+                `;
+
+                params = [
+                    userId,
+                    email
+                ];
+            }
+
+            db.run(
+                sql,
+                params,
+                function (err) {
+                    if (err) {
+                        console.error(
+                            "Mark all notifications read error:",
+                            err
+                        );
+
+                        return res.status(500).json({
+                            success: false,
+                            message:
+                                "Failed to mark notifications as read"
+                        });
+                    }
+
+                    return res.json({
+                        success: true,
+                        updated: this.changes
+                    });
+                }
+            );
+        }
+    );
+});
 app.post("/api/notifications/test", async (req, res) => {
     if (!req.session || !req.session.userId) {
         return res.status(401).json({

@@ -1525,7 +1525,6 @@ async function loadAttendance() {
     try {
         const response = await fetch("/api/attendance");
         const data = await response.json();
-        alert("Loaded records: " + data.attendance.length);
 
         if (!data.success) return;
 
@@ -1555,7 +1554,7 @@ async function loadAttendance() {
 }
 async function deleteAttendance(id) {
     try {
-     const response = await fetch(`http://localhost:3001/api/attendance/${id}`, {
+     const response = await fetch(`/api/attendance/${id}`, {
             method: "DELETE"
         });
 
@@ -1567,7 +1566,7 @@ async function deleteAttendance(id) {
         }
 
         // Reload attendance from database
-        loadAttendance();
+        await loadAttendance();
 
     } catch (error) {
         console.error("Delete attendance error:", error);
@@ -2670,7 +2669,7 @@ async function savePermissions() {
 
         alert("Permissions saved successfully.");
         closePermissionsModal();
-
+        await loadManagedUsers();
     } catch (error) {
         console.error("Save permissions error:", error);
         alert("Could not save permissions.");
@@ -2967,7 +2966,38 @@ async function toggleNotificationRead(notificationId, isUnread) {
         );
     }
 }
+async function markAllNotificationsRead() {
+    try {
+        const response = await fetch(
+            "/api/notifications/read-all",
+            {
+                method: "PATCH"
+            }
+        );
 
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+            throw new Error(
+                data.message ||
+                "Failed to mark notifications as read"
+            );
+        }
+
+        allNotifications.forEach(notification => {
+            notification.is_read = 1;
+        });
+
+        updateNotificationBadge();
+        renderNotifications();
+
+    } catch (error) {
+        console.error(
+            "Mark all notifications read error:",
+            error
+        );
+    }
+}
 function renderNotifications() {
     const notificationList =
         document.getElementById("notificationList");
@@ -3108,6 +3138,18 @@ function renderNotifications() {
 }
 
 function bindNotificationControls() {
+    const markAllBtn =document.getElementById(
+        "markAllNotificationsReadBtn"
+    );
+
+if (markAllBtn && !markAllBtn.dataset.bound) {
+    markAllBtn.dataset.bound = "true";
+
+    markAllBtn.addEventListener(
+        "click",
+        markAllNotificationsRead
+    );
+}
     const searchInput =
         document.getElementById("notificationSearch");
 
@@ -3237,8 +3279,16 @@ async function loadNotifications() {
             Array.isArray(data.notifications)
                 ? data.notifications
                 : [];
+        const unreadCount = Number(data.unreadCount) || 0;
+        const badge = document.getElementById("notificationBadge");
 
-        updateNotificationBadge();
+if (badge) {
+    badge.textContent =
+        unreadCount > 99 ? "99+" : String(unreadCount);
+
+    badge.style.display =
+        unreadCount > 0 ? "flex" : "none";
+}
         bindNotificationControls();
         renderNotifications();
 
@@ -3678,7 +3728,7 @@ async function previewAboutFounderImage(input) {
                 "?t=" +
                 Date.now();
         });
-
+        await loadAboutSection();
     } catch (error) {
         console.error(
             "Founder photo upload error:",
