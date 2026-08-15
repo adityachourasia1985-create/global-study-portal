@@ -60,6 +60,92 @@ let db = new sqlite3.Database(dbPath, (err) => {
         console.log("SQLite database connected");
     }
 });
+// ===== NEON SQLITE-COMPATIBLE DATABASE ADAPTER =====
+
+function convertSqliteQuery(sql) {
+    let index = 0;
+
+    return sql.replace(/\?/g, () => {
+        index++;
+        return `$${index}`;
+    });
+}
+
+const neonDb = {
+
+    all(sql, params = [], callback) {
+        if (typeof params === "function") {
+            callback = params;
+            params = [];
+        }
+
+        pgPool
+            .query(convertSqliteQuery(sql), params)
+            .then(result => callback && callback(null, result.rows))
+            .catch(error => callback && callback(error));
+    },
+
+    get(sql, params = [], callback) {
+        if (typeof params === "function") {
+            callback = params;
+            params = [];
+        }
+
+        pgPool
+            .query(convertSqliteQuery(sql), params)
+            .then(result => {
+                callback && callback(null, result.rows[0]);
+            })
+            .catch(error => callback && callback(error));
+    },
+
+    run(sql, params = [], callback) {
+        if (typeof params === "function") {
+            callback = params;
+            params = [];
+        }
+
+        let query = convertSqliteQuery(sql);
+
+        const isInsert =
+            /^\s*INSERT\s+/i.test(query) &&
+            !/\bRETURNING\b/i.test(query);
+
+        if (isInsert) {
+            query += " RETURNING id";
+        }
+
+        pgPool
+            .query(query, params)
+            .then(result => {
+
+                const context = {
+                    lastID:
+                        result.rows?.[0]?.id ?? null,
+
+                    changes:
+                        result.rowCount ?? 0
+                };
+
+                if (callback) {
+                    callback.call(context, null);
+                }
+            })
+            .catch(error => {
+                if (callback) {
+                    callback.call(
+                        {
+                            lastID: null,
+                            changes: 0
+                        },
+                        error
+                    );
+                }
+            });
+    }
+};
+
+// ================================================
 const bcrypt = require("bcryptjs");
 
 db.serialize(() => {
@@ -426,7 +512,7 @@ db.run(`
     }
 
     db.run(`
-        INSERT OR IGNORE INTO about_content (
+        INSERT INTO about_content (
             id,
             heading,
             description,
@@ -445,7 +531,7 @@ db.run(`
             'Aditya Chourasia',
             'Designed and developed with the goal of building a professional and accessible digital ecosystem for educational institutions.',
             'Version 1.0'
-        )
+        )ON CONFLICT (id) DO NOTHING
     `);
 });
 
@@ -482,10 +568,11 @@ db.serialize(() => {
             return;
         }
 
-        db.run(
-            `INSERT OR IGNORE INTO about_settings (id)
-             VALUES (1)`,
-            (insertError) => {
+      db.run(
+    `INSERT INTO about_settings (id)
+     VALUES (1)
+     ON CONFLICT (id) DO NOTHING`,
+    (insertError) => {
                 if (insertError) {
                     console.error(
                         "about_settings default row error:",
@@ -1507,7 +1594,7 @@ app.get("/api/notifications", (req, res) => {
                 sql = `
                     SELECT *
                     FROM notifications
-                    ORDER BY datetime(created_at) DESC, id DESC
+                    ORDER BY created_at DESC, id DESC
                 `;
 
                 params = [];
@@ -1526,7 +1613,7 @@ app.get("/api/notifications", (req, res) => {
                                 COALESCE(recipient_email, '')
                             )
                         ) = ?
-                    ORDER BY datetime(created_at) DESC, id DESC
+                    ORDER BY created_at DESC, id DESC
                 `;
 
                 params = [
@@ -3672,7 +3759,8 @@ if (existingSameTypeAccount) {
                 ? branchCode?.trim() || null
                 : null,
             finalOrganizationCode,
-                newStatus,
+newStatus,
+accountType
                 
 
         ],
@@ -3690,23 +3778,26 @@ if (existingSameTypeAccount) {
 
                 console.error("Registration error:", err);
 
-                return res.status(500).json({
-                    success: false,
-                    message: "Registration failed."
-                });
+return res.status(500).json({
+    success: false,
+    message: "Registration failed."
+    
+});
             }
 
  if (isNewOrganization && organizationName?.trim()) {
      db.run(
-        `INSERT OR IGNORE INTO organizations (name, organization_code)
-         VALUES (?, ?)`,
+        `INSERT INTO organizations (name, organization_code)
+ VALUES (?, ?)
+ ON CONFLICT (organization_code) DO NOTHING`,
         [organizationName.trim(), finalOrganizationCode]
     );
     if (branchCode) {
     db.run(
-        `INSERT OR IGNORE INTO organization_branches
-         (organization_code, branch_code, branch_name)
-         VALUES (?, ?, ?)`,
+        `INSERT INTO organization_branches
+ (organization_code, branch_code, branch_name)
+ VALUES (?, ?, ?)
+ ON CONFLICT (organization_code, branch_code) DO NOTHING`,
         [
             finalOrganizationCode,
             branchCode.trim(),
@@ -4070,17 +4161,19 @@ app.patch("/api/users/:id/approve", allowRoles("owner", "admin","super_admin"), 
         );
         if (user.organization_code) {
     db.run(
-        `INSERT OR IGNORE INTO organizations
-         (name, organization_code)
-         VALUES (?, ?)`,
+      `INSERT INTO organizations
+(name, organization_code)
+VALUES (?, ?)
+ON CONFLICT (organization_code) DO NOTHING`
         [user.organization_code, user.organization_code]
     );
 
     if (user.branch_code) {
         db.run(
-            `INSERT OR IGNORE INTO organization_branches
-             (organization_code, branch_code, branch_name)
-             VALUES (?, ?, ?)`,
+            `INSERT INTO organization_branches
+(organization_code, branch_code, branch_name)
+VALUES (?, ?, ?)
+ON CONFLICT (organization_code, branch_code) DO NOTHING`,
             [
                 user.organization_code,
                 user.branch_code,
@@ -4964,8 +5057,8 @@ app.put("/api/users/:id/permissions", allowRoles("owner"), (req, res) => {
 });
 
 db.run(
-    `INSERT OR IGNORE INTO users (name, email, password, role)
-     VALUES (?, ?, ?, ?)`,
+    `INSERT INTO users (name, email, password, role)
+     VALUES (?, ?, ?, ?)ON CONFLICT DO NOTHING`,
     ["Aditya", "aditya@polyportal.com", "Aditya1985", "owner"]
 );
 db.run(
@@ -4976,14 +5069,14 @@ db.run(
 );
 
 db.run(
-    `INSERT OR IGNORE INTO users (name, email, password, role)
-     VALUES (?, ?, ?, ?)`,
+    `INSERT INTO users (name, email, password, role)
+     VALUES (?, ?, ?, ?)ON CONFLICT DO NOTHING`,
     ["Portal Admin", "admin@polyportal.com", "admin123", "admin"]
 );
 
 db.run(
-    `INSERT OR IGNORE INTO users (name, email, password, role)
-     VALUES (?, ?, ?, ?)`,
+    `INSERT INTO users (name, email, password, role)
+     VALUES (?, ?, ?, ?)ON CONFLICT DO NOTHING`,
     ["Demo User", "user@polyportal.com", "user123", "user"]
 );
 app.get("/api/owner", allowRoles("owner"), (req, res) => {
@@ -6318,7 +6411,7 @@ app.get("/index.html", (req, res) => {
 
     return res.sendFile(path.join(__dirname, "index.html"));
 });
-
+db = neonDb;
 const server = app.listen(PORT, () => {
     console.log(`Server running at http://localhost:${PORT}`);
 });
