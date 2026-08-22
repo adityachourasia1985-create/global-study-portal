@@ -1479,7 +1479,7 @@ body.portal-open .portal-panel::after {
     background-size: 220% 100%;
 
     animation:
-        lightSweep 6s ease-in-out infinite;
+        none;
 
     z-index: -1;
 }
@@ -1490,7 +1490,7 @@ body.portal-open .portal-panel::after {
         transform:
             translateY(-35px)
             scale(0.94);
-        filter: blur(8px);
+       filter: none;
     }
 
     to {
@@ -1498,7 +1498,7 @@ body.portal-open .portal-panel::after {
         transform:
             translateY(0)
             scale(1);
-        filter: blur(0);
+        filter: none;
     }
 }
 
@@ -1558,9 +1558,8 @@ body.portal-open .portal-panel::after {
 }
 
 body.portal-open .light-particle {
-    animation:
-        lightParticleFloat 7s
-        linear infinite;
+    display: none;
+    animation: none;
 }
 
 .light-particle:nth-child(1) {
@@ -1758,8 +1757,7 @@ body.portal-open .light-beam {
 }
 
 body.portal-open .light-ray {
-    opacity: .22    ;
-    animation: scatteredRay 4.5s ease-in-out infinite alternate;
+    opacity: .32;
 }
 
 body.portal-open .ray-2 { animation-delay: -.8s; }
@@ -1781,15 +1779,13 @@ body.portal-open .ray-5 { animation-delay: -3.2s; }
 
 
 /* PANEL SITS INSIDE THE LIGHT */
-
 .portal-panel {
     position: relative;
     z-index: 1;
-    background: rgba(10, 24, 45, 0.76);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    background: rgba(10, 24, 45, 0.96);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
 }
-
 
 /* RESPONSIVE */
 
@@ -1938,6 +1934,9 @@ body.portal-open .ray-5 { animation-delay: -3.2s; }
     font-weight: 700;
     text-decoration: none;
 }
+
+
+
 </style>
 </head>
 
