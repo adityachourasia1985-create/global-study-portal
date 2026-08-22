@@ -330,12 +330,14 @@
                 0 0 90px rgba(34, 211, 238, 0.28);
         }
 
-        body.portal-open .lamp-button {
+        /* body.portal-open .lamp-button {
             animation:
                 lampClick 0.55s ease,
                 lampSwing 5s ease-in-out 0.55s infinite;
-        }
-
+        } */
+body.portal-open .lamp-button {
+    animation: lampClick 0.35s ease;
+}
         /* Portal Panel */
 
         .portal-panel {
@@ -1861,7 +1863,7 @@ body.portal-open .ray-5 { animation-delay: -3.2s; }
     }
 }
 .lamp-area {
-    transform: translateX(3%);
+    transform: none;
 }
 /* FINAL PANEL ALIGNMENT INSIDE RAYS */
 
